@@ -7,7 +7,7 @@ import { BodyweightProgress } from "@/components/bodyweight-tracking";
 import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
 
 export default function Progress() {
-  const [days, setDays] = useState<GetAnalyticsDays>(90);
+  const [days, setDays] = useState<GetAnalyticsDays>(0);
   return (
     <div>
       <PageHeader kicker="Analytics" title="Progress">

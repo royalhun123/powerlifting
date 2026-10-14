@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { windowStart } from "@/lib/date-window";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetTrueMaxes, useSaveTrueMax, useDeleteTrueMax, type TrueMax } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -66,8 +67,7 @@ export function TrueMaxHistory({days}:{days:number}) {
   const invalidate=useInvalidateAll();
   const guard=useMutationGuard();
   const {toast}=useToast();
-  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
-  const entries=(query.data ?? []).filter(e=>e.date>=cutoff.toISOString().slice(0,10)).slice().reverse();
+  const entries=(query.data ?? []).filter(e=>e.date>=windowStart(days)).slice().reverse();
   return <div className="mt-6"><Panel title="True 1RM history">
     <p className="mb-3 text-sm text-muted-foreground">Tested maxes logged separately from workouts. These actual results also appear in your 1RM trend above.</p>
     {query.isLoading ? <LoadingPage /> : query.isError ? <ErrorState message={errMessage(query.error)} onRetry={()=>query.refetch()} /> : !entries.length ? <EmptyState title="No tested maxes in this period" body="Use Log true 1RM to add current or historical tested maxes." /> : (

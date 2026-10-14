@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { windowStart } from "@/lib/date-window";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetBodyweights, useSaveBodyweight, useDeleteBodyweight } from "@workspace/api-client-react";
 import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
@@ -75,9 +76,7 @@ export function BodyweightProgress({ days }: { days: number }) {
   const client = useQueryClient();
   const {toast} = useToast();
   const guard = useMutationGuard();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate()-days);
-  const cutoffDate = cutoff.toISOString().slice(0,10);
+  const cutoffDate = windowStart(days);
   const entries = (query.data ?? []).filter(entry=>entry.date>=cutoffDate).map(entry=>({
     ...entry,
     timeOfDay: entry.timeOfDay ?? "unspecified" as const,

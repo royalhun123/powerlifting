@@ -45,7 +45,7 @@ router.get("/analytics", async (req,res) => {
   const athleteId=params.athleteId || workspace.profile.id;
   if (athleteId !== workspace.profile.id && !workspace.athletes.some(a=>a.id === athleteId)) fail(403,"You do not have access to this athlete.");
   const maxRows=req.user ? await db.select().from(trueMaxesTable).where(eq(trueMaxesTable.athleteId,athleteId)) : [];
-  res.json(GetAnalyticsResponse.parse(analytics(workspace.sessions.filter(s=>s.athleteId === athleteId),workspace.profile.unit,params.days ?? 90,GetTrueMaxesResponse.parse(maxRows.map(r=>r.data)))));
+  res.json(GetAnalyticsResponse.parse(analytics(workspace.sessions.filter(s=>s.athleteId === athleteId),workspace.profile.unit,params.days ?? 0,GetTrueMaxesResponse.parse(maxRows.map(r=>r.data)))));
 });
 // All remaining endpoints mutate private account data and require a real login.
 router.use(async (req,res,next) => {

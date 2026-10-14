@@ -475,8 +475,9 @@ export type GetAnalyticsDays = typeof GetAnalyticsDays[keyof typeof GetAnalytics
 
 
 export const GetAnalyticsDays = {
-  NUMBER_28: 28,
+  NUMBER_0: 0,
+  NUMBER_30: 30,
   NUMBER_90: 90,
-  NUMBER_365: 365,
+  NUMBER_180: 180,
 } as const;
 

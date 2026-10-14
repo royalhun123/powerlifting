@@ -67,7 +67,7 @@ export default function Clients() {
   const [fresh, setFresh] = useState<Invitation | null>(null);
   const [toRevoke, setToRevoke] = useState<Invitation | null>(null);
   const [selected, setSelected] = useState("");
-  const [days, setDays] = useState<GetAnalyticsDays>(90);
+  const [days, setDays] = useState<GetAnalyticsDays>(0);
   const [assignOpen, setAssignOpen] = useState(false);
   const [programId, setProgramId] = useState("");
   const [startDate, setStartDate] = useState(todayISO());

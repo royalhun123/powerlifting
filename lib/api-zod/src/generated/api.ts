@@ -986,11 +986,11 @@ export const UpdateFeedbackResponse = zod.object({
 }))
 
 
-export const getAnalyticsQueryDaysDefault = 90;
+export const getAnalyticsQueryDaysDefault = 0;
 
 export const GetAnalyticsQueryParams = zod.object({
   "athleteId": zod.coerce.string().optional(),
-  "days": zod.union([zod.literal(28),zod.literal(90),zod.literal(365)]).default(getAnalyticsQueryDaysDefault)
+  "days": zod.union([zod.literal(0),zod.literal(30),zod.literal(90),zod.literal(180)]).default(getAnalyticsQueryDaysDefault)
 })
 
 export const GetAnalyticsResponse = zod.object({

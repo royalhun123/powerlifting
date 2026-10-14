@@ -1,10 +1,12 @@
 import { BodyweightForm } from "@/components/bodyweight-tracking";
 import { TrueMaxButton } from "@/components/true-max-tracking";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, CalendarClock, Flag } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { maxTrendCeiling } from "@/lib/max-trend";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { MaxTrendChart } from "@/components/max-trend-chart";
+import { DaysToggle } from "@/components/days-toggle";
+import type { GetAnalyticsDays } from "@workspace/api-client-react";
 import { getGetAnalyticsQueryKey, useGetAnalytics, type Workout } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,8 @@ import { daysUntil, fmtCompact, fmtDate, fmtNum, LIFT_VAR, PHASE_LABEL, targetLo
 export default function Dashboard() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
   const { isAuthenticated } = useAuth();
-  const params = { days: 90 as const };
+  const [days,setDays]=useState<GetAnalyticsDays>(0);
+  const params = { days };
   const analytics = useGetAnalytics(params, { query: { queryKey: getGetAnalyticsQueryKey(params), staleTime: 20_000 } });
 
   const derived = useMemo(() => {
@@ -112,34 +115,15 @@ export default function Dashboard() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Completed · 90d" value={analytics.data?.completedSessions ?? "—"} sub="sessions" accent={LIFT_VAR.squat} />
-        <Stat label="Volume · 90d" value={analytics.data ? fmtCompact(analytics.data.totalVolume) : "—"} unit={analytics.data?.unit} sub="external load" accent={LIFT_VAR.bench} />
-        <Stat label="Sets · 90d" value={analytics.data?.totalSets ?? "—"} sub={`${analytics.data?.totalReps ?? 0} reps`} accent={LIFT_VAR.deadlift} />
+        <div className="col-span-full"><DaysToggle value={days} onChange={setDays} /></div>
+        <Stat label="Completed" value={analytics.data?.completedSessions ?? "—"} sub="sessions" accent={LIFT_VAR.squat} />
+        <Stat label="Volume" value={analytics.data ? fmtCompact(analytics.data.totalVolume) : "—"} unit={analytics.data?.unit} sub="external load" accent={LIFT_VAR.bench} />
+        <Stat label="Sets" value={analytics.data?.totalSets ?? "—"} sub={`${analytics.data?.totalReps ?? 0} reps`} accent={LIFT_VAR.deadlift} />
         <Stat label="Block progress" value={`${pct}%`} sub={current ? `${derived.done}/${derived.total} workouts` : "no block assigned"} accent={LIFT_VAR.accessory} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Panel title="Estimated max trend" className="rise-2 lg:col-span-2" action={<Link href="/progress" className="font-num text-xs text-primary" data-testid="link-progress">Full analytics</Link>}>
-          {analytics.isLoading ? (
-            <div className="h-64 animate-pulse rounded bg-muted" />
-          ) : trend.length === 0 ? (
-            <EmptyState title="No completed sessions yet" body="Trends are drawn only from completed sessions. Log one and it shows up here." />
-          ) : (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={trend} margin={{ left: -10, right: 8, top: 8 }} maxBarSize={40}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} />
-                  <XAxis dataKey="date" tickFormatter={(d: string) => fmtDate(d)} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[0,maxTrendCeiling(trend)]} allowDataOverflow />
-                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", fontSize: 12 }} labelFormatter={(d) => fmtDate(String(d), { month: "long", day: "numeric", year: "numeric" })} formatter={(v: number, n: string) => [`${fmtNum(v, 1)} ${analytics.data?.unit ?? ""}`, `${n} e1RM`]} />
-                  {(["squat", "bench", "deadlift"] as const).map((l) => (
-                    <Bar key={l} dataKey={l} fill={LIFT_VAR[l]} radius={[3,3,0,0]} />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </Panel>
+        <div className="rise-2 min-w-0 lg:col-span-2"><MaxTrendChart /><Link href="/progress" className="mt-2 inline-block text-xs text-primary" data-testid="link-progress">Full analytics</Link></div>
 
         <Panel title="Up next" className="rise-3" action={current && <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">{PHASE_LABEL[current.program.phase]}</span>}>
           {!current ? (

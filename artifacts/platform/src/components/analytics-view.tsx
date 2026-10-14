@@ -1,8 +1,8 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { maxTrendCeiling } from "@/lib/max-trend";
+import { MaxTrendChart } from "@/components/max-trend-chart";
 import { getGetAnalyticsQueryKey, useGetAnalytics, type GetAnalyticsDays } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState, ErrorState, Panel, Stat } from "@/components/common";
+import { ErrorState, Panel, Stat } from "@/components/common";
 import { errMessage } from "@/hooks/use-platform";
 import { fmtCompact, fmtDate, fmtNum, LIFT_LABEL, LIFT_VAR } from "@/lib/pl";
 
@@ -22,8 +22,6 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
   if (isError || !data) return <ErrorState message={errMessage(error)} onRetry={() => refetch()} />;
 
   const u = data.unit;
-  if (data.completedSessions === 0 && !data.trend.length)
-    return <EmptyState title="No sessions or true maxes in this window" body="Log a true 1RM to start your max history, or complete a workout to track training volume. Drafts and prescriptions are not counted." />;
 
   const main = ["squat", "bench", "deadlift"];
   const records = [...data.records].sort((a, b) => main.indexOf(a.lift) - main.indexOf(b.lift));
@@ -59,21 +57,7 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
         ))}
       </div>
 
-      <Panel title={`1RM trend — actual / RPE 9 estimates (${u})`}>
-        {!data.trend.some(point => point.squat !== null || point.bench !== null || point.deadlift !== null) && <p className="mb-3 text-sm text-muted-foreground">No qualifying maxes in this period. Log a tested single at RPE 10 or a set of 1–10 reps at RPE 9.</p>}
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.trend} margin={{ left: -8, right: 8, top: 8 }} maxBarSize={40}>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} />
-              <XAxis dataKey="date" tickFormatter={(d: string) => fmtDate(d)} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis domain={[0,maxTrendCeiling(data.trend)]} allowDataOverflow tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip contentStyle={tip} labelFormatter={(d) => fmtDate(String(d), { month: "long", day: "numeric", year: "numeric" })} formatter={(v: number, n: string) => [`${fmtNum(v, 1)} ${u}`, `${LIFT_LABEL[n] ?? n} e1RM`]} />
-              {main.map((l) => <Bar key={l} dataKey={l} fill={LIFT_VAR[l]} radius={[3,3,0,0]} />)}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-2 flex gap-4">{main.map((l) => <span key={l} className="flex items-center gap-1.5 font-num text-[11px]"><span className="h-2 w-4 rounded-sm" style={{ background: LIFT_VAR[l] }} />{LIFT_LABEL[l]}</span>)}</div>
-      </Panel>
+      <MaxTrendChart athleteId={athleteId} />
 
       <Panel title={`Volume per session date (${u})`}>
         <div className="h-56">

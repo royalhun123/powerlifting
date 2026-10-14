@@ -319,7 +319,7 @@ paths:
       operationId: getAnalytics
       parameters:
         - { name: athleteId, in: query, schema: { type: string } }
-        - { name: days, in: query, schema: { type: integer, enum: [28, 90, 365], default: 90 } }
+        - { name: days, in: query, schema: { type: integer, enum: [0, 30, 90, 180], default: 0 } }
       responses:
         "200":
           description: Completed sets only; all weights converted to viewer unit
