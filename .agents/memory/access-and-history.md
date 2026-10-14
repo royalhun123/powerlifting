@@ -9,6 +9,12 @@ The user chose private sign-in links instead of external-provider or username-on
 
 **How to apply:** Treat links as bearer credentials; hash stored tokens, allow revocation of links and sessions, and keep existing user IDs when migrating history. Do not replace or move the live database without confirming the backup and transfer.
 
+The Vercel migration must also move data hosting off Replit.
+
+**Why:** The user needs the app to remain available after access to this Replit account ends.
+
+**How to apply:** Treat connecting Vercel to the Replit production database as temporary, not the final solution. Back up production data and verify an independent PostgreSQL destination and account access before retiring the source.
+
 Do not populate a form field with a private key taken from a sign-in URL fragment.
 
 **Why:** Browser automation can expose the value of even a masked password input in its accessibility output. This was observed with a subsequently revoked test-only link.
