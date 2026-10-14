@@ -1,1 +1,2 @@
+- [Access and history](access-and-history.md) — invite-only email access goal; preserve unknown measurement times; composite-key migration ordering.
 - [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.

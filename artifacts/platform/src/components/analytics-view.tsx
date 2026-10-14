@@ -21,8 +21,8 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
   if (isError || !data) return <ErrorState message={errMessage(error)} onRetry={() => refetch()} />;
 
   const u = data.unit;
-  if (data.completedSessions === 0)
-    return <EmptyState title="No completed sessions in this window" body="Analytics only count sessions marked completed, and only sets checked as done. Drafts and prescriptions are never counted." />;
+  if (data.completedSessions === 0 && !data.trend.length)
+    return <EmptyState title="No sessions or true maxes in this window" body="Log a true 1RM to start your max history, or complete a workout to track training volume. Drafts and prescriptions are not counted." />;
 
   const main = ["squat", "bench", "deadlift"];
   const records = [...data.records].sort((a, b) => main.indexOf(a.lift) - main.indexOf(b.lift));
@@ -89,7 +89,7 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
       </Panel>
 
       <div className="grid gap-3 rounded-md border border-dashed p-4 text-sm text-muted-foreground md:grid-cols-3">
-        <div><b className="text-foreground">1RM trend.</b> Actual maxes are logged singles at RPE 10. Estimates use only RPE 9 sets of 1–10 reps: weight × (1 + (reps + 1) / 30), allowing one rep in reserve. Lower-effort sets and blank RPE do not affect this graph. Estimates are not tested maxes.</div>
+        <div><b className="text-foreground">1RM trend.</b> Actual maxes come from your separate true-1RM log or workout singles at RPE 10. Estimates use only RPE 9 sets of 1–10 reps: weight × (1 + (reps + 1) / 30), allowing one rep in reserve. Lower-effort sets and blank RPE do not generate estimates. Separate max entries do not add workout volume or change programming reference maxes.</div>
         <div><b className="text-foreground">Actual vs estimated.</b> Best actual is the heaviest weight you completed. Estimated max projects what that set implies for one rep.</div>
         <div><b className="text-foreground">External-load volume.</b> Sum of weight × reps on completed sets. Bodyweight is excluded, so a 0-weight set adds nothing. Values shown in {u}.</div>
       </div>
