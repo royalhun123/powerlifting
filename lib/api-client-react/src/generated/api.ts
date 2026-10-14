@@ -19,12 +19,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccessLink,
+  AccessLinkInput,
+  AccessLinkRedemption,
   Analytics,
   Assignment,
   AssignmentArchiveInput,
   AssignmentInput,
   AuthUserEnvelope,
   Bodyweight,
+  CreatedAccessLink,
   FeedbackInput,
   GetAnalyticsParams,
   HealthStatus,
@@ -33,6 +37,8 @@ import type {
   InvitationInput,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  PrivateAuthSuccess,
+  PrivateBootstrapInput,
   Profile,
   ProfileInput,
   Program,
@@ -72,6 +78,391 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListAccessLinksUrl = () => {
+
+
+
+
+  return `/api/access-links`
+}
+
+export const listAccessLinks = async ( options?: Parameters<typeof customFetch>[1]): Promise<AccessLink[]> => {
+
+  return customFetch<AccessLink[]>(getListAccessLinksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAccessLinksQueryKey = () => {
+    return [
+    `/api/access-links`
+    ] as const;
+    }
+
+
+export const getListAccessLinksQueryOptions = <TData = Awaited<ReturnType<typeof listAccessLinks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAccessLinks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAccessLinksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAccessLinks>>> = ({ signal }) => listAccessLinks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAccessLinks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAccessLinksQueryResult = NonNullable<Awaited<ReturnType<typeof listAccessLinks>>>
+export type ListAccessLinksQueryError = ErrorType<unknown>
+
+
+
+export function useListAccessLinks<TData = Awaited<ReturnType<typeof listAccessLinks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAccessLinks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAccessLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAccessLinkUrl = () => {
+
+
+
+
+  return `/api/access-links`
+}
+
+export const createAccessLink = async (accessLinkInput: AccessLinkInput, options?: Parameters<typeof customFetch>[1]): Promise<CreatedAccessLink> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CreatedAccessLink>(getCreateAccessLinkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accessLinkInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAccessLinkMutationKey = () => ['createAccessLink'] as const;
+
+export const getCreateAccessLinkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccessLink>>, TError,CreateAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAccessLink>>, TError,CreateAccessLinkMutationVariables, TContext> => {
+
+const mutationKey = getCreateAccessLinkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAccessLink>>, CreateAccessLinkMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAccessLink(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAccessLinkMutationResult = NonNullable<Awaited<ReturnType<typeof createAccessLink>>>
+    export type CreateAccessLinkMutationBody = BodyType<AccessLinkInput>
+    export type CreateAccessLinkMutationError = ErrorType<unknown>
+    export type CreateAccessLinkMutationVariables = {data: BodyType<AccessLinkInput>}
+
+    export const useCreateAccessLink = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccessLink>>, TError,CreateAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAccessLink>>,
+        TError,
+        CreateAccessLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAccessLinkMutationOptions(options));
+    }
+
+export const getRevokeAccessLinkUrl = (id: string,) => {
+
+
+
+
+  return `/api/access-links/${id}`
+}
+
+export const revokeAccessLink = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivateAuthSuccess> => {
+
+  return customFetch<PrivateAuthSuccess>(getRevokeAccessLinkUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevokeAccessLinkMutationKey = () => ['revokeAccessLink'] as const;
+
+export const getRevokeAccessLinkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeAccessLink>>, TError,RevokeAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeAccessLink>>, TError,RevokeAccessLinkMutationVariables, TContext> => {
+
+const mutationKey = getRevokeAccessLinkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeAccessLink>>, RevokeAccessLinkMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  revokeAccessLink(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeAccessLinkMutationResult = NonNullable<Awaited<ReturnType<typeof revokeAccessLink>>>
+
+    export type RevokeAccessLinkMutationError = ErrorType<unknown>
+    export type RevokeAccessLinkMutationVariables = {id: string}
+
+    export const useRevokeAccessLink = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeAccessLink>>, TError,RevokeAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeAccessLink>>,
+        TError,
+        RevokeAccessLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevokeAccessLinkMutationOptions(options));
+    }
+
+export const getRedeemAccessLinkUrl = () => {
+
+
+
+
+  return `/api/auth/private-link`
+}
+
+export const redeemAccessLink = async (accessLinkRedemption: AccessLinkRedemption, options?: Parameters<typeof customFetch>[1]): Promise<PrivateAuthSuccess> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivateAuthSuccess>(getRedeemAccessLinkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accessLinkRedemption)
+  }
+);}
+
+
+
+
+
+export const getRedeemAccessLinkMutationKey = () => ['redeemAccessLink'] as const;
+
+export const getRedeemAccessLinkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof redeemAccessLink>>, TError,RedeemAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof redeemAccessLink>>, TError,RedeemAccessLinkMutationVariables, TContext> => {
+
+const mutationKey = getRedeemAccessLinkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof redeemAccessLink>>, RedeemAccessLinkMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  redeemAccessLink(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RedeemAccessLinkMutationResult = NonNullable<Awaited<ReturnType<typeof redeemAccessLink>>>
+    export type RedeemAccessLinkMutationBody = BodyType<AccessLinkRedemption>
+    export type RedeemAccessLinkMutationError = ErrorType<unknown>
+    export type RedeemAccessLinkMutationVariables = {data: BodyType<AccessLinkRedemption>}
+
+    export const useRedeemAccessLink = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof redeemAccessLink>>, TError,RedeemAccessLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof redeemAccessLink>>,
+        TError,
+        RedeemAccessLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRedeemAccessLinkMutationOptions(options));
+    }
+
+export const getBootstrapPrivateLoginUrl = () => {
+
+
+
+
+  return `/api/auth/bootstrap`
+}
+
+export const bootstrapPrivateLogin = async (privateBootstrapInput: PrivateBootstrapInput, options?: Parameters<typeof customFetch>[1]): Promise<PrivateAuthSuccess> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivateAuthSuccess>(getBootstrapPrivateLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privateBootstrapInput)
+  }
+);}
+
+
+
+
+
+export const getBootstrapPrivateLoginMutationKey = () => ['bootstrapPrivateLogin'] as const;
+
+export const getBootstrapPrivateLoginMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bootstrapPrivateLogin>>, TError,BootstrapPrivateLoginMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bootstrapPrivateLogin>>, TError,BootstrapPrivateLoginMutationVariables, TContext> => {
+
+const mutationKey = getBootstrapPrivateLoginMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bootstrapPrivateLogin>>, BootstrapPrivateLoginMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  bootstrapPrivateLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BootstrapPrivateLoginMutationResult = NonNullable<Awaited<ReturnType<typeof bootstrapPrivateLogin>>>
+    export type BootstrapPrivateLoginMutationBody = BodyType<PrivateBootstrapInput>
+    export type BootstrapPrivateLoginMutationError = ErrorType<unknown>
+    export type BootstrapPrivateLoginMutationVariables = {data: BodyType<PrivateBootstrapInput>}
+
+    export const useBootstrapPrivateLogin = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bootstrapPrivateLogin>>, TError,BootstrapPrivateLoginMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bootstrapPrivateLogin>>,
+        TError,
+        BootstrapPrivateLoginMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBootstrapPrivateLoginMutationOptions(options));
+    }
 
 export const getGetTrueMaxesUrl = () => {
 

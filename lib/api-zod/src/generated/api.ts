@@ -7,6 +7,71 @@
 import * as zod from 'zod';
 
 
+export const ListAccessLinksResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "userId": zod.string(),
+  "expiresAt": zod.string()
+})
+export const ListAccessLinksResponse = zod.array(ListAccessLinksResponseItem)
+
+
+export const createAccessLinkBodyUserIdMax = 200;
+
+export const createAccessLinkBodyNameMax = 100;
+
+
+
+export const CreateAccessLinkBody = zod.object({
+  "userId": zod.string().min(1).max(createAccessLinkBodyUserIdMax).optional(),
+  "name": zod.string().min(1).max(createAccessLinkBodyNameMax).optional()
+})
+
+export const CreateAccessLinkResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "userId": zod.string(),
+  "expiresAt": zod.string()
+}).and(zod.object({
+  "path": zod.string()
+}))
+
+
+export const RevokeAccessLinkParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RevokeAccessLinkResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+export const redeemAccessLinkBodyTokenRegExp = new RegExp('^[A-Za-z0-9_-]{43}$');
+
+
+export const RedeemAccessLinkBody = zod.object({
+  "token": zod.string().regex(redeemAccessLinkBodyTokenRegExp)
+})
+
+export const RedeemAccessLinkResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+export const bootstrapPrivateLoginBodySetupKeyMin = 32;
+export const bootstrapPrivateLoginBodySetupKeyMax = 512;
+
+
+
+export const BootstrapPrivateLoginBody = zod.object({
+  "setupKey": zod.string().min(bootstrapPrivateLoginBodySetupKeyMin).max(bootstrapPrivateLoginBodySetupKeyMax)
+})
+
+export const BootstrapPrivateLoginResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
 export const getTrueMaxesResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const getTrueMaxesResponseOneWeightExclusiveMin = 0;
 export const getTrueMaxesResponseOneWeightMax = 2000;
@@ -270,6 +335,7 @@ export const getWorkspaceResponseSessionsItemOneSetsMax = 300;
 
 
 export const GetWorkspaceResponse = zod.object({
+  "privateLogin": zod.boolean().optional(),
   "demo": zod.boolean(),
   "isCoach": zod.boolean(),
   "profile": zod.object({

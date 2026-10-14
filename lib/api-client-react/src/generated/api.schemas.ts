@@ -4,6 +4,47 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export interface AccessLinkInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  userId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+}
+
+export interface AccessLink {
+  id: string;
+  name: string;
+  userId: string;
+  expiresAt: string;
+}
+
+export type CreatedAccessLink = AccessLink & {
+  path: string;
+};
+
+export interface AccessLinkRedemption {
+  /** @pattern ^[A-Za-z0-9_-]{43}$ */
+  token: string;
+}
+
+export interface PrivateBootstrapInput {
+  /**
+     * @minLength 32
+     * @maxLength 512
+     */
+  setupKey: string;
+}
+
+export interface PrivateAuthSuccess {
+  success: boolean;
+}
+
 export type TrueMaxInputLift = typeof TrueMaxInputLift[keyof typeof TrueMaxInputLift];
 
 
@@ -413,6 +454,7 @@ export interface FeedbackInput {
 }
 
 export interface Workspace {
+  privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;
   profile: Profile;

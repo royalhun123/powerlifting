@@ -4,12 +4,15 @@ import { db, sessionsTable } from '@workspace/db';
 import { eq } from 'drizzle-orm';
 import { type Request, type Response } from 'express';
 import * as client from 'openid-client';
+import { PRIVATE_SESSION_TTL } from "./private-access";
 
 export const ISSUER_URL = process.env.ISSUER_URL ?? 'https://replit.com/oidc';
 export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
 export interface SessionData {
+  provider?: "private-link";
+  privateLinkId?: string;
   user: AuthUser;
   access_token: string;
   refresh_token?: string;
@@ -33,7 +36,7 @@ export async function createSession(data: SessionData): Promise<string> {
   await db.insert(sessionsTable).values({
     sid,
     sess: data as unknown as Record<string, unknown>,
-    expire: new Date(Date.now() + SESSION_TTL),
+    expire: new Date(Date.now() + (data.provider==="private-link" ? PRIVATE_SESSION_TTL : SESSION_TTL)),
   });
   return sid;
 }

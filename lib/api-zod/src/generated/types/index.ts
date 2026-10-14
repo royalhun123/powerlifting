@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './accessLink';
+export * from './accessLinkInput';
+export * from './accessLinkRedemption';
 export * from './analytics';
 export * from './analyticsUnit';
 export * from './assignment';
@@ -17,6 +20,7 @@ export * from './authUserEnvelope';
 export * from './bodyweight';
 export * from './bodyweightTimeOfDay';
 export * from './bodyweightUnit';
+export * from './createdAccessLink';
 export * from './exercise';
 export * from './exerciseLift';
 export * from './exerciseSourceUnit';
@@ -33,6 +37,8 @@ export * from './loggedSet';
 export * from './loggedSetLift';
 export * from './mobileTokenExchangeRequest';
 export * from './mobileTokenExchangeSuccess';
+export * from './privateAuthSuccess';
+export * from './privateBootstrapInput';
 export * from './profile';
 export * from './profileInput';
 export * from './profileInputUnit';

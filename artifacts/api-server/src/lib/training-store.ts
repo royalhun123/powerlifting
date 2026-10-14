@@ -7,6 +7,7 @@ import type { Profile, Workspace } from "./training-types";
 import { convert, round } from "./training-types";
 import { normalizeProgram } from "./program-defaults";
 import { isCoach } from "./coach-access";
+import { privateLoginEnabled, PRIVATE_PREFIX } from "./private-access";
 
 export async function ensureProfile(id: string, name: string): Promise<Profile> {
   const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.userId,id));
@@ -57,10 +58,10 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     const coaches = await db.select().from(profilesTable).where(inArray(profilesTable.userId,coachLinks.map(c=>c.coachId)));
     profile.coachName=coaches.map(r=>UpdateProfileResponse.parse(r.data).name).join(", ");
   }
-  return {demo:false,isCoach:coach,profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
+  return {demo:false,isCoach:coach,privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
       return {...assignment,program:normalizeProgram(assignment.program)};
     }).filter(a=>!a.removed),
-    sessions,invitations:invitationRows.map(r=>({id:r.id,name:r.name,path:r.acceptedBy ? "" : `/join?token=${r.token}`,expiresAt:r.expiresAt.toISOString(),status:r.acceptedBy ? "accepted" as const : r.expiresAt.getTime()<Date.now() ? "expired" as const : "pending" as const}))};
+    sessions,invitations:(invitationRows as (typeof invitationsTable.$inferSelect)[]).filter(r=>!r.token.startsWith(PRIVATE_PREFIX)).map(r=>({id:r.id,name:r.name,path:r.acceptedBy ? "" : `/join?token=${r.token}`,expiresAt:r.expiresAt.toISOString(),status:r.acceptedBy ? "accepted" as const : r.expiresAt.getTime()<Date.now() ? "expired" as const : "pending" as const}))};
 }

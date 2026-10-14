@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   "/clients": "Clients",
   "/settings": "Settings",
   "/join": "Join Team",
+  "/sign-in": "Private sign-in",
 };
 
 /** Resolve an in-app parent route. Never uses history.back. */

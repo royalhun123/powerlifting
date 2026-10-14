@@ -1,6 +1,10 @@
 import type { AuthUser } from '@workspace/api-zod';
 import { type NextFunction, type Request, type Response } from 'express';
 import * as oidc from 'openid-client';
+import { db, invitationsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { privateLoginEnabled, PRIVATE_PREFIX } from "../lib/private-access";
+import { isCoach } from "../lib/coach-access";
 
 import {
   clearSession,
@@ -71,6 +75,17 @@ export async function authMiddleware(
     await clearSession(res, sid);
     next();
     return;
+  }
+  if(session.provider==="private-link") {
+    const [link]=session.privateLinkId ? await db.select().from(invitationsTable).where(eq(invitationsTable.id,session.privateLinkId)) : [];
+    if(!link || !link.token.startsWith(PRIVATE_PREFIX) || link.acceptedBy!==session.user.id || link.expiresAt.getTime()<=Date.now() || !isCoach(link.coachId)) {
+      await clearSession(res,sid);next();return;
+    }
+    req.user=session.user;
+    next();return;
+  }
+  if(privateLoginEnabled()) {
+    await clearSession(res,sid);next();return;
   }
 
   const refreshed = await refreshIfExpired(sid, session);

@@ -12,6 +12,7 @@ import type { Program } from './program';
 import type { Session } from './session';
 
 export interface Workspace {
+  privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;
   profile: Profile;

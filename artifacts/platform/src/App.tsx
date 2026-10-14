@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Shell } from '@/components/shell';
 import NotFound from '@/pages/not-found';
 import Dashboard from '@/pages/dashboard';
+import SignIn from '@/pages/sign-in';
 import Programs from '@/pages/programs';
 import ProgramDetail from '@/pages/program-detail';
 import Workouts from '@/pages/workouts';
@@ -50,6 +51,7 @@ function Router() {
       <RoutedErrorBoundary>
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/sign-in" component={SignIn} />
           <Route path="/my-programs" component={MyPrograms} />
           <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
           <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>

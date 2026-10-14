@@ -3,11 +3,17 @@ name: Access and history expectations
 description: Client access goal and rules for historical measurements.
 ---
 
-The user wants clients to access training using any email provider after receiving an invitation, without needing a Replit account.
+The user chose private sign-in links instead of external-provider or username-only login for the Vercel migration. Clients should not need a Replit account or a password.
 
-**Why:** The user explicitly chose invite-only email sign-in.
+**Why:** Auth0 was not allowed for them; they accepted private links after being informed that username-only access permits impersonation.
 
-**How to apply:** Preserve this as the access goal. Do not claim it is implemented merely because coaching invitations exist; verify the actual authentication provider and account-preservation path first.
+**How to apply:** Treat links as bearer credentials; hash stored tokens, allow revocation of links and sessions, and keep existing user IDs when migrating history. Do not replace or move the live database without confirming the backup and transfer.
+
+Do not populate a form field with a private key taken from a sign-in URL fragment.
+
+**Why:** Browser automation can expose the value of even a masked password input in its accessibility output. This was observed with a subsequently revoked test-only link.
+
+**How to apply:** Strip the fragment immediately, retain it only in transient component state, and show a confirmation button rather than a populated input. Never screenshot or log a real newly issued link.
 
 Only the app owner is the coach and may see All programs and Clients. Everyone, including the owner, gets My programs containing only their personal assignments.
 

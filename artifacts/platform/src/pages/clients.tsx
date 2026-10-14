@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AssignmentOverview } from "@/components/assignment-overview";
+import { PrivateAccessPanel } from "@/components/private-access-panel";
 import { CalendarPlus, Copy, Link2, MessageSquare, Send, UserPlus, X } from "lucide-react";
 import { useAssignProgram, useCreateInvitation, useRevokeInvitation, useUpdateFeedback, type GetAnalyticsDays, type Invitation, type Session } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -139,10 +140,11 @@ export default function Clients() {
     <div>
       <PageHeader kicker="Coaching" title="Clients" />
       <AssignmentOverview />
+      <PrivateAccessPanel />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-5">
-          <Panel title="Invite athlete">
+          {!data.privateLogin && <Panel title="Legacy Replit invitations">
             <div className="flex gap-2">
               <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Athlete name" maxLength={100} onKeyDown={(e) => e.key === "Enter" && sendInvite()} data-testid="input-invite-name" />
               <Button onClick={sendInvite} disabled={create.isPending || !inviteName.trim()} data-testid="button-create-invite"><UserPlus className="h-4 w-4" /></Button>
@@ -179,7 +181,7 @@ export default function Clients() {
                 ))}
               </ul>
             )}
-          </Panel>
+          </Panel>}
 
           <Panel title={`Athletes (${data.athletes.length})`}>
             {data.athletes.length === 0 ? (

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { convertLoad, daysUntil, fmtNum, LIFT_VAR } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 import { LatestBodyweight } from "@/components/bodyweight-tracking";
+import { PrivateAccessPanel } from "@/components/private-access-panel";
 
 export default function Settings() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
@@ -61,6 +62,7 @@ export default function Settings() {
       {!data.demo && form.squatMax + form.benchMax + form.deadliftMax === 0 && <div className="mb-5 rounded-md border border-primary/30 bg-primary/5 p-4 text-sm">Enter your reference maxes so percentage work (e.g. 85%) turns into real target loads.</div>}
       <div className="space-y-5">
         <LatestBodyweight unit={form.unit} />
+        <PrivateAccessPanel />
         <Panel title="Lifter">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">

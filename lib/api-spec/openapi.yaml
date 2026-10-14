@@ -5,6 +5,67 @@ info:
 servers:
   - url: /api
 paths:
+  /access-links:
+    get:
+      operationId: listAccessLinks
+      responses:
+        "200":
+          description: Coach-managed private sign-in links; raw tokens are never listed
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/AccessLink" } }
+    post:
+      operationId: createAccessLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccessLinkInput" }
+      responses:
+        "200":
+          description: New link, shown once
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatedAccessLink" }
+  /access-links/{id}:
+    delete:
+      operationId: revokeAccessLink
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Link and its remembered sessions revoked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivateAuthSuccess" }
+  /auth/private-link:
+    post:
+      operationId: redeemAccessLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccessLinkRedemption" }
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivateAuthSuccess" }
+  /auth/bootstrap:
+    post:
+      operationId: bootstrapPrivateLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivateBootstrapInput" }
+      responses:
+        "200":
+          description: Coach recovery session created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivateAuthSuccess" }
   /maxes:
     get:
       operationId: getTrueMaxes
@@ -328,6 +389,41 @@ paths:
               schema: { $ref: "#/components/schemas/Analytics" }
 components:
   schemas:
+    AccessLinkInput:
+      type: object
+      properties:
+        userId: { type: string, minLength: 1, maxLength: 200 }
+        name: { type: string, minLength: 1, maxLength: 100 }
+    AccessLink:
+      type: object
+      required: [id, name, userId, expiresAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        userId: { type: string }
+        expiresAt: { type: string }
+    CreatedAccessLink:
+      allOf:
+        - { $ref: "#/components/schemas/AccessLink" }
+        - type: object
+          required: [path]
+          properties:
+            path: { type: string }
+    AccessLinkRedemption:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, pattern: "^[A-Za-z0-9_-]{43}$" }
+    PrivateBootstrapInput:
+      type: object
+      required: [setupKey]
+      properties:
+        setupKey: { type: string, minLength: 32, maxLength: 512 }
+    PrivateAuthSuccess:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
     TrueMaxInput:
       type: object
       required: [date, lift, weight, unit]
@@ -575,6 +671,7 @@ components:
       type: object
       required: [demo, isCoach, profile, programs, athletes, assignments, sessions, invitations]
       properties:
+        privateLogin: { type: boolean }
         demo: { type: boolean }
         isCoach: { type: boolean }
         profile: { $ref: "#/components/schemas/Profile" }
