@@ -1,45 +1,33 @@
-# [Project name]
+# Platform — Powerlifting Coach
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A responsive coaching and workout tracker built around the user's supplied peaking workbook.
 
-## Run & Operate
+## Run & operate
+- API: managed workflow `artifacts/api-server: API Server`
+- Web: managed workflow `artifacts/platform: web`, preview `/`
+- `pnpm run typecheck` — workspace typecheck
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate client hooks and validators after contract changes
+- `pnpm --filter @workspace/db run push` — development schema updates
+- Publish manages production schema changes; do not add startup DDL.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+## Structure
+- `lib/api-spec/openapi.yaml`: API contract
+- `lib/db/src/schema/`: PostgreSQL/Drizzle tables and auth sessions
+- `artifacts/api-server/src/routes/training.ts`: authorized training operations
+- `artifacts/api-server/src/lib/analytics.ts`: completed-set aggregates and Epley estimates
+- `artifacts/api-server/src/data/imported-programs.json`: extracted prescription templates
+- `scripts/src/import-workbook.py`: source workbook extraction, including review warnings
+- `artifacts/platform/src/pages/`: dashboard, workouts, programs, clients, progress, settings, invitations
+- `lib/replit-auth-web`: OIDC browser login/logout
 
-## Stack
+## Product and decisions
+- Users train themselves and may coach explicitly linked athletes; there is no globally privileged coach role.
+- Client invitations are single-use, seven-day shareable links. The app does not send email. Acceptance explicitly shares workout history with the coach.
+- Every account receives editable workbook-derived template copies; completed history always starts empty. Assignments snapshot programs so later template edits do not rewrite prescribed work or historical logs.
+- Anonymous preview data is synthetic and read-only, never actual client records.
+- Workout/session units are stored with each log; analytics convert to viewer units. Volume means completed external load × reps, excluding bodyweight.
+- Estimated maxes use Epley only on competition-classified sets of 1–10 reps. Actual weight records and estimates are distinct.
+- Source weight and notes cells are references, not evidence that sets were completed. Review flags identify uncertain Excel date conversions. Verify reference maxes/units before using percentage prescriptions.
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
-
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+## Verification limitations
+Initial build was typechecked and checked with public API requests and a preview screenshot. Signed-in browser flows require an actual sign-in and were not browser-verified.

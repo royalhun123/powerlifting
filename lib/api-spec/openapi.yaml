@@ -1,36 +1,460 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
 servers:
   - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
 paths:
+  /login:
+    get:
+      operationId: beginBrowserLogin
+      responses:
+        "302": { description: Redirect to secure sign-in }
+  /callback:
+    get:
+      operationId: handleBrowserLoginCallback
+      responses:
+        "302": { description: Complete sign-in }
+  /logout:
+    get:
+      operationId: logoutBrowserSession
+      responses:
+        "302": { description: Sign out }
+  /mobile-auth/logout:
+    post:
+      operationId: logoutMobileSession
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      responses:
+        "200":
+          description: Auth state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthUserEnvelope" }
+  /mobile-auth/token-exchange:
+    post:
+      operationId: exchangeMobileAuthorizationCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MobileTokenExchangeRequest" }
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MobileTokenExchangeSuccess" }
+  /workspace:
+    get:
+      operationId: getWorkspace
+      responses:
+        "200":
+          description: Own workspace or explicitly labeled read-only demo for visitors
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Workspace" }
+  /profile:
+    patch:
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+  /programs:
+    post:
+      operationId: saveProgram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProgramInput" }
+      responses:
+        "200":
+          description: Created or updated own program
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Program" }
+  /programs/{id}:
+    delete:
+      operationId: deleteProgram
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted (existing assignments retain snapshots)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
+  /invitations:
+    post:
+      operationId: createInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvitationInput" }
+      responses:
+        "200":
+          description: Shareable invite path, not an email delivery
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invitation" }
+  /invitations/{id}:
+    delete:
+      operationId: revokeInvitation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Revoked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
+  /join:
+    post:
+      operationId: acceptInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvitationAccept" }
+      responses:
+        "200":
+          description: Joined coach
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
+  /assignments:
+    post:
+      operationId: assignProgram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssignmentInput" }
+      responses:
+        "200":
+          description: Assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Assignment" }
+  /sessions:
+    post:
+      operationId: saveSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SessionInput" }
+      responses:
+        "200":
+          description: Saved own workout
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+  /sessions/{id}:
+    delete:
+      operationId: deleteSession
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted own workout
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
+  /sessions/{id}/feedback:
+    patch:
+      operationId: updateFeedback
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeedbackInput" }
+      responses:
+        "200":
+          description: Coach feedback saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+  /analytics:
+    get:
+      operationId: getAnalytics
+      parameters:
+        - { name: athleteId, in: query, schema: { type: string } }
+        - { name: days, in: query, schema: { type: integer, enum: [28, 90, 365], default: 90 } }
+      responses:
+        "200":
+          description: Completed sets only; all weights converted to viewer unit
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Analytics" }
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+    Success:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - { $ref: "#/components/schemas/AuthUser" }
+            - { type: "null" }
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id: { type: string }
+        email: { type: [string, "null"] }
+        firstName: { type: [string, "null"] }
+        lastName: { type: [string, "null"] }
+        profileImageUrl: { type: [string, "null"] }
+    MobileTokenExchangeRequest:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code: { type: string, minLength: 1 }
+        code_verifier: { type: string, minLength: 1 }
+        redirect_uri: { type: string, minLength: 1 }
+        state: { type: string, minLength: 1 }
+        nonce: { type: string }
+    MobileTokenExchangeSuccess:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    ProfileInput:
+      type: object
+      required: [name, unit, meetDate, squatMax, benchMax, deadliftMax]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        unit: { type: string, enum: [lb, kg] }
+        meetDate: { type: string, description: "YYYY-MM-DD or empty" }
+        squatMax: { type: number, minimum: 0, maximum: 2000 }
+        benchMax: { type: number, minimum: 0, maximum: 2000 }
+        deadliftMax: { type: number, minimum: 0, maximum: 2000 }
+    Profile:
+      allOf:
+        - { $ref: "#/components/schemas/ProfileInput" }
+        - type: object
+          required: [id, coachName]
+          properties:
+            id: { type: string }
+            coachName: { type: string }
+    Exercise:
+      type: object
+      required: [id, name, sets, reps, effort, weight, notes, review, lift]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        sets: { type: string, maxLength: 100 }
+        reps: { type: string, maxLength: 100 }
+        effort: { type: string, maxLength: 200 }
+        weight: { type: string, maxLength: 300 }
+        notes: { type: string, maxLength: 2000 }
+        review: { type: boolean }
+        lift: { type: string, enum: [squat, bench, deadlift, accessory] }
+    Workout:
+      type: object
+      required: [id, name, week, day, exercises]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1 }
+        week: { type: integer, minimum: 1, maximum: 52 }
+        day: { type: integer, minimum: 1, maximum: 7 }
+        exercises:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Exercise" }
+    ProgramInput:
+      type: object
+      required: [name, description, phase, weeks, archived, workouts]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, maxLength: 2000 }
+        phase: { type: string, enum: [volume, strength, deload, peak] }
+        weeks: { type: integer, minimum: 1, maximum: 52 }
+        archived: { type: boolean }
+        workouts:
+          type: array
+          maxItems: 364
+          items: { $ref: "#/components/schemas/Workout" }
+    Program:
+      allOf:
+        - { $ref: "#/components/schemas/ProgramInput" }
+        - type: object
+          required: [id, source, reviewCount]
+          properties:
+            id: { type: string }
+            source: { type: string }
+            reviewCount: { type: integer }
+    Athlete:
+      type: object
+      required: [id, name, unit, sessions, lastActive, totalVolume]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        unit: { type: string, enum: [lb, kg] }
+        sessions: { type: integer }
+        lastActive: { type: string }
+        totalVolume: { type: number }
+    InvitationInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+    Invitation:
+      type: object
+      required: [id, name, path, expiresAt, status]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        path: { type: string }
+        expiresAt: { type: string }
+        status: { type: string, enum: [pending, accepted, expired] }
+    InvitationAccept:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 16 }
+    AssignmentInput:
+      type: object
+      required: [programId, athleteId, startDate]
+      properties:
+        programId: { type: string }
+        athleteId: { type: string }
+        startDate: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+    Assignment:
+      type: object
+      required: [id, athleteId, athleteName, program, startDate, coachName]
+      properties:
+        id: { type: string }
+        athleteId: { type: string }
+        athleteName: { type: string }
+        program: { $ref: "#/components/schemas/Program" }
+        startDate: { type: string }
+        coachName: { type: string }
+    LoggedSet:
+      type: object
+      required: [exerciseId, exerciseName, lift, setNumber, weight, reps, rpe, completed, notes]
+      properties:
+        exerciseId: { type: string }
+        exerciseName: { type: string, minLength: 1, maxLength: 200 }
+        lift: { type: string, enum: [squat, bench, deadlift, accessory] }
+        setNumber: { type: integer, minimum: 1, maximum: 100 }
+        weight: { type: number, minimum: 0, maximum: 2000 }
+        reps: { type: integer, minimum: 0, maximum: 1000 }
+        rpe: { type: number, minimum: 0, maximum: 10 }
+        completed: { type: boolean }
+        notes: { type: string, maxLength: 2000 }
+    SessionInput:
+      type: object
+      required: [assignmentId, workoutId, name, date, unit, status, notes, sets]
+      properties:
+        id: { type: string }
+        assignmentId: { type: string }
+        workoutId: { type: string }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        date: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        unit: { type: string, enum: [lb, kg] }
+        status: { type: string, enum: [draft, completed] }
+        notes: { type: string, maxLength: 5000 }
+        sets:
+          type: array
+          maxItems: 300
+          items: { $ref: "#/components/schemas/LoggedSet" }
+    Session:
+      allOf:
+        - { $ref: "#/components/schemas/SessionInput" }
+        - type: object
+          required: [id, athleteId, athleteName, coachFeedback, volume, updatedAt]
+          properties:
+            id: { type: string }
+            athleteId: { type: string }
+            athleteName: { type: string }
+            coachFeedback: { type: string }
+            volume: { type: number }
+            updatedAt: { type: string }
+    FeedbackInput:
+      type: object
+      required: [feedback]
+      properties:
+        feedback: { type: string, maxLength: 5000 }
+    Workspace:
+      type: object
+      required: [demo, profile, programs, athletes, assignments, sessions, invitations]
+      properties:
+        demo: { type: boolean }
+        profile: { $ref: "#/components/schemas/Profile" }
+        programs: { type: array, items: { $ref: "#/components/schemas/Program" } }
+        athletes: { type: array, items: { $ref: "#/components/schemas/Athlete" } }
+        assignments: { type: array, items: { $ref: "#/components/schemas/Assignment" } }
+        sessions: { type: array, items: { $ref: "#/components/schemas/Session" } }
+        invitations: { type: array, items: { $ref: "#/components/schemas/Invitation" } }
+    TrendPoint:
+      type: object
+      required: [date, volume, squat, bench, deadlift, sessions]
+      properties:
+        date: { type: string }
+        volume: { type: number }
+        squat: { type: [number, "null"] }
+        bench: { type: [number, "null"] }
+        deadlift: { type: [number, "null"] }
+        sessions: { type: integer }
+    LiftRecord:
+      type: object
+      required: [lift, bestWeight, estimatedMax, totalVolume, sets, date]
+      properties:
+        lift: { type: string }
+        bestWeight: { type: number }
+        estimatedMax: { type: number }
+        totalVolume: { type: number }
+        sets: { type: integer }
+        date: { type: string }
+    Analytics:
+      type: object
+      required: [unit, completedSessions, totalVolume, totalSets, totalReps, records, trend]
+      properties:
+        unit: { type: string, enum: [lb, kg] }
+        completedSessions: { type: integer }
+        totalVolume: { type: number }
+        totalSets: { type: integer }
+        totalReps: { type: integer }
+        records: { type: array, items: { $ref: "#/components/schemas/LiftRecord" } }
+        trend: { type: array, items: { $ref: "#/components/schemas/TrendPoint" } }

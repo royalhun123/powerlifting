@@ -1,0 +1,1 @@
+- [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.
