@@ -5,6 +5,7 @@ import { SaveProgramResponse, UpdateProfileResponse, AssignProgramResponse, Save
 import imported from "../data/imported-programs.json";
 import type { Profile, Workspace } from "./training-types";
 import { convert, round } from "./training-types";
+import { normalizeProgram } from "./program-defaults";
 
 export async function ensureProfile(id: string, name: string): Promise<Profile> {
   const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.userId,id));
@@ -16,7 +17,7 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
     // Each account owns its own editable copies. Source cells are prescriptions,
     // never seeded as completed sessions or counted in progress.
     const templates = imported.map(raw => {
-      const program = SaveProgramResponse.parse({...raw,id:randomUUID()});
+      const program = normalizeProgram(SaveProgramResponse.parse({...raw,id:randomUUID()}));
       return {id:program.id,ownerId:id,data:program};
     });
     await tx.insert(programsTable).values(templates);
@@ -54,7 +55,10 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     const coaches = await db.select().from(profilesTable).where(inArray(profilesTable.userId,coachLinks.map(c=>c.coachId)));
     profile.coachName=coaches.map(r=>UpdateProfileResponse.parse(r.data).name).join(", ");
   }
-  return {demo:false,profile,programs:programRows.map(r=>SaveProgramResponse.parse(r.data)),athletes,
-    assignments:assignmentRows.map(r=>AssignProgramResponse.parse(r.data)),
+  return {demo:false,profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
+    assignments:assignmentRows.map(r=>{
+      const assignment=AssignProgramResponse.parse(r.data);
+      return {...assignment,program:normalizeProgram(assignment.program)};
+    }),
     sessions,invitations:invitationRows.map(r=>({id:r.id,name:r.name,path:r.acceptedBy ? "" : `/join?token=${r.token}`,expiresAt:r.expiresAt.toISOString(),status:r.acceptedBy ? "accepted" as const : r.expiresAt.getTime()<Date.now() ? "expired" as const : "pending" as const}))};
 }

@@ -88,6 +88,12 @@ export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemEffortM
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemWeightMax = 300;
 
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax = 2000;
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesMax = 50;
@@ -114,6 +120,12 @@ export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesI
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemEffortMax = 200;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemWeightMax = 300;
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
 
@@ -177,6 +189,8 @@ export const GetWorkspaceResponse = zod.object({
   "reps": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemRepsMax),
   "effort": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemEffortMax),
   "weight": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
@@ -218,6 +232,8 @@ export const GetWorkspaceResponse = zod.object({
   "reps": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemRepsMax),
   "effort": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemEffortMax),
   "weight": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
@@ -338,6 +354,12 @@ export const saveProgramBodyWorkoutsItemExercisesItemEffortMax = 200;
 
 export const saveProgramBodyWorkoutsItemExercisesItemWeightMax = 300;
 
+export const saveProgramBodyWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const saveProgramBodyWorkoutsItemExercisesItemSetWeightsMax = 100;
+
 export const saveProgramBodyWorkoutsItemExercisesItemNotesMax = 2000;
 
 export const saveProgramBodyWorkoutsItemExercisesMax = 50;
@@ -365,6 +387,8 @@ export const SaveProgramBody = zod.object({
   "reps": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemRepsMax),
   "effort": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemEffortMax),
   "weight": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(saveProgramBodyWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMin).max(saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(saveProgramBodyWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
@@ -393,6 +417,12 @@ export const saveProgramResponseOneWorkoutsItemExercisesItemEffortMax = 200;
 
 export const saveProgramResponseOneWorkoutsItemExercisesItemWeightMax = 300;
 
+export const saveProgramResponseOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
 export const saveProgramResponseOneWorkoutsItemExercisesItemNotesMax = 2000;
 
 export const saveProgramResponseOneWorkoutsItemExercisesMax = 50;
@@ -420,6 +450,8 @@ export const SaveProgramResponse = zod.object({
   "reps": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemRepsMax),
   "effort": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemEffortMax),
   "weight": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(saveProgramResponseOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMin).max(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
@@ -510,6 +542,12 @@ export const assignProgramResponseProgramOneWorkoutsItemExercisesItemEffortMax =
 
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemWeightMax = 300;
 
+export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
 
 export const assignProgramResponseProgramOneWorkoutsItemExercisesMax = 50;
@@ -541,6 +579,8 @@ export const AssignProgramResponse = zod.object({
   "reps": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemRepsMax),
   "effort": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemEffortMax),
   "weight": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(assignProgramResponseProgramOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])

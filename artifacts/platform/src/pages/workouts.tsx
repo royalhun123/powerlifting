@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { EmptyState, ErrorState, LiftTag, LoadingPage, PageHeader, Panel } from "@/components/common";
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
-import { buildSets, fmtDate, fmtNum, targetLoad, todayISO } from "@/lib/pl";
+import { buildSets, fmtDate, fmtNum, setTargetLoad, repRange, todayISO } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@workspace/api-client-react";
 
@@ -115,11 +115,7 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
 
       <div className="space-y-4">
         {workout.exercises.map((ex) => {
-          const profileTarget = targetLoad(ex, profile);
-          const t = profileTarget === null ? null : Math.round(
-            profileTarget * (state.unit === profile.unit ? 1 : state.unit === "kg" ? 1 / 2.2046226218 : 2.2046226218)
-            / (state.unit === "kg" ? 2.5 : 5),
-          ) * (state.unit === "kg" ? 2.5 : 5);
+          const range = repRange(ex.reps);
           const rows = state.sets.map((s, i) => ({ s, i })).filter(({ s }) => s.exerciseId === ex.id);
           return (
             <section key={ex.id} className="rise overflow-hidden rounded-md border border-card-border bg-card" data-testid={`log-exercise-${ex.id}`}>
@@ -129,22 +125,25 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                   <LiftTag lift={ex.lift} />
                 </div>
                 <div className="text-right font-num text-xs">
-                  <div className="text-sm">{ex.sets} × {ex.reps} <span className="text-primary">{ex.effort}</span></div>
-                  {t !== null && <div className="text-muted-foreground"><Target className="mr-1 inline h-3 w-3" />target {t} {state.unit}</div>}
-                  {ex.weight && <div className="text-muted-foreground">program ref: {ex.weight}</div>}
+                  <div className="text-sm">Sets: <strong>{ex.sets}</strong> · Target reps: <strong>{ex.reps}</strong></div>
+                  <div className="text-primary">Effort: {ex.effort || "—"}</div>
+                  {ex.weight && <div className="text-muted-foreground">Source weight: {ex.weight} lbs</div>}
                 </div>
                 {ex.notes && <p className="w-full text-xs text-muted-foreground">{ex.notes}</p>}
+                <p className="w-full text-xs text-muted-foreground">Each set has its own actual weight and reps. Increase or decrease the weight as needed.{range ? ` Aim for ${range.min}–${range.max} reps; log the number you actually complete.` : ` Rep prescription: ${ex.reps}. Log actual reps below.`}</p>
               </header>
               <div className="grid grid-cols-[2rem_1fr_1fr_1fr_3rem] gap-2 px-4 pt-2 font-num text-[10px] uppercase tracking-widest text-muted-foreground">
-                <span>#</span><span>{state.unit}</span><span>reps</span><span>rpe</span><span className="text-center">done</span>
+                <span>Set</span><span>Weight ({state.unit === "lb" ? "lbs" : "kg"})</span><span>Actual reps</span><span>RPE</span><span className="text-center">Done</span>
               </div>
               <div className="space-y-1.5 px-4 py-2">
-                {rows.map(({ s, i }, k) => (
+                {rows.map(({ s, i }, k) => {
+                  const t = setTargetLoad(ex, k, profile, state.unit);
+                  return (
                   <div key={i} className="group">
                     <div className={cn("grid grid-cols-[2rem_1fr_1fr_1fr_3rem] items-center gap-2 rounded-sm transition-colors", s.completed && "bg-[hsl(var(--accessory)/0.08)]")}>
                       <span className="font-display text-lg font-bold text-muted-foreground">{k + 1}</span>
-                      <Input inputMode="decimal" className="h-11 font-num text-base" placeholder={t !== null ? String(t) : "—"} value={s.weight ? String(s.weight) : ""} onChange={(e) => setAt(i, { weight: numOr0(e.target.value) })} data-testid={`input-set-weight-${i}`} />
-                      <Input inputMode="numeric" className="h-11 font-num text-base" value={s.reps ? String(s.reps) : ""} placeholder="0" onChange={(e) => setAt(i, { reps: Math.round(numOr0(e.target.value)) })} data-testid={`input-set-reps-${i}`} />
+                      <Input inputMode="decimal" aria-label={`${ex.name} set ${k + 1} actual weight in ${state.unit}`} className="h-11 font-num text-base" placeholder={t !== null ? String(t) : "—"} value={s.weight ? String(s.weight) : ""} onChange={(e) => setAt(i, { weight: numOr0(e.target.value) })} data-testid={`input-set-weight-${i}`} />
+                      <Input inputMode="numeric" aria-label={`${ex.name} set ${k + 1} actual reps`} className="h-11 font-num text-base" value={s.reps ? String(s.reps) : ""} placeholder="Done" onChange={(e) => setAt(i, { reps: Math.round(numOr0(e.target.value)) })} data-testid={`input-set-reps-${i}`} />
                       <Input inputMode="decimal" className="h-11 font-num text-base" value={s.rpe ? String(s.rpe) : ""} placeholder="—" onChange={(e) => setAt(i, { rpe: Math.min(10, numOr0(e.target.value)) })} data-testid={`input-set-rpe-${i}`} />
                       <button
                         onClick={() => setAt(i, { completed: !s.completed })}
@@ -155,11 +154,12 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                         <Check className="h-5 w-5" />
                       </button>
                     </div>
-                    <div className="ml-10 mt-1 hidden items-center gap-2 group-focus-within:flex">
-                      {t !== null && !s.weight && (
-                        <button className="font-num text-[10px] uppercase tracking-widest text-primary" onClick={() => setAt(i, { weight: t })} data-testid={`button-use-target-${i}`}>
-                          use target
-                        </button>
+                    <div className="ml-10 mt-1 flex flex-wrap items-center gap-2">
+                      {t !== null && (
+                        <span className="flex items-center gap-2 font-num text-[10px] text-muted-foreground">
+                          <Target className="h-3 w-3" /> Target: {fmtNum(t, 2)} {state.unit === "lb" ? "lbs" : "kg"}
+                          <button className="min-h-8 font-semibold uppercase text-primary underline" onClick={() => setAt(i, { weight: t })} data-testid={`button-use-target-${i}`}>Use for this set</button>
+                        </span>
                       )}
                       <Input className="h-7 text-xs" placeholder="Set note" value={s.notes} onChange={(e) => setAt(i, { notes: e.target.value })} data-testid={`input-set-notes-${i}`} />
                       <button className="text-muted-foreground hover:text-destructive" onClick={() => setState({ ...state, sets: state.sets.filter((_, j) => j !== i) })} aria-label="Remove set" data-testid={`button-remove-set-${i}`}>
@@ -168,7 +168,7 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                     </div>
                     {s.notes && <div className="ml-10 mt-0.5 text-[11px] text-muted-foreground group-focus-within:hidden">{s.notes}</div>}
                   </div>
-                ))}
+                );})}
               </div>
               <div className="px-4 pb-3">
                 <button

@@ -11,6 +11,7 @@ import {
 import { ensureProfile, linked, loadWorkspace } from "../lib/training-store";
 import { demoWorkspace } from "../lib/demo";
 import { analytics } from "../lib/analytics";
+import { normalizeProgram } from "../lib/program-defaults";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
@@ -49,6 +50,12 @@ router.post("/programs", async (req,res) => {
   for(const w of input.workouts) {
     if(w.week>input.weeks) fail(400,"Workout week exceeds program length.");
     if(new Set(w.exercises.map(e=>e.id)).size !== w.exercises.length) fail(400,"Exercise identifiers must be unique within a workout.");
+    for (const ex of w.exercises) {
+      const range = /^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/.exec(ex.reps);
+      if (range && (Number(range[1]) < 1 || Number(range[2]) < Number(range[1]) || Number(range[2]) > 1000)) {
+        fail(400,`${ex.name}: enter a rep range with a positive minimum no greater than the maximum, for example 8-12.`);
+      }
+    }
   }
   let source="Custom program";
   if (input.id) {
@@ -56,7 +63,7 @@ router.post("/programs", async (req,res) => {
     if(!row) fail(404,"Program not found.");
     source=SaveProgramResponse.parse(row.data).source;
   }
-  const program:Program=SaveProgramResponse.parse({...input,id:input.id || randomUUID(),source,reviewCount:input.workouts.reduce((n,w)=>n+w.exercises.filter(e=>e.review).length,0)});
+  const program:Program=normalizeProgram(SaveProgramResponse.parse({...input,id:input.id || randomUUID(),source,reviewCount:input.workouts.reduce((n,w)=>n+w.exercises.filter(e=>e.review).length,0)}));
   if(input.id) await db.update(programsTable).set({data:program}).where(and(eq(programsTable.id,input.id),eq(programsTable.ownerId,req.user!.id)));
   else await db.insert(programsTable).values({id:program.id,ownerId:req.user!.id,data:program});
   res.json(program);
@@ -99,7 +106,7 @@ router.post("/assignments", async (req,res) => {
   if(!await linked(req.user!.id,input.athleteId)) fail(403,"Invite this athlete and wait for them to accept first.");
   const [row]=await db.select().from(programsTable).where(and(eq(programsTable.id,input.programId),eq(programsTable.ownerId,req.user!.id)));
   if(!row) fail(404,"Program not found.");
-  const program=SaveProgramResponse.parse(row.data);
+  const program=normalizeProgram(SaveProgramResponse.parse(row.data));
   const [athlete]=await db.select().from(profilesTable).where(eq(profilesTable.userId,input.athleteId));
   const coach=await ensureProfile(req.user!.id,req.user!.firstName || "Coach");
   if(!athlete) fail(404,"Athlete not found.");

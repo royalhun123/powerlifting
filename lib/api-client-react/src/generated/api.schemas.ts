@@ -83,6 +83,16 @@ export type Profile = ProfileInput & {
   coachName: string;
 };
 
+/**
+ * Program source weights and per-set targets are always pounds.
+ */
+export type ExerciseSourceUnit = typeof ExerciseSourceUnit[keyof typeof ExerciseSourceUnit];
+
+
+export const ExerciseSourceUnit = {
+  lb: 'lb',
+} as const;
+
 export type ExerciseLift = typeof ExerciseLift[keyof typeof ExerciseLift];
 
 
@@ -108,6 +118,15 @@ export interface Exercise {
   effort: string;
   /** @maxLength 300 */
   weight: string;
+  /** Program source weights and per-set targets are always pounds. */
+  sourceUnit?: ExerciseSourceUnit;
+  /**
+     * Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.
+     * @maxItems 100
+     * @items.minimum 0
+     * @items.maximum 2000
+     */
+  setWeights?: (number | null)[];
   /** @maxLength 2000 */
   notes: string;
   review: boolean;

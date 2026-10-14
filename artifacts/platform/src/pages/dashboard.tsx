@@ -43,7 +43,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <PageHeader kicker={data.demo ? "Demo athlete" : "Training dashboard"} title={p.name ? `${p.name.split(" ")[0]}'s platform` : "Your platform"}>
+      <PageHeader kicker={data.demo ? "Navy Powerlifting · Demo athlete" : "Navy Powerlifting · Team training"} title={p.name ? `${p.name.split(" ")[0]}'s training` : "Your training"}>
         <Link href="/workouts" className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground" data-testid="link-log-workout">
           Log a session <ArrowRight className="ml-2 h-4 w-4" />
         </Link>
@@ -153,8 +153,8 @@ export default function Dashboard() {
                         <LiftTag lift={ex.lift} />
                       </div>
                       <div className="text-right font-num text-xs">
-                        <div>{ex.sets}×{ex.reps}</div>
-                        <div className="text-muted-foreground">{ex.effort}{t ? ` · ${t}${p.unit}` : ""}</div>
+                        <div>Sets: {ex.sets} · Reps: {ex.reps}</div>
+                        <div className="text-muted-foreground">Effort: {ex.effort || "—"}{t ? ` · ${t}${p.unit}` : ""}</div>
                       </div>
                     </li>
                   );

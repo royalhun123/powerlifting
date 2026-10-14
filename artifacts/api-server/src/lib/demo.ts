@@ -21,7 +21,14 @@ export function demoWorkspace(): Workspace {
       {id:`w${week+1}-d3`,week:week+1,day:4,name:"Primary deadlift",exercises:[
         {id:"dead",name:"Competition deadlift",sets:"3",reps:"1",effort:"85%",weight:"",notes:"Take the slack out.",review:false,lift:"deadlift" as const},
       ]},
-    ]).flat()
+    ]).flat().map(workout => ({
+      ...workout,
+      exercises: workout.exercises.map(ex => ({
+        ...ex,
+        sourceUnit: "lb" as const,
+        setWeights: ex.id === "squat" ? [325, 335, 330] : [],
+      })),
+    }))
   };
   const sessions: Session[] = Array.from({length:12},(_,i) => {
     const lift = (["squat","bench","deadlift"] as const)[i%3]!;

@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ExerciseLift } from './exerciseLift';
+import type { ExerciseSourceUnit } from './exerciseSourceUnit';
 
 export interface Exercise {
   id: string;
@@ -21,6 +22,15 @@ export interface Exercise {
   effort: string;
   /** @maxLength 300 */
   weight: string;
+  /** Program source weights and per-set targets are always pounds. */
+  sourceUnit?: ExerciseSourceUnit;
+  /**
+     * Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.
+     * @maxItems 100
+     * @items.minimum 0
+     * @items.maximum 2000
+     */
+  setWeights?: (number | null)[];
   /** @maxLength 2000 */
   notes: string;
   review: boolean;

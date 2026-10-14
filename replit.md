@@ -1,6 +1,6 @@
-# Platform — Powerlifting Coach
+# Navy Powerlifting — Team Training
 
-A responsive coaching and workout tracker built around the user's supplied peaking workbook.
+A responsive Navy Powerlifting team coaching and workout tracker built around the user's supplied peaking workbook, with usna.edu-inspired navy/gold styling.
 
 ## Run & operate
 - API: managed workflow `artifacts/api-server: API Server`
@@ -27,7 +27,8 @@ A responsive coaching and workout tracker built around the user's supplied peaki
 - Anonymous preview data is synthetic and read-only, never actual client records.
 - Workout/session units are stored with each log; analytics convert to viewer units. Volume means completed external load × reps, excluding bodyweight.
 - Estimated maxes use Epley only on competition-classified sets of 1–10 reps. Actual weight records and estimates are distinct.
-- Source weight and notes cells are references, not evidence that sets were completed. Review flags identify uncertain Excel date conversions. Verify reference maxes/units before using percentage prescriptions.
+- Source weights default to pounds for every existing and future program and assignment. Optional per-set target weights are pounds; actual logged weights retain their recorded unit. Normalization upgrades old program JSON at read/save time without modifying completed logs.
+- Source weight and notes cells are references, not evidence that sets were completed. Review flags identify uncertain Excel date conversions. Verify reference maxes before using percentage prescriptions. Rep ranges describe targets, not completed reps.
 
 ## Verification limitations
 Initial build was typechecked and checked with public API requests and a preview screenshot. Signed-in browser flows require an actual sign-in and were not browser-verified.

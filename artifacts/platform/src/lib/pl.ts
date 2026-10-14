@@ -80,7 +80,8 @@ export function buildSets(exercises: Exercise[], profile: Profile | undefined): 
   const out: LoggedSet[] = [];
   for (const ex of exercises) {
     const n = Math.min(firstInt(ex.sets, 1), 20);
-    const reps = firstInt(ex.reps, 0);
+    // A prescription is not an actual result, especially when it is a range.
+    const reps = 0;
     for (let i = 1; i <= n; i++) {
       out.push({
         exerciseId: ex.id,
@@ -96,6 +97,30 @@ export function buildSets(exercises: Exercise[], profile: Profile | undefined): 
     }
   }
   return out;
+}
+
+/** Source and per-set program loads are always pounds. Session unit is separate. */
+export function setTargetLoad(ex: Exercise, setIndex: number, profile: Profile | undefined, unit: string): number | null {
+  const override = ex.setWeights?.[setIndex];
+  const source = ex.weight.trim();
+  const sourceLoad = /^\d+(?:\.\d+)?$/.test(source) ? Number(source) : null;
+  // Explicit per-set targets override percentages and the common source load.
+  if (override !== undefined && override !== null) {
+    return Math.round((unit === "kg" ? override / 2.2046226218 : override) * 100) / 100;
+  }
+  const percentage = targetLoad(ex, profile);
+  if (percentage !== null) {
+    const converted = profile?.unit === unit ? percentage : unit === "kg" ? percentage / 2.2046226218 : percentage * 2.2046226218;
+    return roundLoad(converted, unit);
+  }
+  return sourceLoad === null ? null : Math.round((unit === "kg" ? sourceLoad / 2.2046226218 : sourceLoad) * 100) / 100;
+}
+
+export function repRange(value: string): { min: number; max: number } | null {
+  const match = /^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/.exec(value);
+  if (!match) return null;
+  const min = Number(match[1]), max = Number(match[2]);
+  return min > 0 && max >= min ? { min, max } : null;
 }
 
 export function epley(weight: number, reps: number): number {

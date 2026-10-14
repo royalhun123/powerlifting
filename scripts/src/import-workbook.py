@@ -83,10 +83,10 @@ with zipfile.ZipFile(source) as z:
                 lift = "squat" if lower in ["comp squat", "competition squat"] else "bench" if lower in ["comp bench","competition bench"] else "deadlift" if lower in ["deadlift","comp dead","comp deadlift","competition deadlift"] else "accessory"
                 notes = vals[5]
                 if vals[4]:
-                    notes = ("Source weight (unit not specified): "+vals[4]+". "+notes).strip()
+                    notes = ("Source weight (lbs): "+vals[4]+". "+notes).strip()
                 if warnings:
                     notes += "\n" + "\n".join(warnings)
-                current["exercises"].append({"id":f"e{r}","name":vals[0],"sets":vals[1],"reps":vals[2],"effort":vals[3],"weight":vals[4],"notes":notes,"review":review,"lift":lift})
+                current["exercises"].append({"id":f"e{r}","name":vals[0],"sets":vals[1],"reps":vals[2],"effort":vals[3],"weight":vals[4],"sourceUnit":"lb","setWeights":[],"notes":notes,"review":review,"lift":lift})
         programs.append({
             "id": f"source-{si+1}", "name": "Meet Peak" if name=="Peak" else "Deload" if name=="deload" else name,
             "description": "Imported from your workbook. Prescriptions and source references only, not completed workout history. "+("Percentages use Block 2 week 4 singles; set your reference maxes before starting." if name=="Peak" else "Review flagged Excel date conversions before assigning."),

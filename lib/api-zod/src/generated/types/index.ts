@@ -15,6 +15,7 @@ export * from './authUser';
 export * from './authUserEnvelope';
 export * from './exercise';
 export * from './exerciseLift';
+export * from './exerciseSourceUnit';
 export * from './feedbackInput';
 export * from './getAnalyticsDays';
 export * from './getAnalyticsParams';

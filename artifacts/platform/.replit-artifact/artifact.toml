@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Platform — Powerlifting Coach"
+title = "Navy Powerlifting — Team Training"
 description = "Powerlifting coaching and workout tracking with imported peaking programs, client invitations, set-by-set logging and performance analytics."
 version = "1.0.0"
 id = "artifacts/platform"
