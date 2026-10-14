@@ -7,6 +7,8 @@
 import type { Program } from './program';
 
 export interface Assignment {
+  archived?: boolean;
+  removed?: boolean;
   id: string;
   athleteId: string;
   athleteName: string;

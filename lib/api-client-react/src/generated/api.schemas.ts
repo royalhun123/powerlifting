@@ -305,7 +305,13 @@ export interface AssignmentInput {
   startDate: string;
 }
 
+export interface AssignmentArchiveInput {
+  archived: boolean;
+}
+
 export interface Assignment {
+  archived?: boolean;
+  removed?: boolean;
   id: string;
   athleteId: string;
   athleteName: string;
@@ -455,6 +461,10 @@ export interface Analytics {
   records: LiftRecord[];
   trend: TrendPoint[];
 }
+
+export type RemoveAssignment200 = {
+  success: boolean;
+};
 
 export type GetAnalyticsParams = {
 athleteId?: string;

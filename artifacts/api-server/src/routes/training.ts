@@ -9,6 +9,7 @@ import {
   UpdateFeedbackParams, UpdateFeedbackBody, UpdateFeedbackResponse, GetAnalyticsQueryParams, GetAnalyticsResponse,
   GetBodyweightsResponse, SaveBodyweightBody, SaveBodyweightResponse,
   GetTrueMaxesResponse, SaveTrueMaxBody, SaveTrueMaxResponse,
+  ArchiveAssignmentBody,
 } from "@workspace/api-zod";
 import { ensureProfile, linked, loadWorkspace } from "../lib/training-store";
 import { demoWorkspace } from "../lib/demo";
@@ -49,7 +50,8 @@ router.get("/analytics", async (req,res) => {
 // All remaining endpoints mutate private account data and require a real login.
 router.use(async (req,res,next) => {
   if (!req.isAuthenticated()) {res.status(401).json({error:"Sign in to save training or manage clients."});return;}
-  if (/^\/(programs|invitations|assignments|feedback)(\/|$)/.test(req.path) && !isCoach(req.user.id)) {
+  const ownArchive = req.method==="PATCH" && /^\/assignments\/[^/]+\/?$/i.test(req.path);
+  if (!ownArchive && /^\/(programs|invitations|assignments|feedback)(\/|$)/i.test(req.path) && !isCoach(req.user.id)) {
     res.status(403).json({error:"Only the coach can manage programs and clients."});return;
   }
   await ensureProfile(req.user.id,req.user.firstName || "Athlete");
@@ -162,9 +164,31 @@ router.post("/assignments", async (req,res) => {
   const [athlete]=await db.select().from(profilesTable).where(eq(profilesTable.userId,input.athleteId));
   const coach=await ensureProfile(req.user!.id,req.user!.firstName || "Coach");
   if(!athlete) fail(404,"Athlete not found.");
-  const assignment:Assignment={id:randomUUID(),athleteId:input.athleteId,athleteName:UpdateProfileResponse.parse(athlete.data).name,program,startDate:input.startDate,coachName:coach.name};
+  const assignment:Assignment={id:randomUUID(),archived:false,removed:false,athleteId:input.athleteId,athleteName:UpdateProfileResponse.parse(athlete.data).name,program,startDate:input.startDate,coachName:coach.name};
   await db.insert(assignmentsTable).values({id:assignment.id,coachId:req.user!.id,athleteId:input.athleteId,data:assignment});
   res.json(AssignProgramResponse.parse(assignment));
+});
+router.patch("/assignments/:id", async (req,res) => {
+  const {archived}=ArchiveAssignmentBody.parse(req.body);
+  const assignment=await db.transaction(async tx=>{
+    const [row]=await tx.select().from(assignmentsTable).where(eq(assignmentsTable.id,req.params.id as string)).for("update");
+    if(!row || row.athleteId!==req.user!.id) fail(403,"You may archive only your own assigned programs.");
+    const current=AssignProgramResponse.parse(row.data);
+    if(current.removed) fail(404,"Assignment no longer available.");
+    const saved={...current,archived};
+    await tx.update(assignmentsTable).set({data:saved}).where(eq(assignmentsTable.id,row.id));
+    return saved;
+  });
+  res.json(AssignProgramResponse.parse(assignment));
+});
+router.delete("/assignments/:id", async (req,res) => {
+  await db.transaction(async tx=>{
+    const [row]=await tx.select().from(assignmentsTable).where(eq(assignmentsTable.id,req.params.id as string)).for("update");
+    if(!row || row.coachId!==req.user!.id) fail(403,"Only the assigning coach can remove this program.");
+    // Keep the snapshot and all session rows; removal must not erase training history.
+    await tx.update(assignmentsTable).set({data:{...AssignProgramResponse.parse(row.data),removed:true}}).where(eq(assignmentsTable.id,row.id));
+  });
+  res.json({success:true});
 });
 router.post("/sessions", async (req,res) => {
   const input=SaveSessionBody.parse(req.body);
@@ -172,6 +196,8 @@ router.post("/sessions", async (req,res) => {
   const [assigned]=await db.select().from(assignmentsTable).where(and(eq(assignmentsTable.id,input.assignmentId),eq(assignmentsTable.athleteId,req.user!.id)));
   if(!assigned) fail(403,"You can log only your own assigned workouts.");
   const assignment=AssignProgramResponse.parse(assigned.data);
+  if(assignment.removed) fail(403,"Your coach removed this assignment. Existing workout history is preserved.");
+  if(assignment.archived) fail(409,"Restore this program before logging or editing a workout.");
   const workout=assignment.program.workouts.find(w=>w.id===input.workoutId);
   if(!workout) fail(400,"Workout not found in this assignment.");
   if(new Set(input.sets.map(s=>`${s.exerciseId}:${s.setNumber}`)).size!==input.sets.length) fail(400,"Duplicate exercise/set number.");

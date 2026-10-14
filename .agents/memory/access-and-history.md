@@ -15,6 +15,12 @@ Only the app owner is the coach and may see All programs and Clients. Everyone, 
 
 **How to apply:** Keep coach authority server-controlled and separate templates from assignments; never let a profile edit or first-time signup grant coach access.
 
+Clients can archive and restore their assigned programs, but only the assigning coach can remove them. Keep workout history and progress after removal.
+
+**Why:** The user requested coach control over client programs, client-only archiving, and preservation of their saved edits.
+
+**How to apply:** Remove an assignment from active and archived lists without deleting its historical sessions or the original template. Archiving is per athlete, not a change to the shared template.
+
 Historical bodyweight entries without a recorded time must remain “time not recorded,” not be assigned morning/day/night.
 
 **Why:** Time-of-day tracking was added after existing daily logs, so assigning a period would invent measurement metadata.

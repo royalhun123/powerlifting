@@ -214,7 +214,7 @@ export default function Workouts() {
     if (!data) return { assignments: [] as Assignment[], sessions: [] as Session[] };
     const me = data.profile.id;
     return {
-      assignments: data.assignments.filter((a) => a.athleteId === me).sort((a, b) => b.startDate.localeCompare(a.startDate)),
+      assignments: data.assignments.filter((a) => a.athleteId === me && !a.archived).sort((a, b) => b.startDate.localeCompare(a.startDate)),
       sessions: data.sessions.filter((s) => s.athleteId === me).sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt)),
     };
   }, [data]);

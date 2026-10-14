@@ -8,6 +8,7 @@
 export * from './analytics';
 export * from './analyticsUnit';
 export * from './assignment';
+export * from './assignmentArchiveInput';
 export * from './assignmentInput';
 export * from './athlete';
 export * from './athleteUnit';
@@ -38,6 +39,7 @@ export * from './profileInputUnit';
 export * from './program';
 export * from './programInput';
 export * from './programInputPhase';
+export * from './removeAssignment200';
 export * from './session';
 export * from './sessionInput';
 export * from './sessionInputStatus';

@@ -1,7 +1,7 @@
 """Extract source workbook as prescription templates, not inferred completions.
 
-Excel coerced ranges into date serials. Preserve raw values and flag any proposed
-month/day reconstruction for manual confirmation rather than silently trusting it.
+Excel-coerced sets/reps use month-day as ranges, as confirmed by the coach.
+Keep ambiguous note cells flagged rather than rewriting their meaning.
 """
 import datetime
 import json
@@ -68,9 +68,12 @@ with zipfile.ZipFile(source) as z:
                         if 30000 < n < 60000:
                             date = datetime.datetime(1899,12,30) + datetime.timedelta(days=n)
                             suggested = f"{date.month}-{date.day}"
-                            warnings.append(f"Import review: {'sets' if i==1 else 'reps' if i==2 else 'notes'} source Excel date serial {vals[i]} may mean {suggested}. Confirm against original.")
-                            vals[i] = suggested + "?"
-                            review = True
+                            if i in [1, 2]:
+                                vals[i] = suggested
+                            else:
+                                warnings.append(f"Import review: notes source Excel date serial {vals[i]} may mean {suggested}. Confirm against original.")
+                                vals[i] = suggested + "?"
+                                review = True
                     except ValueError:
                         pass
                 try:

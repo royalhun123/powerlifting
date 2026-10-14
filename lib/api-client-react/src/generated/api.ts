@@ -21,6 +21,7 @@ import type {
 import type {
   Analytics,
   Assignment,
+  AssignmentArchiveInput,
   AssignmentInput,
   AuthUserEnvelope,
   Bodyweight,
@@ -36,6 +37,7 @@ import type {
   ProfileInput,
   Program,
   ProgramInput,
+  RemoveAssignment200,
   Session,
   SessionInput,
   Success,
@@ -1635,6 +1637,157 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getAssignProgramMutationOptions(options));
+    }
+
+export const getArchiveAssignmentUrl = (id: string,) => {
+
+
+
+
+  return `/api/assignments/${id}`
+}
+
+export const archiveAssignment = async (id: string,
+    assignmentArchiveInput: AssignmentArchiveInput, options?: Parameters<typeof customFetch>[1]): Promise<Assignment> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Assignment>(getArchiveAssignmentUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assignmentArchiveInput)
+  }
+);}
+
+
+
+
+
+export const getArchiveAssignmentMutationKey = () => ['archiveAssignment'] as const;
+
+export const getArchiveAssignmentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveAssignment>>, TError,ArchiveAssignmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveAssignment>>, TError,ArchiveAssignmentMutationVariables, TContext> => {
+
+const mutationKey = getArchiveAssignmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveAssignment>>, ArchiveAssignmentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  archiveAssignment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveAssignmentMutationResult = NonNullable<Awaited<ReturnType<typeof archiveAssignment>>>
+    export type ArchiveAssignmentMutationBody = BodyType<AssignmentArchiveInput>
+    export type ArchiveAssignmentMutationError = ErrorType<unknown>
+    export type ArchiveAssignmentMutationVariables = {id: string;data: BodyType<AssignmentArchiveInput>}
+
+    export const useArchiveAssignment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveAssignment>>, TError,ArchiveAssignmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveAssignment>>,
+        TError,
+        ArchiveAssignmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArchiveAssignmentMutationOptions(options));
+    }
+
+export const getRemoveAssignmentUrl = (id: string,) => {
+
+
+
+
+  return `/api/assignments/${id}`
+}
+
+export const removeAssignment = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RemoveAssignment200> => {
+
+  return customFetch<RemoveAssignment200>(getRemoveAssignmentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveAssignmentMutationKey = () => ['removeAssignment'] as const;
+
+export const getRemoveAssignmentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeAssignment>>, TError,RemoveAssignmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeAssignment>>, TError,RemoveAssignmentMutationVariables, TContext> => {
+
+const mutationKey = getRemoveAssignmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeAssignment>>, RemoveAssignmentMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  removeAssignment(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveAssignmentMutationResult = NonNullable<Awaited<ReturnType<typeof removeAssignment>>>
+
+    export type RemoveAssignmentMutationError = ErrorType<unknown>
+    export type RemoveAssignmentMutationVariables = {id: string}
+
+    export const useRemoveAssignment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeAssignment>>, TError,RemoveAssignmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeAssignment>>,
+        TError,
+        RemoveAssignmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveAssignmentMutationOptions(options));
     }
 
 export const getSaveSessionUrl = () => {

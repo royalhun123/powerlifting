@@ -61,6 +61,6 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
       return {...assignment,program:normalizeProgram(assignment.program)};
-    }),
+    }).filter(a=>!a.removed),
     sessions,invitations:invitationRows.map(r=>({id:r.id,name:r.name,path:r.acceptedBy ? "" : `/join?token=${r.token}`,expiresAt:r.expiresAt.toISOString(),status:r.acceptedBy ? "accepted" as const : r.expiresAt.getTime()<Date.now() ? "expired" as const : "pending" as const}))};
 }

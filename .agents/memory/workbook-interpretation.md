@@ -11,9 +11,9 @@ The user wants a professional powerlifting coach/client tracker and also tracks 
 
 The supplied workbook has Excel-coerced date serials where set/rep ranges and notes were intended. Its weight cells mix numeric loads, bodyweight, plates, chains, and free-text attempts. The user has specified that source weights default to pounds.
 
-**Why:** Treating these source cells as completed sets would fabricate reps, inflate volume, and misstate performance. Date month/day values may suggest a range but cannot prove the user's intent.
+**Why:** Treating source prescriptions as completed sets would fabricate reps, inflate volume, and misstate performance. The user explicitly confirmed date-coerced rep values are ranges: 8-10-2026 means 8-10.
 
-**How to apply:** Flag suspected ranges for explicit review and keep prescriptions separate from logged completion. The user clarified that non-percentage workbook weights were filled-in results after workouts, not targets: do not suggest them or copy them into new logs. Only percentage prescriptions prefill editable weights. Do not backfill or alter completed deload sessions.
+**How to apply:** Automatically accept numeric rep ranges and month/day ranges from date-coerced set/rep cells, remove trailing question marks and their import-review warnings, but preserve unrelated review notes. Keep prescriptions separate from logged completion. Non-percentage workbook weights were filled-in results after workouts, not targets: do not suggest them or copy them into new logs. Only percentage prescriptions prefill editable weights. Do not backfill or alter completed deload sessions.
 
 The current workbook library should contain only Deload and Peak. Completed workout history must be preserved when removing other templates.
 

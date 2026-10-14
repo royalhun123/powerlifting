@@ -138,6 +138,7 @@ export default function Programs() {
                   <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{p.description || "No description"}</p>
                   <div className="mt-1 font-num text-[11px] text-muted-foreground">
                     {days} workouts across {weeks} weeks · source: {p.source || "manual"}
+                    <div>{data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && !a.archived).length} active client assignments · {data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && a.archived).length} archived</div>
                   </div>
                 </Link>
                 <div className="flex gap-1">

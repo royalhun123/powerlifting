@@ -20,7 +20,7 @@ export default function Dashboard() {
   const derived = useMemo(() => {
     if (!data) return null;
     const me = data.profile.id;
-    const mine = data.assignments.filter((a) => a.athleteId === me).sort((a, b) => b.startDate.localeCompare(a.startDate));
+    const mine = data.assignments.filter((a) => a.athleteId === me && !a.archived).sort((a, b) => b.startDate.localeCompare(a.startDate));
     const current = mine[0];
     const mySessions = data.sessions.filter((s) => s.athleteId === me).sort((a, b) => b.date.localeCompare(a.date));
     let next: Workout | null = null;

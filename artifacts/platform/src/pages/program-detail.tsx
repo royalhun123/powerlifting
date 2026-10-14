@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AssignmentOverview } from "@/components/assignment-overview";
 import { Link, useParams } from "wouter";
 import { AlertTriangle, ArrowLeft, CalendarPlus, Check, Plus, Save, Trash2 } from "lucide-react";
 import { useAssignProgram, useSaveProgram, type Exercise, type ExerciseLift, type ProgramInput, type ProgramInputPhase, type Workout } from "@workspace/api-client-react";
@@ -35,6 +36,7 @@ export default function ProgramDetail() {
   const [athleteId, setAthleteId] = useState("");
   const [startDate, setStartDate] = useState(todayISO());
   const initFor = useRef<string | null>(null);
+  const editVersion = useRef(0);
 
   useEffect(() => {
     if (program && initFor.current !== program.id) {
@@ -61,6 +63,7 @@ export default function ProgramDetail() {
   if (!draft) return <LoadingPage />;
 
   const update = (patch: Partial<ProgramInput>) => {
+    editVersion.current++;
     setDraft({ ...draft, ...patch });
     setDirty(true);
   };
@@ -80,11 +83,16 @@ export default function ProgramDetail() {
 
   const doSave = () => {
     if (!guard()) return;
+    const savingVersion=editVersion.current;
     save.mutate(
       { data: { ...draft, id: program.id } },
       {
-        onSuccess: async () => {
-          initFor.current = null;
+        onSuccess: async (saved) => {
+          if(editVersion.current===savingVersion) {
+            const {source:_source,reviewCount:_review,...rest}=saved;
+            setDraft(rest);
+            setDirty(false);
+          }
           await invalidate();
           toast({ title: "Program saved" });
         },
@@ -109,7 +117,7 @@ export default function ProgramDetail() {
     );
   };
 
-  const assignedTo = data.assignments.filter((a) => a.program.id === program.id || a.program.name === program.name);
+  const assignedTo = data.assignments.filter((a) => a.program.id === program.id);
 
   return (
     <div className="pb-24">
@@ -149,12 +157,13 @@ export default function ProgramDetail() {
         </div>
       </div>
 
+      <AssignmentOverview programId={program.id} />
       {reviewCount > 0 && (
         <div className="rise mb-5 flex items-start gap-3 rounded-md border border-[hsl(var(--deadlift))] bg-[hsl(var(--deadlift)/0.12)] p-4" data-testid="alert-import-review">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" style={{ color: "hsl(var(--deadlift))" }} />
           <div className="text-sm">
             <div className="font-semibold">Import review: {reviewCount} prescription{reviewCount === 1 ? "" : "s"} flagged</div>
-            Some spreadsheet cells were auto-converted to dates by Excel. They are shown as the suspected original range, marked with "?" (e.g. 5-8?). Nothing is confirmed automatically. Check each flagged row, correct it, then clear the flag and save.
+            Rep ranges, including Excel date-formatted ranges, are accepted automatically. Only remaining ambiguous notes or manually flagged prescriptions need review. Check those rows, clear the flag, and save.
           </div>
         </div>
       )}

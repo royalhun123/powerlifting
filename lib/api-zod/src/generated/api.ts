@@ -210,6 +210,8 @@ export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesMax = 50;
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsMax = 364;
 
+export const getWorkspaceResponseAssignmentsItemArchivedDefault = false;
+export const getWorkspaceResponseAssignmentsItemRemovedDefault = false;
 export const getWorkspaceResponseAssignmentsItemProgramOneNameMax = 120;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneDescriptionMax = 2000;
@@ -321,6 +323,8 @@ export const GetWorkspaceResponse = zod.object({
   "totalVolume": zod.number()
 })),
   "assignments": zod.array(zod.object({
+  "archived": zod.boolean().default(getWorkspaceResponseAssignmentsItemArchivedDefault),
+  "removed": zod.boolean().default(getWorkspaceResponseAssignmentsItemRemovedDefault),
   "id": zod.string(),
   "athleteId": zod.string(),
   "athleteName": zod.string(),
@@ -632,6 +636,8 @@ export const AssignProgramBody = zod.object({
   "startDate": zod.string().regex(assignProgramBodyStartDateRegExp)
 })
 
+export const assignProgramResponseArchivedDefault = false;
+export const assignProgramResponseRemovedDefault = false;
 export const assignProgramResponseProgramOneNameMax = 120;
 
 export const assignProgramResponseProgramOneDescriptionMax = 2000;
@@ -668,6 +674,8 @@ export const assignProgramResponseProgramOneWorkoutsMax = 364;
 
 
 export const AssignProgramResponse = zod.object({
+  "archived": zod.boolean().default(assignProgramResponseArchivedDefault),
+  "removed": zod.boolean().default(assignProgramResponseRemovedDefault),
   "id": zod.string(),
   "athleteId": zod.string(),
   "athleteName": zod.string(),
@@ -704,6 +712,102 @@ export const AssignProgramResponse = zod.object({
 })),
   "startDate": zod.string(),
   "coachName": zod.string()
+})
+
+
+export const ArchiveAssignmentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ArchiveAssignmentBody = zod.object({
+  "archived": zod.boolean()
+})
+
+export const archiveAssignmentResponseArchivedDefault = false;
+export const archiveAssignmentResponseRemovedDefault = false;
+export const archiveAssignmentResponseProgramOneNameMax = 120;
+
+export const archiveAssignmentResponseProgramOneDescriptionMax = 2000;
+
+export const archiveAssignmentResponseProgramOneWeeksMax = 52;
+
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemWeekMax = 52;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemDayMax = 7;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNameMax = 200;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetsMax = 100;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemRepsMax = 100;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemEffortMax = 200;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemWeightMax = 300;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesMax = 50;
+
+export const archiveAssignmentResponseProgramOneWorkoutsMax = 364;
+
+
+
+export const ArchiveAssignmentResponse = zod.object({
+  "archived": zod.boolean().default(archiveAssignmentResponseArchivedDefault),
+  "removed": zod.boolean().default(archiveAssignmentResponseRemovedDefault),
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "athleteName": zod.string(),
+  "program": zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(archiveAssignmentResponseProgramOneNameMax),
+  "description": zod.string().max(archiveAssignmentResponseProgramOneDescriptionMax),
+  "phase": zod.enum(['volume', 'strength', 'deload', 'peak']),
+  "weeks": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWeeksMax),
+  "archived": zod.boolean(),
+  "workouts": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1),
+  "week": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemWeekMax),
+  "day": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemDayMax),
+  "exercises": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNameMax),
+  "sets": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetsMax),
+  "reps": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemRepsMax),
+  "effort": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemEffortMax),
+  "weight": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
+  "notes": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNotesMax),
+  "review": zod.boolean(),
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+})).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesMax)
+})).max(archiveAssignmentResponseProgramOneWorkoutsMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "reviewCount": zod.number().int()
+})),
+  "startDate": zod.string(),
+  "coachName": zod.string()
+})
+
+
+export const RemoveAssignmentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RemoveAssignmentResponse = zod.object({
+  "success": zod.boolean()
 })
 
 
