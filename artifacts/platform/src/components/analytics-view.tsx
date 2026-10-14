@@ -58,7 +58,8 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
         ))}
       </div>
 
-      <Panel title={`Estimated 1RM trend (${u})`}>
+      <Panel title={`1RM trend — actual / RPE 9 estimates (${u})`}>
+        {!data.trend.some(point => point.squat !== null || point.bench !== null || point.deadlift !== null) && <p className="mb-3 text-sm text-muted-foreground">No qualifying maxes in this period. Log a tested single at RPE 10 or a set of 1–10 reps at RPE 9.</p>}
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.trend} margin={{ left: -8, right: 8, top: 8 }}>
@@ -88,7 +89,7 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
       </Panel>
 
       <div className="grid gap-3 rounded-md border border-dashed p-4 text-sm text-muted-foreground md:grid-cols-3">
-        <div><b className="text-foreground">Estimated 1RM (Epley).</b> e1RM = weight × (1 + reps / 30), taken from the best completed set. Singles count as-is. It is an estimate, not a tested max.</div>
+        <div><b className="text-foreground">1RM trend.</b> Actual maxes are logged singles at RPE 10. Estimates use only RPE 9 sets of 1–10 reps: weight × (1 + (reps + 1) / 30), allowing one rep in reserve. Lower-effort sets and blank RPE do not affect this graph. Estimates are not tested maxes.</div>
         <div><b className="text-foreground">Actual vs estimated.</b> Best actual is the heaviest weight you completed. Estimated max projects what that set implies for one rep.</div>
         <div><b className="text-foreground">External-load volume.</b> Sum of weight × reps on completed sets. Bodyweight is excluded, so a 0-weight set adds nothing. Values shown in {u}.</div>
       </div>

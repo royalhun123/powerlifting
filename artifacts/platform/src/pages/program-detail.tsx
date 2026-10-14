@@ -13,7 +13,6 @@ import { EmptyState, ErrorState, LiftTag, LoadingPage } from "@/components/commo
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
 import { LIFT_LABEL, newId, PHASE_LABEL, targetLoad, todayISO } from "@/lib/pl";
-import { ExerciseSetTargets } from "@/components/exercise-set-targets";
 import { PhaseBadge } from "@/pages/programs";
 
 function blankExercise(): Exercise {
@@ -199,7 +198,7 @@ export default function ProgramDetail() {
                 const t = targetLoad(ex, data.profile);
                 return (
                   <div key={ex.id} className={`px-4 py-3 ${ex.review ? "bg-[hsl(var(--deadlift)/0.08)]" : ""}`} data-testid={`row-exercise-${ex.id}`}>
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-[1.6fr_.8fr_.5fr_.5fr_.8fr_1fr_auto] md:items-center">
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-[1.6fr_.8fr_.5fr_.6fr_.8fr_auto] md:items-center">
                       <label className="col-span-2 grid gap-1 text-xs font-medium md:col-span-1">Exercise
                         <Input value={ex.name} onChange={(e) => updateExercise(w.id, ex.id, { name: e.target.value })} data-testid={`input-ex-name-${ex.id}`} />
                       </label>
@@ -220,15 +219,11 @@ export default function ProgramDetail() {
                       <label className="grid gap-1 text-xs font-medium">Effort
                         <Input value={ex.effort} onChange={(e) => updateExercise(w.id, ex.id, { effort: e.target.value })} className="font-num" placeholder="85% / RPE 8" data-testid={`input-effort-${ex.id}`} />
                       </label>
-                      <label className="grid gap-1 text-xs font-medium">Source weight (lbs)
-                        <Input value={ex.weight} onChange={(e) => updateExercise(w.id, ex.id, { weight: e.target.value })} className="font-num" placeholder="e.g. 225" data-testid={`input-weight-${ex.id}`} />
-                      </label>
                       <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => updateWorkout(w.id, { exercises: w.exercises.filter((e) => e.id !== ex.id) })} data-testid={`button-remove-ex-${ex.id}`}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground"><strong>Sets: {ex.sets || "—"}</strong> · <strong>Target reps: {ex.reps || "—"}</strong> · Effort: {ex.effort || "—"}. Enter a fixed rep count or a range such as 8-12; actual reps are logged separately for every set.</p>
-                    <ExerciseSetTargets exercise={ex} onChange={patch => updateExercise(w.id, ex.id, patch)} />
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <LiftTag lift={ex.lift} />
                       {t !== null && <span className="font-num text-[11px] text-muted-foreground">target ≈ {t} {data.profile.unit} from ref max</span>}

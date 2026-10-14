@@ -88,7 +88,7 @@ export function buildSets(exercises: Exercise[], profile: Profile | undefined): 
         exerciseName: ex.name,
         lift: ex.lift,
         setNumber: i,
-        weight: 0,
+        weight: targetLoad(ex, profile) ?? 0,
         reps,
         rpe: 0,
         completed: false,
@@ -99,21 +99,18 @@ export function buildSets(exercises: Exercise[], profile: Profile | undefined): 
   return out;
 }
 
-/** Source and per-set program loads are always pounds. Session unit is separate. */
+/** Only percentages are prescriptions; workbook weights were historical results. */
 export function setTargetLoad(ex: Exercise, setIndex: number, profile: Profile | undefined, unit: string): number | null {
-  const override = ex.setWeights?.[setIndex];
-  const source = ex.weight.trim();
-  const sourceLoad = /^\d+(?:\.\d+)?$/.test(source) ? Number(source) : null;
-  // Explicit per-set targets override percentages and the common source load.
-  if (override !== undefined && override !== null) {
-    return Math.round((unit === "kg" ? override / 2.2046226218 : override) * 100) / 100;
-  }
   const percentage = targetLoad(ex, profile);
   if (percentage !== null) {
     const converted = profile?.unit === unit ? percentage : unit === "kg" ? percentage / 2.2046226218 : percentage * 2.2046226218;
     return roundLoad(converted, unit);
   }
-  return sourceLoad === null ? null : Math.round((unit === "kg" ? sourceLoad / 2.2046226218 : sourceLoad) * 100) / 100;
+  return null;
+}
+
+export function isSetPerformed(set: Pick<LoggedSet, "reps" | "weight" | "lift">): boolean {
+  return set.reps > 0 && (set.weight > 0 || set.lift === "accessory");
 }
 
 export function repRange(value: string): { min: number; max: number } | null {

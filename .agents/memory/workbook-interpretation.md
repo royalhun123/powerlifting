@@ -13,7 +13,13 @@ The supplied workbook has Excel-coerced date serials where set/rep ranges and no
 
 **Why:** Treating these source cells as completed sets would fabricate reps, inflate volume, and misstate performance. Date month/day values may suggest a range but cannot prove the user's intent.
 
-**How to apply:** Preserve source references, flag suspected ranges for explicit review, keep original prescriptions separate from logged completion, use pounds for source weights, and let the athlete set session units and reference maxes. Do not infer historical completed sets from prescriptions.
+**How to apply:** Flag suspected ranges for explicit review and keep prescriptions separate from logged completion. The user clarified that non-percentage workbook weights were filled-in results after workouts, not targets: do not suggest them or copy them into new logs. Only percentage prescriptions prefill editable weights. Do not backfill or alter completed deload sessions.
+
+The current workbook library should contain only Deload and Peak. Completed workout history must be preserved when removing other templates.
+
+**Why:** The user wants current meet preparation only and has already entered completed deload workouts.
+
+**How to apply:** Seed only the current blocks; preserve assignment snapshots needed for history. Sets are performed when actual reps and load are entered (zero external load is allowed for accessories), without per-set checkboxes. Accessory RPE is optional. The 1RM trend must exclude low-effort estimates and use only actual maxes or RPE 9 estimates.
 
 The product is focused on the Navy Powerlifting team, with usna.edu styling. Back buttons, clear sets/reps labels, rep-range targets, and independently editable per-set weights apply to both current and future programs.
 

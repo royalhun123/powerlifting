@@ -27,7 +27,7 @@ A responsive Navy Powerlifting team coaching and workout tracker built around th
 - Anonymous preview data is synthetic and read-only, never actual client records.
 - Workout/session units are stored with each log; analytics convert to viewer units. Volume means completed external load × reps, excluding bodyweight.
 - Estimated maxes use Epley only on competition-classified sets of 1–10 reps. Actual weight records and estimates are distinct.
-- Source weights default to pounds for every existing and future program and assignment. Optional per-set target weights are pounds; actual logged weights retain their recorded unit. Normalization upgrades old program JSON at read/save time without modifying completed logs.
+- Only percentage prescriptions prefill new sets; non-percentage workbook weights are historical results, not targets. Actual logged weights retain their recorded unit. Normalization cleans old program JSON at read/save time without modifying completed logs.
 - Source weight and notes cells are references, not evidence that sets were completed. Review flags identify uncertain Excel date conversions. Verify reference maxes before using percentage prescriptions. Rep ranges describe targets, not completed reps.
 
 ## Verification limitations

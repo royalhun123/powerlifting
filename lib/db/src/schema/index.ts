@@ -1,3 +1,5 @@
+export * from "./bodyweights";
+export * from "./true-maxes";
 // Export your models here. Add one export per file
 // export * from "./posts";
 //

@@ -7,6 +7,116 @@
 import * as zod from 'zod';
 
 
+export const getTrueMaxesResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getTrueMaxesResponseOneWeightExclusiveMin = 0;
+export const getTrueMaxesResponseOneWeightMax = 2000;
+
+
+
+export const GetTrueMaxesResponseItem = zod.object({
+  "id": zod.string(),
+  "date": zod.string().regex(getTrueMaxesResponseOneDateRegExp),
+  "lift": zod.enum(['squat', 'bench', 'deadlift']),
+  "weight": zod.number().gt(getTrueMaxesResponseOneWeightExclusiveMin).max(getTrueMaxesResponseOneWeightMax),
+  "unit": zod.enum(['lb', 'kg'])
+}).and(zod.object({
+  "id": zod.string()
+}))
+export const GetTrueMaxesResponse = zod.array(GetTrueMaxesResponseItem)
+
+
+export const saveTrueMaxBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveTrueMaxBodyWeightExclusiveMin = 0;
+export const saveTrueMaxBodyWeightMax = 2000;
+
+
+
+export const SaveTrueMaxBody = zod.object({
+  "id": zod.string().optional(),
+  "date": zod.string().regex(saveTrueMaxBodyDateRegExp),
+  "lift": zod.enum(['squat', 'bench', 'deadlift']),
+  "weight": zod.number().gt(saveTrueMaxBodyWeightExclusiveMin).max(saveTrueMaxBodyWeightMax),
+  "unit": zod.enum(['lb', 'kg'])
+})
+
+export const saveTrueMaxResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveTrueMaxResponseOneWeightExclusiveMin = 0;
+export const saveTrueMaxResponseOneWeightMax = 2000;
+
+
+
+export const SaveTrueMaxResponse = zod.object({
+  "id": zod.string(),
+  "date": zod.string().regex(saveTrueMaxResponseOneDateRegExp),
+  "lift": zod.enum(['squat', 'bench', 'deadlift']),
+  "weight": zod.number().gt(saveTrueMaxResponseOneWeightExclusiveMin).max(saveTrueMaxResponseOneWeightMax),
+  "unit": zod.enum(['lb', 'kg'])
+}).and(zod.object({
+  "id": zod.string()
+}))
+
+
+export const DeleteTrueMaxParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteTrueMaxResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+export const getBodyweightsResponseDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getBodyweightsResponseWeightExclusiveMin = 0;
+export const getBodyweightsResponseWeightMax = 2000;
+
+export const getBodyweightsResponseTimeOfDayDefault = `unspecified`;
+
+export const GetBodyweightsResponseItem = zod.object({
+  "date": zod.string().regex(getBodyweightsResponseDateRegExp),
+  "weight": zod.number().gt(getBodyweightsResponseWeightExclusiveMin).max(getBodyweightsResponseWeightMax),
+  "unit": zod.enum(['lb', 'kg']),
+  "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified']).default(getBodyweightsResponseTimeOfDayDefault)
+})
+export const GetBodyweightsResponse = zod.array(GetBodyweightsResponseItem)
+
+
+export const saveBodyweightBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveBodyweightBodyWeightExclusiveMin = 0;
+export const saveBodyweightBodyWeightMax = 2000;
+
+export const saveBodyweightBodyTimeOfDayDefault = `unspecified`;
+
+export const SaveBodyweightBody = zod.object({
+  "date": zod.string().regex(saveBodyweightBodyDateRegExp),
+  "weight": zod.number().gt(saveBodyweightBodyWeightExclusiveMin).max(saveBodyweightBodyWeightMax),
+  "unit": zod.enum(['lb', 'kg']),
+  "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified']).default(saveBodyweightBodyTimeOfDayDefault)
+})
+
+export const saveBodyweightResponseDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const saveBodyweightResponseWeightExclusiveMin = 0;
+export const saveBodyweightResponseWeightMax = 2000;
+
+export const saveBodyweightResponseTimeOfDayDefault = `unspecified`;
+
+export const SaveBodyweightResponse = zod.object({
+  "date": zod.string().regex(saveBodyweightResponseDateRegExp),
+  "weight": zod.number().gt(saveBodyweightResponseWeightExclusiveMin).max(saveBodyweightResponseWeightMax),
+  "unit": zod.enum(['lb', 'kg']),
+  "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified']).default(saveBodyweightResponseTimeOfDayDefault)
+})
+
+
+export const DeleteBodyweightParams = zod.object({
+  "date": zod.coerce.string(),
+  "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified'])
+})
+
+export const DeleteBodyweightResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
 export const BeginBrowserLoginResponse = zod.void()
 
 

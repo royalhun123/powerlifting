@@ -1,12 +1,14 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, profilesTable, programsTable, assignmentsTable, workoutsTable, coachingTable, invitationsTable } from "@workspace/db";
+import { db, profilesTable, programsTable, assignmentsTable, workoutsTable, coachingTable, invitationsTable, bodyweightsTable, trueMaxesTable } from "@workspace/db";
 import {
   GetWorkspaceResponse, UpdateProfileBody, UpdateProfileResponse, SaveProgramBody, SaveProgramResponse,
   DeleteProgramParams, CreateInvitationBody, CreateInvitationResponse, RevokeInvitationParams, AcceptInvitationBody,
   AssignProgramBody, AssignProgramResponse, SaveSessionBody, SaveSessionResponse, DeleteSessionParams,
   UpdateFeedbackParams, UpdateFeedbackBody, UpdateFeedbackResponse, GetAnalyticsQueryParams, GetAnalyticsResponse,
+  GetBodyweightsResponse, SaveBodyweightBody, SaveBodyweightResponse,
+  GetTrueMaxesResponse, SaveTrueMaxBody, SaveTrueMaxResponse,
 } from "@workspace/api-zod";
 import { ensureProfile, linked, loadWorkspace } from "../lib/training-store";
 import { demoWorkspace } from "../lib/demo";
@@ -16,6 +18,18 @@ import { fail, dateValid, sessionVolume, type Program, type Assignment, type Ses
 
 const router:IRouter = Router();
 
+router.get("/bodyweights", async (req,res) => {
+  if (!req.user) { res.json([]); return; }
+  const rows = await db.select().from(bodyweightsTable)
+    .where(eq(bodyweightsTable.athleteId,req.user.id)).orderBy(bodyweightsTable.date);
+  const times=["morning","day","night","unspecified"];
+  res.json(GetBodyweightsResponse.parse(rows.map(r=>r.data)).sort((a,b)=>a.date.localeCompare(b.date)||times.indexOf(a.timeOfDay)-times.indexOf(b.timeOfDay)));
+});
+router.get("/maxes", async (req,res) => {
+  if (!req.user) {res.json([]);return;}
+  const rows=await db.select().from(trueMaxesTable).where(eq(trueMaxesTable.athleteId,req.user.id)).orderBy(trueMaxesTable.date);
+  res.json(GetTrueMaxesResponse.parse(rows.map(r=>r.data)));
+});
 router.get("/workspace", async (req,res) => {
   const workspace=req.user ? await loadWorkspace(req.user.id,req.user.firstName || "Athlete") : demoWorkspace();
   res.json(GetWorkspaceResponse.parse(workspace));
@@ -28,7 +42,8 @@ router.get("/analytics", async (req,res) => {
   const workspace=req.user ? await loadWorkspace(req.user.id,req.user.firstName || "Athlete") : demoWorkspace();
   const athleteId=params.athleteId || workspace.profile.id;
   if (athleteId !== workspace.profile.id && !workspace.athletes.some(a=>a.id === athleteId)) fail(403,"You do not have access to this athlete.");
-  res.json(GetAnalyticsResponse.parse(analytics(workspace.sessions.filter(s=>s.athleteId === athleteId),workspace.profile.unit,params.days ?? 90)));
+  const maxRows=req.user ? await db.select().from(trueMaxesTable).where(eq(trueMaxesTable.athleteId,athleteId)) : [];
+  res.json(GetAnalyticsResponse.parse(analytics(workspace.sessions.filter(s=>s.athleteId === athleteId),workspace.profile.unit,params.days ?? 90,GetTrueMaxesResponse.parse(maxRows.map(r=>r.data)))));
 });
 // All remaining endpoints mutate private account data and require a real login.
 router.use(async (req,res,next) => {
@@ -42,6 +57,38 @@ router.patch("/profile", async (req,res) => {
   const profile=UpdateProfileResponse.parse({...input,name:input.name.trim() || "Athlete",id:req.user!.id,coachName:""});
   await db.update(profilesTable).set({data:profile}).where(eq(profilesTable.userId,req.user!.id));
   res.json(profile);
+});
+router.post("/bodyweights", async (req,res) => {
+  const input=SaveBodyweightBody.parse(req.body);
+  if(!dateValid(input.date)) fail(400,"Enter a valid bodyweight date.");
+  if(input.timeOfDay==="unspecified") fail(400,"Choose morning, day, or night.");
+  await db.insert(bodyweightsTable).values({athleteId:req.user!.id,date:input.date,timeOfDay:input.timeOfDay,data:input})
+    .onConflictDoUpdate({target:[bodyweightsTable.athleteId,bodyweightsTable.date,bodyweightsTable.timeOfDay],set:{data:input}});
+  res.json(SaveBodyweightResponse.parse(input));
+});
+router.delete("/bodyweights/:date/:timeOfDay", async (req,res) => {
+  const date=String(req.params.date);
+  if(!dateValid(date)) fail(400,"Enter a valid bodyweight date.");
+  await db.delete(bodyweightsTable).where(and(eq(bodyweightsTable.athleteId,req.user!.id),eq(bodyweightsTable.date,date),eq(bodyweightsTable.timeOfDay,String(req.params.timeOfDay))));
+  res.json({success:true});
+});
+router.post("/maxes", async (req,res) => {
+  const input=SaveTrueMaxBody.parse(req.body);
+  if(!dateValid(input.date)) fail(400,"Enter a valid max date.");
+  const max=SaveTrueMaxResponse.parse({...input,id:input.id || randomUUID()});
+  if(input.id) {
+    const rows=await db.update(trueMaxesTable).set({date:max.date,data:max})
+      .where(and(eq(trueMaxesTable.id,input.id),eq(trueMaxesTable.athleteId,req.user!.id))).returning();
+    if(!rows.length) fail(404,"Max entry not found.");
+  } else {
+    await db.insert(trueMaxesTable).values({id:max.id,athleteId:req.user!.id,date:max.date,data:max});
+  }
+  res.json(max);
+});
+router.delete("/maxes/:id", async (req,res) => {
+  const rows=await db.delete(trueMaxesTable).where(and(eq(trueMaxesTable.id,String(req.params.id)),eq(trueMaxesTable.athleteId,req.user!.id))).returning();
+  if(!rows.length) fail(404,"Max entry not found.");
+  res.json({success:true});
 });
 router.post("/programs", async (req,res) => {
   const input=SaveProgramBody.parse(req.body);
@@ -127,9 +174,9 @@ router.post("/sessions", async (req,res) => {
     const ex=workout.exercises.find(e=>e.id===s.exerciseId);
     if(!ex) fail(400,"Exercise not found in assigned workout.");
     // Competition classification comes from the assigned program, not the client.
-    return {...s,exerciseName:ex.name,lift:ex.lift};
+    return {...s,exerciseName:ex.name,lift:ex.lift,completed:s.reps>0 && (s.weight>0 || ex.lift==="accessory")};
   });
-  if(normalizedSets.some(s=>s.completed && s.lift!=="accessory" && (s.weight<=0 || s.reps<=0))) fail(400,"Completed competition-lift sets need a weight and at least one rep. Leave failed attempts unchecked and record them in notes.");
+  if(normalizedSets.some(s=>s.reps>0 && s.lift!=="accessory" && s.weight<=0)) fail(400,"Enter a weight for competition-lift sets with completed reps. Record failed attempts with zero reps and a note.");
   if(input.status==="completed" && !normalizedSets.some(s=>s.completed && s.reps>0)) fail(400,"Complete at least one set with reps before finishing.");
   const profile=await ensureProfile(req.user!.id,req.user!.firstName || "Athlete");
   const saved=await db.transaction(async tx=>{

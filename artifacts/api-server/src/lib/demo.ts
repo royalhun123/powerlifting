@@ -26,7 +26,7 @@ export function demoWorkspace(): Workspace {
       exercises: workout.exercises.map(ex => ({
         ...ex,
         sourceUnit: "lb" as const,
-        setWeights: ex.id === "squat" ? [325, 335, 330] : [],
+        setWeights: [],
       })),
     }))
   };

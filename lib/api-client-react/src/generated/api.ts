@@ -23,6 +23,7 @@ import type {
   Assignment,
   AssignmentInput,
   AuthUserEnvelope,
+  Bodyweight,
   FeedbackInput,
   GetAnalyticsParams,
   HealthStatus,
@@ -38,6 +39,8 @@ import type {
   Session,
   SessionInput,
   Success,
+  TrueMax,
+  TrueMaxInput,
   Workspace
 } from './api.schemas';
 
@@ -67,6 +70,450 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetTrueMaxesUrl = () => {
+
+
+
+
+  return `/api/maxes`
+}
+
+export const getTrueMaxes = async ( options?: Parameters<typeof customFetch>[1]): Promise<TrueMax[]> => {
+
+  return customFetch<TrueMax[]>(getGetTrueMaxesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTrueMaxesQueryKey = () => {
+    return [
+    `/api/maxes`
+    ] as const;
+    }
+
+
+export const getGetTrueMaxesQueryOptions = <TData = Awaited<ReturnType<typeof getTrueMaxes>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrueMaxes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTrueMaxesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrueMaxes>>> = ({ signal }) => getTrueMaxes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrueMaxes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTrueMaxesQueryResult = NonNullable<Awaited<ReturnType<typeof getTrueMaxes>>>
+export type GetTrueMaxesQueryError = ErrorType<unknown>
+
+
+
+export function useGetTrueMaxes<TData = Awaited<ReturnType<typeof getTrueMaxes>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrueMaxes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTrueMaxesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveTrueMaxUrl = () => {
+
+
+
+
+  return `/api/maxes`
+}
+
+export const saveTrueMax = async (trueMaxInput: TrueMaxInput, options?: Parameters<typeof customFetch>[1]): Promise<TrueMax> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TrueMax>(getSaveTrueMaxUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(trueMaxInput)
+  }
+);}
+
+
+
+
+
+export const getSaveTrueMaxMutationKey = () => ['saveTrueMax'] as const;
+
+export const getSaveTrueMaxMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveTrueMax>>, TError,SaveTrueMaxMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveTrueMax>>, TError,SaveTrueMaxMutationVariables, TContext> => {
+
+const mutationKey = getSaveTrueMaxMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveTrueMax>>, SaveTrueMaxMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveTrueMax(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveTrueMaxMutationResult = NonNullable<Awaited<ReturnType<typeof saveTrueMax>>>
+    export type SaveTrueMaxMutationBody = BodyType<TrueMaxInput>
+    export type SaveTrueMaxMutationError = ErrorType<unknown>
+    export type SaveTrueMaxMutationVariables = {data: BodyType<TrueMaxInput>}
+
+    export const useSaveTrueMax = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveTrueMax>>, TError,SaveTrueMaxMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveTrueMax>>,
+        TError,
+        SaveTrueMaxMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveTrueMaxMutationOptions(options));
+    }
+
+export const getDeleteTrueMaxUrl = (id: string,) => {
+
+
+
+
+  return `/api/maxes/${id}`
+}
+
+export const deleteTrueMax = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Success> => {
+
+  return customFetch<Success>(getDeleteTrueMaxUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteTrueMaxMutationKey = () => ['deleteTrueMax'] as const;
+
+export const getDeleteTrueMaxMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTrueMax>>, TError,DeleteTrueMaxMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTrueMax>>, TError,DeleteTrueMaxMutationVariables, TContext> => {
+
+const mutationKey = getDeleteTrueMaxMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTrueMax>>, DeleteTrueMaxMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTrueMax(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTrueMaxMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTrueMax>>>
+
+    export type DeleteTrueMaxMutationError = ErrorType<unknown>
+    export type DeleteTrueMaxMutationVariables = {id: string}
+
+    export const useDeleteTrueMax = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTrueMax>>, TError,DeleteTrueMaxMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTrueMax>>,
+        TError,
+        DeleteTrueMaxMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteTrueMaxMutationOptions(options));
+    }
+
+export const getGetBodyweightsUrl = () => {
+
+
+
+
+  return `/api/bodyweights`
+}
+
+export const getBodyweights = async ( options?: Parameters<typeof customFetch>[1]): Promise<Bodyweight[]> => {
+
+  return customFetch<Bodyweight[]>(getGetBodyweightsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBodyweightsQueryKey = () => {
+    return [
+    `/api/bodyweights`
+    ] as const;
+    }
+
+
+export const getGetBodyweightsQueryOptions = <TData = Awaited<ReturnType<typeof getBodyweights>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBodyweights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBodyweightsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBodyweights>>> = ({ signal }) => getBodyweights({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBodyweights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBodyweightsQueryResult = NonNullable<Awaited<ReturnType<typeof getBodyweights>>>
+export type GetBodyweightsQueryError = ErrorType<unknown>
+
+
+
+export function useGetBodyweights<TData = Awaited<ReturnType<typeof getBodyweights>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBodyweights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBodyweightsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveBodyweightUrl = () => {
+
+
+
+
+  return `/api/bodyweights`
+}
+
+export const saveBodyweight = async (bodyweight: Bodyweight, options?: Parameters<typeof customFetch>[1]): Promise<Bodyweight> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Bodyweight>(getSaveBodyweightUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(bodyweight)
+  }
+);}
+
+
+
+
+
+export const getSaveBodyweightMutationKey = () => ['saveBodyweight'] as const;
+
+export const getSaveBodyweightMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBodyweight>>, TError,SaveBodyweightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveBodyweight>>, TError,SaveBodyweightMutationVariables, TContext> => {
+
+const mutationKey = getSaveBodyweightMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveBodyweight>>, SaveBodyweightMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveBodyweight(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveBodyweightMutationResult = NonNullable<Awaited<ReturnType<typeof saveBodyweight>>>
+    export type SaveBodyweightMutationBody = BodyType<Bodyweight>
+    export type SaveBodyweightMutationError = ErrorType<unknown>
+    export type SaveBodyweightMutationVariables = {data: BodyType<Bodyweight>}
+
+    export const useSaveBodyweight = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBodyweight>>, TError,SaveBodyweightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveBodyweight>>,
+        TError,
+        SaveBodyweightMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveBodyweightMutationOptions(options));
+    }
+
+export const getDeleteBodyweightUrl = (date: string,
+    timeOfDay: 'morning' | 'day' | 'night' | 'unspecified',) => {
+
+
+
+
+  return `/api/bodyweights/${date}/${timeOfDay}`
+}
+
+export const deleteBodyweight = async (date: string,
+    timeOfDay: 'morning' | 'day' | 'night' | 'unspecified', options?: Parameters<typeof customFetch>[1]): Promise<Success> => {
+
+  return customFetch<Success>(getDeleteBodyweightUrl(date,timeOfDay),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteBodyweightMutationKey = () => ['deleteBodyweight'] as const;
+
+export const getDeleteBodyweightMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBodyweight>>, TError,DeleteBodyweightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBodyweight>>, TError,DeleteBodyweightMutationVariables, TContext> => {
+
+const mutationKey = getDeleteBodyweightMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBodyweight>>, DeleteBodyweightMutationVariables> = (props) => {
+          const {date,timeOfDay} = props ?? {};
+
+          return  deleteBodyweight(date,timeOfDay,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBodyweightMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBodyweight>>>
+
+    export type DeleteBodyweightMutationError = ErrorType<unknown>
+    export type DeleteBodyweightMutationVariables = {date: string;timeOfDay: 'morning' | 'day' | 'night' | 'unspecified'}
+
+    export const useDeleteBodyweight = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBodyweight>>, TError,DeleteBodyweightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBodyweight>>,
+        TError,
+        DeleteBodyweightMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteBodyweightMutationOptions(options));
+    }
 
 export const getBeginBrowserLoginUrl = () => {
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { ArrowLeft, Check, CheckCircle2, MessageSquare, Pencil, Plus, Target, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { useDeleteSession, useSaveSession, type Assignment, type LoggedSet, type Session, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { EmptyState, ErrorState, LiftTag, LoadingPage, PageHeader, Panel } from "@/components/common";
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
-import { buildSets, fmtDate, fmtNum, setTargetLoad, repRange, todayISO } from "@/lib/pl";
+import { buildSets, fmtDate, fmtNum, setTargetLoad, isSetPerformed, repRange, todayISO } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@workspace/api-client-react";
 
@@ -37,7 +37,11 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
   const { toast } = useToast();
   const { workout } = state;
 
-  const setAt = (idx: number, patch: Partial<LoggedSet>) => setState({ ...state, sets: state.sets.map((s, i) => (i === idx ? { ...s, ...patch } : s)) });
+  const setAt = (idx: number, patch: Partial<LoggedSet>) => setState({ ...state, sets: state.sets.map((s, i) => {
+    if (i !== idx) return s;
+    const updated = { ...s, ...patch };
+    return { ...updated, completed: isSetPerformed(updated) };
+  }) });
   const done = state.sets.filter((s) => s.completed).length;
   const volume = state.sets.filter((s) => s.completed).reduce((t, s) => t + s.weight * s.reps, 0);
   const unitMismatch = state.unit !== profile.unit;
@@ -127,40 +131,25 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                 <div className="text-right font-num text-xs">
                   <div className="text-sm">Sets: <strong>{ex.sets}</strong> · Target reps: <strong>{ex.reps}</strong></div>
                   <div className="text-primary">Effort: {ex.effort || "—"}</div>
-                  {ex.weight && <div className="text-muted-foreground">Source weight: {ex.weight} lbs</div>}
                 </div>
                 {ex.notes && <p className="w-full text-xs text-muted-foreground">{ex.notes}</p>}
                 <p className="w-full text-xs text-muted-foreground">Each set has its own actual weight and reps. Increase or decrease the weight as needed.{range ? ` Aim for ${range.min}–${range.max} reps; log the number you actually complete.` : ` Rep prescription: ${ex.reps}. Log actual reps below.`}</p>
+                <p className="w-full text-xs text-muted-foreground">Entering reps records the set automatically once a weight is entered (bodyweight accessories may use 0). RPE is optional; a tested 1RM is a single at RPE 10. Only RPE 9 sets generate estimated maxes.</p>
               </header>
-              <div className="grid grid-cols-[2rem_1fr_1fr_1fr_3rem] gap-2 px-4 pt-2 font-num text-[10px] uppercase tracking-widest text-muted-foreground">
-                <span>Set</span><span>Weight ({state.unit === "lb" ? "lbs" : "kg"})</span><span>Actual reps</span><span>RPE</span><span className="text-center">Done</span>
+              <div className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 px-4 pt-2 font-num text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span>Set</span><span>Weight ({state.unit === "lb" ? "lbs" : "kg"})</span><span>Actual reps</span><span>RPE (optional)</span>
               </div>
               <div className="space-y-1.5 px-4 py-2">
                 {rows.map(({ s, i }, k) => {
-                  const t = setTargetLoad(ex, k, profile, state.unit);
                   return (
                   <div key={i} className="group">
-                    <div className={cn("grid grid-cols-[2rem_1fr_1fr_1fr_3rem] items-center gap-2 rounded-sm transition-colors", s.completed && "bg-[hsl(var(--accessory)/0.08)]")}>
+                    <div className={cn("grid grid-cols-[2rem_1fr_1fr_1fr] items-center gap-2 rounded-sm transition-colors", s.completed && "bg-[hsl(var(--accessory)/0.08)]")}>
                       <span className="font-display text-lg font-bold text-muted-foreground">{k + 1}</span>
-                      <Input inputMode="decimal" aria-label={`${ex.name} set ${k + 1} actual weight in ${state.unit}`} className="h-11 font-num text-base" placeholder={t !== null ? String(t) : "—"} value={s.weight ? String(s.weight) : ""} onChange={(e) => setAt(i, { weight: numOr0(e.target.value) })} data-testid={`input-set-weight-${i}`} />
+                      <Input inputMode="decimal" aria-label={`${ex.name} set ${k + 1} actual weight in ${state.unit}`} className="h-11 font-num text-base" placeholder="—" value={s.weight ? String(s.weight) : ""} onChange={(e) => setAt(i, { weight: numOr0(e.target.value) })} data-testid={`input-set-weight-${i}`} />
                       <Input inputMode="numeric" aria-label={`${ex.name} set ${k + 1} actual reps`} className="h-11 font-num text-base" value={s.reps ? String(s.reps) : ""} placeholder="Done" onChange={(e) => setAt(i, { reps: Math.round(numOr0(e.target.value)) })} data-testid={`input-set-reps-${i}`} />
                       <Input inputMode="decimal" className="h-11 font-num text-base" value={s.rpe ? String(s.rpe) : ""} placeholder="—" onChange={(e) => setAt(i, { rpe: Math.min(10, numOr0(e.target.value)) })} data-testid={`input-set-rpe-${i}`} />
-                      <button
-                        onClick={() => setAt(i, { completed: !s.completed })}
-                        className={cn("flex h-11 w-12 items-center justify-center rounded-sm border-2 transition-colors", s.completed ? "pop border-[hsl(var(--accessory))] bg-[hsl(var(--accessory))] text-primary-foreground" : "border-input text-transparent hover:border-foreground/40")}
-                        aria-label="Toggle set completed"
-                        data-testid={`button-set-complete-${i}`}
-                      >
-                        <Check className="h-5 w-5" />
-                      </button>
                     </div>
                     <div className="ml-10 mt-1 flex flex-wrap items-center gap-2">
-                      {t !== null && (
-                        <span className="flex items-center gap-2 font-num text-[10px] text-muted-foreground">
-                          <Target className="h-3 w-3" /> Target: {fmtNum(t, 2)} {state.unit === "lb" ? "lbs" : "kg"}
-                          <button className="min-h-8 font-semibold uppercase text-primary underline" onClick={() => setAt(i, { weight: t })} data-testid={`button-use-target-${i}`}>Use for this set</button>
-                        </span>
-                      )}
                       <Input className="h-7 text-xs" placeholder="Set note" value={s.notes} onChange={(e) => setAt(i, { notes: e.target.value })} data-testid={`input-set-notes-${i}`} />
                       <button className="text-muted-foreground hover:text-destructive" onClick={() => setState({ ...state, sets: state.sets.filter((_, j) => j !== i) })} aria-label="Remove set" data-testid={`button-remove-set-${i}`}>
                         <Trash2 className="h-3.5 w-3.5" />
@@ -174,9 +163,8 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                 <button
                   className="inline-flex items-center font-num text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                   onClick={() => {
-                    const last = rows[rows.length - 1]?.s;
                     const lastIdx = rows[rows.length - 1]?.i ?? state.sets.length - 1;
-                    const ns: LoggedSet = { exerciseId: ex.id, exerciseName: ex.name, lift: ex.lift, setNumber: rows.length + 1, weight: 0, reps: last?.reps ?? 0, rpe: 0, completed: false, notes: "" };
+                    const ns: LoggedSet = { exerciseId: ex.id, exerciseName: ex.name, lift: ex.lift, setNumber: rows.length + 1, weight: setTargetLoad(ex, rows.length, profile, state.unit) ?? 0, reps: 0, rpe: 0, completed: false, notes: "" };
                     const arr = [...state.sets];
                     arr.splice(lastIdx + 1, 0, ns);
                     setState({ ...state, sets: arr });

@@ -4,6 +4,70 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export type TrueMaxInputLift = typeof TrueMaxInputLift[keyof typeof TrueMaxInputLift];
+
+
+export const TrueMaxInputLift = {
+  squat: 'squat',
+  bench: 'bench',
+  deadlift: 'deadlift',
+} as const;
+
+export type TrueMaxInputUnit = typeof TrueMaxInputUnit[keyof typeof TrueMaxInputUnit];
+
+
+export const TrueMaxInputUnit = {
+  lb: 'lb',
+  kg: 'kg',
+} as const;
+
+export interface TrueMaxInput {
+  id?: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  lift: TrueMaxInputLift;
+  /**
+     * @maximum 2000
+     * @exclusiveMinimum 0
+     */
+  weight: number;
+  unit: TrueMaxInputUnit;
+}
+
+export type TrueMax = TrueMaxInput & {
+  id: string;
+};
+
+export type BodyweightUnit = typeof BodyweightUnit[keyof typeof BodyweightUnit];
+
+
+export const BodyweightUnit = {
+  lb: 'lb',
+  kg: 'kg',
+} as const;
+
+export type BodyweightTimeOfDay = typeof BodyweightTimeOfDay[keyof typeof BodyweightTimeOfDay];
+
+
+export const BodyweightTimeOfDay = {
+  morning: 'morning',
+  day: 'day',
+  night: 'night',
+  unspecified: 'unspecified',
+} as const;
+
+export interface Bodyweight {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  /**
+     * @maximum 2000
+     * @exclusiveMinimum 0
+     */
+  weight: number;
+  unit: BodyweightUnit;
+  timeOfDay?: BodyweightTimeOfDay;
+}
+
 export interface HealthStatus {
   status: string;
 }

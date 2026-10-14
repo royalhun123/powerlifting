@@ -1,7 +1,7 @@
 import type { Analytics, Session } from "./training-types";
 import { convert, round } from "./training-types";
 
-export function analytics(sessions: Session[], unit: "lb" | "kg", days: number): Analytics {
+export function analytics(sessions: Session[], unit: "lb" | "kg", days: number, trueMaxes: {date:string;lift:"squat"|"bench"|"deadlift";weight:number;unit:"lb"|"kg"}[] = []): Analytics {
   const cutoff = new Date();
   cutoff.setUTCDate(cutoff.getUTCDate() - days);
   const rows = sessions.filter(s => s.status === "completed" && s.date >= cutoff.toISOString().slice(0,10)).sort((a,b) => a.date.localeCompare(b.date));
@@ -22,16 +22,28 @@ export function analytics(sessions: Session[], unit: "lb" | "kg", days: number):
         record.totalVolume += volume;
         record.sets++;
         if (w > record.bestWeight) { record.bestWeight = w; record.date = row.date; }
-        // Estimate only competition-lift sets of 1–10 reps; high-rep estimates are unreliable.
-        const estimate = set.reps === 1 ? w : set.reps <= 10 ? w*(1+set.reps/30) : 0;
+        // An actual maximal single is 1 rep at RPE 10. Estimates use only
+        // RPE 9 sets (one rep in reserve), capped at 10 completed reps.
+        const estimate = set.reps === 1 && set.rpe === 10 ? w
+          : set.rpe === 9 && set.reps <= 10 ? w*(1+(set.reps+1)/30) : 0;
         record.estimatedMax = Math.max(record.estimatedMax,estimate);
         if (set.lift !== "accessory" && estimate > 0) point[set.lift] = Math.max(point[set.lift] ?? 0, estimate);
       }
     }
     byDate.set(row.date, point);
   }
+  // A separately logged tested max contributes to max history, not workout volume.
+  for (const max of trueMaxes.filter(m=>m.date>=cutoff.toISOString().slice(0,10))) {
+    const weight=convert(max.weight,max.unit,unit);
+    const point=byDate.get(max.date) ?? {date:max.date,volume:0,squat:null,bench:null,deadlift:null,sessions:0};
+    point[max.lift]=Math.max(point[max.lift] ?? 0,weight);
+    byDate.set(max.date,point);
+    const record=result.records.find(r=>r.lift===max.lift)!;
+    record.estimatedMax=Math.max(record.estimatedMax,weight);
+    if(weight>record.bestWeight) {record.bestWeight=weight;record.date=max.date;}
+  }
   result.totalVolume = round(result.totalVolume);
   result.records = result.records.map(r => ({...r,bestWeight:round(r.bestWeight),estimatedMax:round(r.estimatedMax),totalVolume:round(r.totalVolume)}));
-  result.trend = [...byDate.values()].map(p => ({...p,volume:round(p.volume),squat:p.squat === null ? null : round(p.squat),bench:p.bench === null ? null : round(p.bench),deadlift:p.deadlift === null ? null : round(p.deadlift)}));
+  result.trend = [...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date)).map(p => ({...p,volume:round(p.volume),squat:p.squat === null ? null : round(p.squat),bench:p.bench === null ? null : round(p.bench),deadlift:p.deadlift === null ? null : round(p.deadlift)}));
   return result;
 }

@@ -5,6 +5,86 @@ info:
 servers:
   - url: /api
 paths:
+  /maxes:
+    get:
+      operationId: getTrueMaxes
+      responses:
+        "200":
+          description: Separately logged tested one-rep maxes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TrueMax" }
+    post:
+      operationId: saveTrueMax
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrueMaxInput" }
+      responses:
+        "200":
+          description: Saved tested max
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrueMax" }
+  /maxes/{id}:
+    delete:
+      operationId: deleteTrueMax
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted max
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
+  /bodyweights:
+    get:
+      operationId: getBodyweights
+      responses:
+        "200":
+          description: The signed-in athlete's daily bodyweight entries, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Bodyweight" }
+    post:
+      operationId: saveBodyweight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Bodyweight" }
+      responses:
+        "200":
+          description: Saved daily weight; logging the same date updates that entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Bodyweight" }
+  /bodyweights/{date}/{timeOfDay}:
+    delete:
+      operationId: deleteBodyweight
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema: { type: string }
+        - in: path
+          name: timeOfDay
+          required: true
+          schema: { type: string, enum: [morning, day, night, unspecified] }
+      responses:
+        "200":
+          description: Deleted the signed-in athlete's entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Success" }
   /login:
     get:
       operationId: beginBrowserLogin
@@ -217,6 +297,33 @@ paths:
               schema: { $ref: "#/components/schemas/Analytics" }
 components:
   schemas:
+    TrueMaxInput:
+      type: object
+      required: [date, lift, weight, unit]
+      properties:
+        id: { type: string }
+        date: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        lift: { type: string, enum: [squat, bench, deadlift] }
+        weight: { type: number, exclusiveMinimum: 0, maximum: 2000 }
+        unit: { type: string, enum: [lb, kg] }
+    TrueMax:
+      allOf:
+        - $ref: "#/components/schemas/TrueMaxInput"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+    Bodyweight:
+      type: object
+      required: [date, weight, unit]
+      properties:
+        date: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        weight: { type: number, exclusiveMinimum: 0, maximum: 2000 }
+        unit: { type: string, enum: [lb, kg] }
+        timeOfDay:
+          type: string
+          enum: [morning, day, night, unspecified]
+          default: unspecified
     HealthStatus:
       type: object
       required: [status]
