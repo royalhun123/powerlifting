@@ -3,7 +3,8 @@ import { TrueMaxButton } from "@/components/true-max-tracking";
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowRight, CalendarClock, Flag } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { maxTrendCeiling } from "@/lib/max-trend";
 import { getGetAnalyticsQueryKey, useGetAnalytics, type Workout } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
@@ -126,15 +127,15 @@ export default function Dashboard() {
           ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trend} margin={{ left: -10, right: 8, top: 8 }}>
+                <BarChart data={trend} margin={{ left: -10, right: 8, top: 8 }} maxBarSize={40}>
                   <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} />
                   <XAxis dataKey="date" tickFormatter={(d: string) => fmtDate(d)} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={["auto", "auto"]} />
+                  <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[0,maxTrendCeiling(trend)]} allowDataOverflow />
                   <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", fontSize: 12 }} labelFormatter={(d) => fmtDate(String(d), { month: "long", day: "numeric", year: "numeric" })} formatter={(v: number, n: string) => [`${fmtNum(v, 1)} ${analytics.data?.unit ?? ""}`, `${n} e1RM`]} />
                   {(["squat", "bench", "deadlift"] as const).map((l) => (
-                    <Line key={l} type="monotone" dataKey={l} stroke={LIFT_VAR[l]} strokeWidth={2.5} dot={{ r: 2.5 }} connectNulls />
+                    <Bar key={l} dataKey={l} fill={LIFT_VAR[l]} radius={[3,3,0,0]} />
                   ))}
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           )}

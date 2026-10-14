@@ -1,4 +1,5 @@
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { maxTrendCeiling } from "@/lib/max-trend";
 import { getGetAnalyticsQueryKey, useGetAnalytics, type GetAnalyticsDays } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState, Panel, Stat } from "@/components/common";
@@ -62,13 +63,13 @@ export function AnalyticsView({ athleteId, days }: { athleteId?: string; days: G
         {!data.trend.some(point => point.squat !== null || point.bench !== null || point.deadlift !== null) && <p className="mb-3 text-sm text-muted-foreground">No qualifying maxes in this period. Log a tested single at RPE 10 or a set of 1–10 reps at RPE 9.</p>}
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data.trend} margin={{ left: -8, right: 8, top: 8 }}>
+            <BarChart data={data.trend} margin={{ left: -8, right: 8, top: 8 }} maxBarSize={40}>
               <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} />
               <XAxis dataKey="date" tickFormatter={(d: string) => fmtDate(d)} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[0,maxTrendCeiling(data.trend)]} allowDataOverflow tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip contentStyle={tip} labelFormatter={(d) => fmtDate(String(d), { month: "long", day: "numeric", year: "numeric" })} formatter={(v: number, n: string) => [`${fmtNum(v, 1)} ${u}`, `${LIFT_LABEL[n] ?? n} e1RM`]} />
-              {main.map((l) => <Line key={l} type="monotone" dataKey={l} stroke={LIFT_VAR[l]} strokeWidth={2.5} dot={{ r: 3 }} connectNulls />)}
-            </LineChart>
+              {main.map((l) => <Bar key={l} dataKey={l} fill={LIFT_VAR[l]} radius={[3,3,0,0]} />)}
+            </BarChart>
           </ResponsiveContainer>
         </div>
         <div className="mt-2 flex gap-4">{main.map((l) => <span key={l} className="flex items-center gap-1.5 font-num text-[11px]"><span className="h-2 w-4 rounded-sm" style={{ background: LIFT_VAR[l] }} />{LIFT_LABEL[l]}</span>)}</div>

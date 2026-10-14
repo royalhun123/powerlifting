@@ -31,4 +31,6 @@ test("normalize old snapshots without mutating source or unrelated coach edits",
   assert.equal(ambiguous.effort,"75%");
   assert.equal(output.reviewCount,1);
   assert.deepEqual(normalizeProgram(output),output);
+  const description="Imported from your workbook. Prescriptions and source references only, not completed workout history. Review flagged Excel date conversions before assigning. Keep my own coaching instructions.";
+  assert.equal(normalizeProgram({...program,description}).description,"Keep my own coaching instructions.");
 });

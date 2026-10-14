@@ -30,6 +30,10 @@ export function normalizeProgram(program: Program): Program {
   }));
   return {
     ...program,
+    description:program.description
+      .replace(/Imported from your workbook\.\s*/gi,"")
+      .replace(/Prescriptions and source references only, not completed workout history\.\s*/gi,"")
+      .replace(/Review flagged Excel date conversions before assigning\.\s*/gi,"").trim(),
     workouts,
     reviewCount:workouts.reduce((sum,w)=>sum+w.exercises.filter(e=>e.review).length,0),
   };

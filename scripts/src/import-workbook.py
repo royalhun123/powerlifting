@@ -90,7 +90,7 @@ with zipfile.ZipFile(source) as z:
                 current["exercises"].append({"id":f"e{r}","name":vals[0],"sets":vals[1],"reps":vals[2],"effort":vals[3],"weight":"","sourceUnit":"lb","setWeights":[],"notes":notes,"review":review,"lift":lift})
         programs.append({
             "id": f"source-{si+1}", "name": "Meet Peak" if name=="Peak" else "Deload" if name=="deload" else name,
-            "description": "Imported from your workbook. Prescriptions and source references only, not completed workout history. "+("Percentages use Block 2 week 4 singles; set your reference maxes before starting." if name=="Peak" else "Review flagged Excel date conversions before assigning."),
+            "description": "Percentages use Block 2 week 4 singles; set your reference maxes before starting." if name=="Peak" else "",
             "phase": "peak" if name=="Peak" else "deload" if name=="deload" else "volume" if name=="Block 1" else "strength",
             "weeks":len(columns), "archived":name=="old Block 2", "workouts":workouts,
             "source": source.name,

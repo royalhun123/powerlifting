@@ -2,7 +2,7 @@
   {
     "id": "source-4",
     "name": "Deload",
-    "description": "Imported from your workbook. Prescriptions and source references only, not completed workout history. Review flagged Excel date conversions before assigning.",
+    "description": "",
     "phase": "deload",
     "weeks": 1,
     "archived": false,
@@ -358,7 +358,7 @@
   {
     "id": "source-5",
     "name": "Meet Peak",
-    "description": "Imported from your workbook. Prescriptions and source references only, not completed workout history. Percentages use Block 2 week 4 singles; set your reference maxes before starting.",
+    "description": "Percentages use Block 2 week 4 singles; set your reference maxes before starting.",
     "phase": "peak",
     "weeks": 4,
     "archived": false,

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SessionSummary } from "@/components/session-summary";
 import { useLocation, useSearch } from "wouter";
 import { ArrowLeft, Check, CheckCircle2, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { useDeleteSession, useSaveSession, type Assignment, type LoggedSet, type Session, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
@@ -206,6 +207,7 @@ export default function Workouts() {
   const guard = useMutationGuard();
   const { toast } = useToast();
   const [log, setLog] = useState<LogState | null>(null);
+  const [viewedSession,setViewedSession]=useState<Session|null>(null);
   const [pickedAssignment, setPickedAssignment] = useState<string>("");
   const [toDelete, setToDelete] = useState<Session | null>(null);
   const [consumedQuery, setConsumedQuery] = useState("");
@@ -226,7 +228,11 @@ export default function Workouts() {
     const w = a?.program.workouts.find((x) => x.id === q.get("workout"));
     setConsumedQuery(search);
     if (a) setPickedAssignment(a.id);
-    if (a && w) setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+    if (a && w) {
+      const completed=mine.sessions.find(s=>s.assignmentId===a.id && s.workoutId===w.id && s.status==="completed");
+      if(completed) setViewedSession(completed);
+      else setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+    }
   }
 
   if (isLoading) return <LoadingPage />;
@@ -247,7 +253,11 @@ export default function Workouts() {
   }
 
   const active = mine.assignments.find((a) => a.id === pickedAssignment) ?? mine.assignments[0];
-  const start = (a: Assignment, w: Workout) => setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+  const start = (a: Assignment, w: Workout) => {
+    const completed=mine.sessions.find(s=>s.assignmentId===a.id && s.workoutId===w.id && s.status==="completed");
+    if(completed) {setViewedSession(completed);return;}
+    setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+  };
   const edit = (s: Session) => {
     const a = data.assignments.find((x) => x.id === s.assignmentId);
     const w = a?.program.workouts.find((x) => x.id === s.workoutId);
@@ -279,6 +289,7 @@ export default function Workouts() {
 
   return (
     <div>
+      <SessionSummary session={viewedSession} onClose={()=>{setViewedSession(null);setLocation("/workouts");}} />
       <PageHeader kicker="Train" title="Workouts">
         {mine.assignments.length > 1 && (
           <Select value={active?.id} onValueChange={setPickedAssignment}>
@@ -336,7 +347,7 @@ export default function Workouts() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">{fmtDate(s.date, { weekday: "short", month: "short", day: "numeric" })} · {s.unit}</div>
-                      <div className="font-medium">{s.name}</div>
+                      <button className="text-left font-medium hover:underline" onClick={()=>setViewedSession(s)}>{s.name}</button>
                       <div className="font-num text-[11px] text-muted-foreground">
                         {s.sets.filter((x) => x.completed).length}/{s.sets.length} sets · {fmtNum(s.volume)} {s.unit} ·{" "}
                         <span className={s.status === "completed" ? "text-foreground" : "text-primary"}>{s.status}</span>
