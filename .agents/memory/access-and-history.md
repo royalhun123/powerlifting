@@ -9,6 +9,12 @@ The user wants clients to access training using any email provider after receivi
 
 **How to apply:** Preserve this as the access goal. Do not claim it is implemented merely because coaching invitations exist; verify the actual authentication provider and account-preservation path first.
 
+Only the app owner is the coach and may see All programs and Clients. Everyone, including the owner, gets My programs containing only their personal assignments.
+
+**Why:** The owner needs to write programs for clients without adding them to their own training, and clients must not manage the shared program library.
+
+**How to apply:** Keep coach authority server-controlled and separate templates from assignments; never let a profile edit or first-time signup grant coach access.
+
 Historical bodyweight entries without a recorded time must remain “time not recorded,” not be assigned morning/day/night.
 
 **Why:** Time-of-day tracking was added after existing daily logs, so assigning a period would invent measurement metadata.

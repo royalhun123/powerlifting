@@ -269,6 +269,7 @@ export const getWorkspaceResponseSessionsItemOneSetsMax = 300;
 
 export const GetWorkspaceResponse = zod.object({
   "demo": zod.boolean(),
+  "isCoach": zod.boolean(),
   "profile": zod.object({
   "name": zod.string().min(1).max(getWorkspaceResponseProfileOneNameMax),
   "unit": zod.enum(['lb', 'kg']),

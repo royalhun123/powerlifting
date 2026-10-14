@@ -65,7 +65,7 @@ export default function Dashboard() {
         <div className="rise mb-6 grid gap-3 rounded-md border border-dashed border-primary/40 bg-card p-5 md:grid-cols-3" data-testid="panel-getting-started">
           <div className="md:col-span-3 font-display text-2xl font-bold uppercase">Get on the platform</div>
           <Link href="/settings" className={`rounded-sm border p-3 text-sm hover:border-primary ${total > 0 ? "opacity-50" : ""}`} data-testid="link-start-maxes"><b className="font-num text-primary">01</b> Set reference maxes and meet date</Link>
-          <Link href="/programs" className={`rounded-sm border p-3 text-sm hover:border-primary ${current ? "opacity-50" : ""}`} data-testid="link-start-assign"><b className="font-num text-primary">02</b> Open a block and assign it to yourself</Link>
+          <Link href={data.isCoach ? "/programs" : "/my-programs"} className={`rounded-sm border p-3 text-sm hover:border-primary ${current ? "opacity-50" : ""}`} data-testid="link-start-assign"><b className="font-num text-primary">02</b> {data.isCoach ? "Open All programs and assign a block to yourself" : "View training assigned by your coach"}</Link>
           <Link href="/workouts" className="rounded-sm border p-3 text-sm hover:border-primary" data-testid="link-start-log"><b className="font-num text-primary">03</b> Log your first session</Link>
         </div>
       )}
@@ -142,7 +142,7 @@ export default function Dashboard() {
 
         <Panel title="Up next" className="rise-3" action={current && <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">{PHASE_LABEL[current.program.phase]}</span>}>
           {!current ? (
-            <EmptyState title="No block assigned" body="Assign a program to yourself to get a day-by-day plan." action={<Link href="/programs" className="text-sm text-primary underline" data-testid="link-assign-first">Browse programs</Link>} />
+            <EmptyState title="No block assigned" body={data.isCoach ? "Assign a program to yourself from All programs." : "Your coach will assign your day-by-day plan."} action={<Link href={data.isCoach ? "/programs" : "/my-programs"} className="text-sm text-primary underline" data-testid="link-assign-first">{data.isCoach ? "Browse All programs" : "My programs"}</Link>} />
           ) : !next ? (
             <div className="text-sm text-muted-foreground">Every workout in <b>{current.program.name}</b> is complete. Time for the next block.</div>
           ) : (
@@ -224,7 +224,7 @@ export default function Dashboard() {
         <div className="mt-6 flex items-center gap-2 font-num text-xs text-muted-foreground">
           <CalendarClock className="h-3.5 w-3.5" /> {current.program.name} started {fmtDate(current.startDate, { month: "long", day: "numeric" })}, assigned by {current.coachName}
           <Button variant="link" size="sm" asChild>
-            <Link href={`/programs/${current.program.id}`} data-testid="link-current-program">View block</Link>
+            <Link href="/my-programs" data-testid="link-current-program">View My programs</Link>
           </Button>
         </div>
       )}

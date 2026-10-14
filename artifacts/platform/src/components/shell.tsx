@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
-  { href: "/programs", label: "Programs", icon: ClipboardList },
+  { href: "/my-programs", label: "My programs", icon: ClipboardList },
+  { href: "/programs", label: "All programs", icon: ClipboardList },
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -20,9 +21,10 @@ const NAV = [
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const [loc] = useLocation();
+  const { data } = useWorkspace();
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.map(({ href, label, icon: Icon }) => {
+      {NAV.filter(item => data?.isCoach || !["/programs","/clients"].includes(item.href)).map(({ href, label, icon: Icon }) => {
         const active = href === "/" ? loc === "/" : loc.startsWith(href);
         return (
           <Link

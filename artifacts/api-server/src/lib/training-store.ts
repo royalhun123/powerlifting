@@ -6,6 +6,7 @@ import imported from "../data/imported-programs.json";
 import type { Profile, Workspace } from "./training-types";
 import { convert, round } from "./training-types";
 import { normalizeProgram } from "./program-defaults";
+import { isCoach } from "./coach-access";
 
 export async function ensureProfile(id: string, name: string): Promise<Profile> {
   const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.userId,id));
@@ -13,7 +14,7 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
   const profile:Profile = {id,name:name || "Athlete",unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""};
   await db.transaction(async tx => {
     const inserted = await tx.insert(profilesTable).values({userId:id,data:profile}).onConflictDoNothing().returning();
-    if (!inserted.length) return;
+    if (!inserted.length || !isCoach(id)) return;
     // Each account owns its own editable copies. Source cells are prescriptions,
     // never seeded as completed sessions or counted in progress.
     const templates = imported.map(raw => {
@@ -34,14 +35,15 @@ export async function linked(coachId: string, athleteId: string): Promise<boolea
 
 export async function loadWorkspace(id: string, name: string): Promise<Workspace> {
   const profile = await ensureProfile(id,name);
-  const links = await db.select().from(coachingTable).where(eq(coachingTable.coachId,id));
+  const coach = isCoach(id);
+  const links = coach ? await db.select().from(coachingTable).where(eq(coachingTable.coachId,id)) : [];
   const athleteIds = links.map(l => l.athleteId);
   const ids = [id,...athleteIds];
   const [programRows, assignmentRows, sessionRows, invitationRows, profileRows, coachLinks] = await Promise.all([
-    db.select().from(programsTable).where(eq(programsTable.ownerId,id)),
-    db.select().from(assignmentsTable).where(or(eq(assignmentsTable.coachId,id),eq(assignmentsTable.athleteId,id))),
+    coach ? db.select().from(programsTable).where(eq(programsTable.ownerId,id)) : Promise.resolve([]),
+    db.select().from(assignmentsTable).where(coach ? or(eq(assignmentsTable.coachId,id),eq(assignmentsTable.athleteId,id)) : eq(assignmentsTable.athleteId,id)),
     db.select().from(workoutsTable).where(inArray(workoutsTable.athleteId,ids)),
-    db.select().from(invitationsTable).where(eq(invitationsTable.coachId,id)),
+    coach ? db.select().from(invitationsTable).where(eq(invitationsTable.coachId,id)) : Promise.resolve([]),
     athleteIds.length ? db.select().from(profilesTable).where(inArray(profilesTable.userId,athleteIds)) : Promise.resolve([]),
     db.select().from(coachingTable).where(eq(coachingTable.athleteId,id)),
   ]);
@@ -55,7 +57,7 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     const coaches = await db.select().from(profilesTable).where(inArray(profilesTable.userId,coachLinks.map(c=>c.coachId)));
     profile.coachName=coaches.map(r=>UpdateProfileResponse.parse(r.data).name).join(", ");
   }
-  return {demo:false,profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
+  return {demo:false,isCoach:coach,profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
       return {...assignment,program:normalizeProgram(assignment.program)};

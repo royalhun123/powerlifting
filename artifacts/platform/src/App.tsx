@@ -16,6 +16,16 @@ import Clients from '@/pages/clients';
 import Settings from '@/pages/settings';
 import Join from '@/pages/join';
 import { INVITE_KEY } from '@/lib/pl';
+import { useWorkspace } from '@/hooks/use-platform';
+import { EmptyState, LoadingPage } from '@/components/common';
+import MyPrograms from '@/pages/my-programs';
+
+function CoachOnly({children}:{children:ReactNode}) {
+  const {data,isLoading}=useWorkspace();
+  if(isLoading) return <LoadingPage />;
+  if(!data?.isCoach) return <EmptyState title="Coach-only page" body="Your assigned training is available under My programs." />;
+  return <>{children}</>;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 20_000, refetchOnWindowFocus: true, retry: 1 } },
@@ -40,11 +50,12 @@ function Router() {
       <RoutedErrorBoundary>
         <Switch>
           <Route path="/" component={Dashboard} />
-          <Route path="/programs" component={Programs} />
-          <Route path="/programs/:id" component={ProgramDetail} />
+          <Route path="/my-programs" component={MyPrograms} />
+          <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
+          <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>
           <Route path="/workouts" component={Workouts} />
           <Route path="/progress" component={Progress} />
-          <Route path="/clients" component={Clients} />
+          <Route path="/clients"><CoachOnly><Clients /></CoachOnly></Route>
           <Route path="/settings" component={Settings} />
           <Route path="/join" component={Join} />
           <Route component={NotFound} />

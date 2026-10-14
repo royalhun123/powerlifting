@@ -14,6 +14,7 @@ import { ensureProfile, linked, loadWorkspace } from "../lib/training-store";
 import { demoWorkspace } from "../lib/demo";
 import { analytics } from "../lib/analytics";
 import { normalizeProgram } from "../lib/program-defaults";
+import { isCoach } from "../lib/coach-access";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
@@ -48,6 +49,9 @@ router.get("/analytics", async (req,res) => {
 // All remaining endpoints mutate private account data and require a real login.
 router.use(async (req,res,next) => {
   if (!req.isAuthenticated()) {res.status(401).json({error:"Sign in to save training or manage clients."});return;}
+  if (/^\/(programs|invitations|assignments|feedback)(\/|$)/.test(req.path) && !isCoach(req.user.id)) {
+    res.status(403).json({error:"Only the coach can manage programs and clients."});return;
+  }
   await ensureProfile(req.user.id,req.user.firstName || "Athlete");
   next();
 });
@@ -140,6 +144,7 @@ router.post("/join", async (req,res) => {
   await db.transaction(async tx=>{
     const [invite]=await tx.select().from(invitationsTable).where(eq(invitationsTable.token,token)).for("update");
     if(!invite || invite.expiresAt.getTime()<Date.now()) fail(400,"This invitation has expired or was revoked.");
+    if(!isCoach(invite.coachId)) fail(400,"This invitation is no longer valid. Ask your coach for a new link.");
     if(invite.coachId===req.user!.id) fail(400,"You cannot accept your own invitation.");
     if(invite.acceptedBy && invite.acceptedBy!==req.user!.id) fail(409,"This invitation has already been used.");
     await tx.insert(coachingTable).values({coachId:invite.coachId,athleteId:req.user!.id}).onConflictDoNothing();
@@ -201,6 +206,7 @@ router.delete("/sessions/:id", async (req,res) => {
   res.json({success:true});
 });
 router.patch("/sessions/:id/feedback", async (req,res) => {
+  if(!isCoach(req.user!.id)) fail(403,"Only the coach can leave feedback.");
   const {id}=UpdateFeedbackParams.parse(req.params);
   const {feedback}=UpdateFeedbackBody.parse(req.body);
   const saved=await db.transaction(async tx=>{

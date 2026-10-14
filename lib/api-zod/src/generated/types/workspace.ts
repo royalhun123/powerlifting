@@ -13,6 +13,7 @@ import type { Session } from './session';
 
 export interface Workspace {
   demo: boolean;
+  isCoach: boolean;
   profile: Profile;
   programs: Program[];
   athletes: Athlete[];

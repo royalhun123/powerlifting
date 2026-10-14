@@ -100,7 +100,7 @@ export default function Programs() {
 
   return (
     <div>
-      <PageHeader kicker="Block library" title="Programs">
+      <PageHeader kicker="Coach library · Draft and assign programs" title="All programs">
         {archivedCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)} data-testid="button-toggle-archived">
             <Archive className="mr-2 h-4 w-4" /> {showArchived ? "Hide" : "Show"} archived ({archivedCount})

@@ -225,6 +225,7 @@ export default function Workouts() {
     const a = mine.assignments.find((x) => x.id === q.get("assignment"));
     const w = a?.program.workouts.find((x) => x.id === q.get("workout"));
     setConsumedQuery(search);
+    if (a) setPickedAssignment(a.id);
     if (a && w) setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
   }
 
@@ -292,7 +293,7 @@ export default function Workouts() {
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div>
           {!active ? (
-            <EmptyState title="No block assigned to you" body="Open a program and assign it to yourself to start logging. Coaches assign blocks to clients the same way." action={<Button variant="outline" onClick={() => setLocation("/programs")} data-testid="button-go-programs">Go to programs</Button>} />
+            <EmptyState title="No block assigned to you" body={data.isCoach ? "Open All programs and assign a block to yourself to start logging." : "Your coach will assign your training. You can see your assignments in My programs."} action={<Button variant="outline" onClick={() => setLocation(data.isCoach ? "/programs" : "/my-programs")} data-testid="button-go-programs">{data.isCoach ? "All programs" : "My programs"}</Button>} />
           ) : (
             <div className="space-y-5">
               {[...byWeek.entries()].sort((a, b) => a[0] - b[0]).map(([wk, ws]) => (

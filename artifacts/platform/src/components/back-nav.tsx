@@ -5,7 +5,8 @@ import { ChevronLeft } from "lucide-react";
 const TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/workouts": "Workouts",
-  "/programs": "Programs",
+  "/programs": "All programs",
+  "/my-programs": "My programs",
   "/progress": "Progress",
   "/clients": "Clients",
   "/settings": "Settings",
@@ -15,7 +16,7 @@ const TITLES: Record<string, string> = {
 /** Resolve an in-app parent route. Never uses history.back. */
 export function backTarget(loc: string): { href: string; label: string } | null {
   if (loc === "/" || loc === "") return null;
-  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "Programs" };
+  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "All programs" };
   return { href: "/", label: "Dashboard" };
 }
 

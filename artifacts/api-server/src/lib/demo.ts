@@ -40,5 +40,5 @@ export function demoWorkspace(): Workspace {
     else s.workoutId = `w1-d${i%3+1}`;
     s.volume=sessionVolume(s);return s;
   });
-  return {demo:true,profile:{id:"demo",name:"Alex Morgan",unit:"lb",meetDate:shift(30),squatMax:385,benchMax:225,deadliftMax:465,coachName:""},programs:[program],athletes:[],assignments:[{id:"demo-assignment",athleteId:"demo",athleteName:"Alex Morgan",program,startDate:today(),coachName:"Self-coached"}],sessions:sessions.reverse(),invitations:[]};
+  return {demo:true,isCoach:false,profile:{id:"demo",name:"Alex Morgan",unit:"lb",meetDate:shift(30),squatMax:385,benchMax:225,deadliftMax:465,coachName:""},programs:[],athletes:[],assignments:[{id:"demo-assignment",athleteId:"demo",athleteName:"Alex Morgan",program,startDate:today(),coachName:"Self-coached"}],sessions:sessions.reverse(),invitations:[]};
 }

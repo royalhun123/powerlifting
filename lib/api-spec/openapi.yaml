@@ -535,9 +535,10 @@ components:
         feedback: { type: string, maxLength: 5000 }
     Workspace:
       type: object
-      required: [demo, profile, programs, athletes, assignments, sessions, invitations]
+      required: [demo, isCoach, profile, programs, athletes, assignments, sessions, invitations]
       properties:
         demo: { type: boolean }
+        isCoach: { type: boolean }
         profile: { $ref: "#/components/schemas/Profile" }
         programs: { type: array, items: { $ref: "#/components/schemas/Program" } }
         athletes: { type: array, items: { $ref: "#/components/schemas/Athlete" } }

@@ -125,3 +125,18 @@ export function BodyweightProgress({ days }: { days: number }) {
     </div>
   );
 }
+
+export function LatestBodyweight({unit}:{unit:"lb"|"kg"}) {
+  const query=useGetBodyweights({query:{queryKey:["/api/bodyweights"],staleTime:20_000,refetchInterval:60_000}});
+  const latest=query.data?.at(-1);
+  const weight=latest ? (latest.unit===unit ? latest.weight : unit==="kg" ? latest.weight/2.2046226218 : latest.weight*2.2046226218) : null;
+  return <Panel title="Most recent bodyweight">
+    {query.isLoading ? <p className="text-sm text-muted-foreground">Loading bodyweight…</p> :
+      query.isError ? <ErrorState message={errMessage(query.error)} onRetry={()=>query.refetch()} /> :
+      latest && weight !== null ? <div data-testid="latest-bodyweight">
+        <div className="font-display text-3xl font-bold">{fmtNum(weight,2)} <span className="text-lg">{unit==="lb" ? "lbs" : "kg"}</span></div>
+        <p className="mt-1 text-sm capitalize text-muted-foreground">{fmtDate(latest.date)} · {latest.timeOfDay && latest.timeOfDay!=="unspecified" ? latest.timeOfDay : "Time not recorded"}</p>
+      </div> : <p className="text-sm text-muted-foreground">No bodyweight logged yet.</p>}
+    <div className="mt-3"><BodyweightForm /></div>
+  </Panel>;
+}
