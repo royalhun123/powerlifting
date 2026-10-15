@@ -5,6 +5,17 @@ info:
 servers:
   - url: /api
 paths:
+  /athletes/{athleteId}/bodyweights:
+    get:
+      operationId: getClientBodyweights
+      parameters:
+        - { in: path, name: athleteId, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Read-only bodyweight history for a coach's own linked client in their workspace
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Bodyweight" } }
   /sessions/{id}/discussion:
     parameters:
       - { in: path, name: id, required: true, schema: { type: string } }
@@ -942,6 +953,8 @@ components:
       type: object
       required: [demo, isCoach, profile, programs, athletes, assignments, sessions, invitations]
       properties:
+        workspaceId: { type: string }
+        workspaceName: { type: string }
         privateLogin: { type: boolean }
         demo: { type: boolean }
         isCoach: { type: boolean }

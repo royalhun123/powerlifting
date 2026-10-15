@@ -16,10 +16,18 @@ import { demoWorkspace } from "../lib/demo";
 import { analytics } from "../lib/analytics";
 import { normalizeProgram } from "../lib/program-defaults";
 import { isCoach, isAdmin } from "../lib/coach-access";
+import { sameWorkspace } from "../lib/workspace-access";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
 
+router.get("/athletes/:athleteId/bodyweights", async (req,res) => {
+  res.setHeader("Cache-Control","no-store");
+  if (!req.user || !await isCoach(req.user.id) || !await linked(req.user.id,req.params.athleteId)) fail(403,"Only this athlete's linked coach can view their bodyweight logs.");
+  const rows=await db.select().from(bodyweightsTable).where(eq(bodyweightsTable.athleteId,req.params.athleteId)).orderBy(bodyweightsTable.date);
+  const times=["morning","day","night","unspecified"];
+  res.json(GetBodyweightsResponse.parse(rows.map(r=>r.data)).sort((a,b)=>a.date.localeCompare(b.date)||times.indexOf(a.timeOfDay)-times.indexOf(b.timeOfDay)));
+});
 router.get("/bodyweights", async (req,res) => {
   if (!req.user) { res.json([]); return; }
   const rows = await db.select().from(bodyweightsTable)
@@ -150,6 +158,7 @@ router.post("/join", async (req,res) => {
     const [invite]=await tx.select().from(invitationsTable).where(eq(invitationsTable.token,token)).for("update");
     if(!invite || invite.expiresAt.getTime()<Date.now()) fail(400,"This invitation has expired or was revoked.");
     if(!await isCoach(invite.coachId)) fail(400,"This invitation is no longer valid. Ask your coach for a new link.");
+    if(!await sameWorkspace(req.user!.id,invite.coachId)) fail(403,"This invitation belongs to another workspace. Ask the coach to create a separate account for you.");
     if(await isCoach(req.user!.id) || await isAdmin(req.user!.id)) fail(403,"Coach and admin accounts cannot become managed clients.");
     const existingLinks=await tx.select().from(coachingTable).where(eq(coachingTable.athleteId,req.user!.id));
     if(existingLinks.some(l=>l.coachId!==invite.coachId)) fail(409,"This athlete already belongs to another coach.");
@@ -166,6 +175,7 @@ router.post("/assignments", async (req,res) => {
   if(!await linked(req.user!.id,input.athleteId)) fail(403,"Invite this athlete and wait for them to accept first.");
   const [row]=await db.select().from(programsTable).where(eq(programsTable.id,input.programId));
   if(!row) fail(404,"Program not found.");
+  if(!await sameWorkspace(req.user!.id,row.ownerId)) fail(404,"Program not found.");
   const owner=await ensureProfile(row.ownerId,"Coach");
   const program=normalizeProgram(SaveProgramResponse.parse({...row.data as object,uploaderId:row.ownerId,uploaderName:owner.name}));
   const [athlete]=await db.select().from(profilesTable).where(eq(profilesTable.userId,input.athleteId));

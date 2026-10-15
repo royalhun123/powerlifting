@@ -3,7 +3,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { and, eq, gt, inArray, like, sql } from "drizzle-orm";
 import {
   db, usersTable, profilesTable, coachingTable, credentialsTable,
-  passwordSetupsTable, invitationsTable, sessionsTable,
+  passwordSetupsTable, invitationsTable, sessionsTable, workspaceMembersTable,
 } from "@workspace/db";
 import {
   CreatePasswordSetupBody, PasswordLoginBody, CompletePasswordSetupBody,
@@ -16,6 +16,7 @@ import { clearSession, getSessionId } from "../lib/auth";
 import { authLimit, issuePasswordSession, passwordCredential } from "../lib/password-access";
 import { hashPassword, hashSetupToken, normalizeUsername, verifyPassword } from "../lib/password-crypto";
 import { PRIVATE_PREFIX } from "../lib/private-access";
+import { workspaceId, workspaceUserIds } from "../lib/workspace-access";
 
 const router = Router();
 router.use((_req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
@@ -39,7 +40,7 @@ async function accounts(ids: string[]) {
 
 router.get("/password-accounts", async (req, res) => {
   if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
-  const linkedClients = await db.select().from(coachingTable).where(eq(coachingTable.coachId, req.user.id));
+  const linkedClients = await db.select().from(coachingTable).where(and(eq(coachingTable.coachId, req.user.id),inArray(coachingTable.athleteId,await workspaceUserIds(req.user.id))));
   res.json(await accounts([req.user.id, ...linkedClients.map(c => c.athleteId)]));
 });
 router.get("/auth/password-account", async (req, res) => {
@@ -53,6 +54,7 @@ router.post("/password-accounts", async (req, res) => {
   if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
   const input = CreatePasswordSetupBody.parse(req.body);
   const coach = req.user.id;
+  const scope = await workspaceId(coach);
   if(!await isCoach(coach) && input.userId!==coach) fail(403,"The admin may manage only their own password.");
   if (!input.userId && !input.name?.trim()) fail(400, "Enter a client name.");
   if (input.userId && !await linked(coach, input.userId)) fail(403, "Choose your account or an existing linked client.");
@@ -65,6 +67,7 @@ router.post("/password-accounts", async (req, res) => {
       if (!input.userId) {
         const name = input.name!.trim();
         await tx.insert(usersTable).values({ id: userId, firstName: name });
+        await tx.insert(workspaceMembersTable).values({userId,workspaceId:scope});
         await tx.insert(profilesTable).values({
           userId, data: { id: userId, name, unit: "lb", meetDate: "", squatMax: 0, benchMax: 0, deadliftMax: 0, coachName: "" },
         });

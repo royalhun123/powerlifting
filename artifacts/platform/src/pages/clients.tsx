@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState, ErrorState, LiftTag, LoadingPage, PageHeader, Panel } from "@/components/common";
+import { ClientBodyweights } from "@/components/client-bodyweights";
+import { WorkspaceBadge } from "@/components/workspace-badge";
 import { AnalyticsView } from "@/components/analytics-view";
 import { DaysToggle } from "@/components/days-toggle";
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
@@ -102,7 +104,7 @@ export default function Clients() {
 
   return (
     <div>
-      <PageHeader kicker="Coaching" title="My clients" />
+      <PageHeader kicker="Coaching" title="My clients"><WorkspaceBadge /></PageHeader>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-5">
@@ -147,6 +149,8 @@ export default function Clients() {
               </div>
 
               <AnalyticsView athleteId={athlete.id} days={days} />
+
+              <ClientBodyweights key={athlete.id} athleteId={athlete.id} athleteName={athlete.name} days={days} />
 
               <Panel title="Sessions">
                 {athleteSessions.length === 0 ? (

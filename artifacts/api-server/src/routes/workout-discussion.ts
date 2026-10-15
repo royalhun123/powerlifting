@@ -9,6 +9,7 @@ import {
 import { isAdmin, isCoach } from "../lib/coach-access";
 import { ensureProfile, linked } from "../lib/training-store";
 import { fail, type Session } from "../lib/training-types";
+import { sameWorkspace } from "../lib/workspace-access";
 
 const router = Router();
 type WorkoutRow = typeof workoutsTable.$inferSelect;
@@ -21,6 +22,7 @@ router.use("/sessions/:id/discussion", (req, res, next) => {
 });
 
 async function access(row: WorkoutRow, userId: string) {
+  if (!await sameWorkspace(userId,row.athleteId)) fail(403,"This workout belongs to another workspace.");
   if (await isAdmin(userId)) {
     const [client] = await db.select({ id: coachingTable.athleteId }).from(coachingTable)
       .innerJoin(coachesTable, eq(coachingTable.coachId, coachesTable.userId))

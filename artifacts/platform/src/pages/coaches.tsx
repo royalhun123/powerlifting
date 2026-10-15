@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCoach, useListCoaches, getListCoachesQueryKey, type CoachDirectoryEntry } from "@workspace/api-client-react";
 import { ChevronDown, Clock, Copy, EyeOff, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
+import { WorkspaceBadge, useWorkspaceScope } from "@/components/workspace-badge";
 import { CoachDetail } from "@/components/program-inspector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function Coaches() {
   const { toast } = useToast();
   const list = useListCoaches({ query: { queryKey: getListCoachesQueryKey(), staleTime: 15_000, refetchInterval: 30_000 } });
   const create = useCreateCoach();
+  const scope = useWorkspaceScope();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [fresh, setFresh] = useState<Fresh | null>(null);
@@ -62,12 +64,12 @@ export default function Coaches() {
 
   return (
     <div>
-      <PageHeader kicker="Admin · Coaching staff" title="Coaches" />
+      <PageHeader kicker="Admin · This workspace only" title="Coaches"><WorkspaceBadge /></PageHeader>
 
       <div className="mb-6">
         <Panel title={<span className="inline-flex items-center gap-2"><UserPlus className="h-4 w-4 text-[#B4975A]" /> Onboard a coach</span>}>
           <p className="mb-4 text-sm text-muted-foreground">
-            Each coach runs an independent roster and shares the program library. Create the account with a name and username, then send the one-time link privately so they choose their own password. Links last 24 hours.
+            Coaches you add join {scope.name} only. Each runs an independent roster and shares the program library within this workspace; there is no global staff across workspaces. Create the account with a name and username, then send the one-time link privately so they choose their own password. Links last 24 hours.
           </p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
             <label className="grid gap-1 text-sm">Coach name
@@ -101,7 +103,7 @@ export default function Coaches() {
       </div>
 
       <Panel title="Coach directory" action={<span className="font-num text-xs text-muted-foreground" data-testid="text-coach-count">{coaches.length} coach{coaches.length === 1 ? "" : "es"}</span>}>
-        <p className="mb-4 text-xs text-muted-foreground">Read-only. View details on a coach to see uploaded programs, their own blocks with logged workouts, and each client's blocks with logged workouts. Established coaches manage their own clients and password; invitations can only be renewed until the coach finishes setup.</p>
+        <p className="mb-4 text-xs text-muted-foreground">Read-only. Lists coaches in {scope.name} only. View details on a coach to see uploaded programs, their own blocks with logged workouts, and each client's blocks with logged workouts. Established coaches manage their own clients and password; invitations can only be renewed until the coach finishes setup.</p>
         {list.isLoading ? (
           <div className="space-y-2" data-testid="coaches-loading">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse bg-muted" />)}</div>
         ) : list.isError ? (

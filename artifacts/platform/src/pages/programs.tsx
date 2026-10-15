@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmptyState, ErrorState, LoadingPage, PageHeader } from "@/components/common";
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
+import { WorkspaceBadge } from "@/components/workspace-badge";
 import { PHASE_LABEL } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 
@@ -122,7 +123,8 @@ export default function Programs() {
 
   return (
     <div>
-      <PageHeader kicker="Shared coach library · Every coach can view, copy and assign" title="Programs">
+      <PageHeader kicker="Workspace library · Shared only with coaches in this workspace" title="Programs">
+        <WorkspaceBadge />
         {archivedCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)} data-testid="button-toggle-archived">
             <Archive className="mr-2 h-4 w-4" /> {showArchived ? "Hide" : "Show"} archived ({archivedCount})
@@ -134,7 +136,7 @@ export default function Programs() {
       </PageHeader>
 
       <div className="mb-4 flex flex-wrap items-center gap-1" role="tablist">
-        {([["all", "All coaches"], ["mine", "Uploaded by me"], ["others", "Other coaches"]] as const).map(([k, l]) => (
+        {([["all", "All coaches here"], ["mine", "Uploaded by me"], ["others", "Other coaches"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={scope === k ? "default" : "outline"} onClick={() => setScope(k)} data-testid={`button-scope-${k}`}>{l}</Button>
         ))}
         <span className="ml-auto font-num text-[11px] text-muted-foreground">Your own assigned training lives in <Link href="/my-blocks" className="text-primary underline" data-testid="link-my-blocks">My blocks</Link>.</span>

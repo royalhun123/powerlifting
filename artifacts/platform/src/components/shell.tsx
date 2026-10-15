@@ -4,6 +4,7 @@ import { Anchor } from "lucide-react";
 import { BackNav, pageTitle, useDocumentTitle } from "@/components/back-nav";
 import { BarChart3, BookOpen, ClipboardList, Dumbbell, ShieldCheck, LayoutGrid, LogIn, LogOut, Menu, Settings, Users, X } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { WorkspaceBadge } from "@/components/workspace-badge";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/hooks/use-platform";
 import { daysUntil, initials } from "@/lib/pl";
@@ -74,6 +75,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-sidebar-primary">Team Training</div>
         </div>
       </Link>
+      {data && <div className="border-b border-sidebar-border px-5 py-3"><div className="mb-1 font-num text-[9px] uppercase tracking-[0.25em] text-sidebar-foreground/50">Current workspace</div><WorkspaceBadge variant="sidebar" /></div>}
       <div className="h-4" />
       <div className="flex-1 px-3">
         <NavLinks onNavigate={() => setOpen(false)} />
@@ -124,6 +126,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </button>
           <span className="flex items-center gap-1.5 whitespace-nowrap font-display text-lg font-bold text-primary md:hidden"><Anchor className="h-4 w-4 text-[#B4975A]" />Navy Powerlifting</span>
           <BackNav />
+          {data && <WorkspaceBadge className="md:hidden" />}
           <span className="hidden font-display text-lg text-primary sm:inline" data-testid="text-page-title">{pageTitle(loc)}</span>
           {data?.demo && (
             <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border border-primary/40 bg-primary/10 px-2 py-0.5 font-num text-[10px] uppercase tracking-widest text-primary" data-testid="badge-demo">

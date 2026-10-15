@@ -1,7 +1,8 @@
 import { Router, type Response } from "express";
 import { randomUUID, timingSafeEqual, createHash } from "node:crypto";
 import { and, eq, like } from "drizzle-orm";
-import { db, invitationsTable, usersTable, coachingTable, profilesTable } from "@workspace/db";
+import { db, invitationsTable, usersTable, coachingTable, profilesTable, workspaceMembersTable } from "@workspace/db";
+import { sameWorkspace, workspaceId } from "../lib/workspace-access";
 import { CreateAccessLinkBody, RedeemAccessLinkBody, BootstrapPrivateLoginBody } from "@workspace/api-zod";
 import { isCoach } from "../lib/coach-access";
 import { linked } from "../lib/training-store";
@@ -28,6 +29,7 @@ router.post("/auth/private-link",async(req,res)=>{
   const {token}=RedeemAccessLinkBody.parse(req.body);
   const [link]=await db.select().from(invitationsTable).where(eq(invitationsTable.token,hashPrivateToken(token)));
   if(!link?.acceptedBy || link.expiresAt.getTime()<=Date.now() || !await isCoach(link.coachId)) fail(401,"This private link is invalid, revoked, or expired. Ask your coach for a new link.");
+  if (!await sameWorkspace(link.coachId,link.acceptedBy)) fail(403,"This link crosses workspace boundaries.");
   if ((await passwordCredential(link.acceptedBy))?.passwordHash) fail(401, "This account now uses a username and password.");
   const old=getSessionId(req);
   if(old) await clearSession(res,old);
@@ -79,6 +81,7 @@ router.post("/access-links",async(req,res)=>{
     let name=input.name?.trim() || "";
     if(!input.userId) {
       await tx.insert(usersTable).values({id:target,firstName:name});
+      await tx.insert(workspaceMembersTable).values({userId:target,workspaceId:await workspaceId(coach)});
       await tx.insert(profilesTable).values({userId:target,data:{id:target,name,unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""}});
       await tx.insert(coachingTable).values({coachId:coach,athleteId:target});
     } else {

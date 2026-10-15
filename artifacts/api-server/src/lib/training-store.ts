@@ -8,6 +8,7 @@ import { convert, round } from "./training-types";
 import { normalizeProgram } from "./program-defaults";
 import { isCoach, isAdmin } from "./coach-access";
 import { privateLoginEnabled, PRIVATE_PREFIX } from "./private-access";
+import { sameWorkspace, workspaceUserIds, workspaceInfo } from "./workspace-access";
 
 export async function ensureProfile(id: string, name: string): Promise<Profile> {
   const [existing] = await db.select().from(profilesTable).where(eq(profilesTable.userId,id));
@@ -30,6 +31,7 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
 
 export async function linked(coachId: string, athleteId: string): Promise<boolean> {
   if (coachId === athleteId) return true;
+  if (!await sameWorkspace(coachId, athleteId)) return false;
   if (await isCoach(athleteId)) return false;
   const rows = await db.select().from(coachingTable).where(and(eq(coachingTable.coachId,coachId),eq(coachingTable.athleteId,athleteId)));
   return rows.length > 0;
@@ -38,16 +40,17 @@ export async function linked(coachId: string, athleteId: string): Promise<boolea
 export async function loadWorkspace(id: string, name: string): Promise<Workspace> {
   const profile = await ensureProfile(id,name);
   const coach = await isCoach(id);
-  const links = coach ? await db.select().from(coachingTable).where(eq(coachingTable.coachId,id)) : [];
+  const allowedIds = await workspaceUserIds(id);
+  const links = coach ? await db.select().from(coachingTable).where(and(eq(coachingTable.coachId,id),inArray(coachingTable.athleteId,allowedIds))) : [];
   const athleteIds = links.map(l => l.athleteId);
   const ids = [id,...athleteIds];
   const [programRows, assignmentRows, sessionRows, invitationRows, profileRows, coachLinks] = await Promise.all([
-    coach ? db.select().from(programsTable) : Promise.resolve([]),
-    db.select().from(assignmentsTable).where(coach ? or(eq(assignmentsTable.coachId,id),eq(assignmentsTable.athleteId,id)) : eq(assignmentsTable.athleteId,id)),
+    coach ? db.select().from(programsTable).where(inArray(programsTable.ownerId,allowedIds)) : Promise.resolve([]),
+    db.select().from(assignmentsTable).where(and(inArray(assignmentsTable.coachId,allowedIds),inArray(assignmentsTable.athleteId,allowedIds),coach ? or(eq(assignmentsTable.coachId,id),eq(assignmentsTable.athleteId,id)) : eq(assignmentsTable.athleteId,id))),
     db.select().from(workoutsTable).where(inArray(workoutsTable.athleteId,ids)),
     coach ? db.select().from(invitationsTable).where(eq(invitationsTable.coachId,id)) : Promise.resolve([]),
     athleteIds.length ? db.select().from(profilesTable).where(inArray(profilesTable.userId,athleteIds)) : Promise.resolve([]),
-    db.select().from(coachingTable).where(eq(coachingTable.athleteId,id)),
+    db.select().from(coachingTable).where(and(eq(coachingTable.athleteId,id),inArray(coachingTable.coachId,allowedIds))),
   ]);
   const sessions = sessionRows.map(r => SaveSessionResponse.parse(r.data)).sort((a,b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
   const athletes = profileRows.map(r => {
@@ -62,7 +65,7 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
   const ownerIds = [...new Set([...programRows.map(r=>r.ownerId), ...assignmentRows.map(r=>r.coachId)])];
   const owners = ownerIds.length ? await db.select().from(profilesTable).where(inArray(profilesTable.userId,ownerIds)) : [];
   const ownerNames = new Map(owners.map(r=>[r.userId,UpdateProfileResponse.parse(r.data).name]));
-  return {demo:false,isCoach:coach,isAdmin:await isAdmin(id),privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>({...normalizeProgram(SaveProgramResponse.parse(r.data)),uploaderId:r.ownerId,uploaderName:ownerNames.get(r.ownerId) || "Coach"})),athletes,
+  return {...await workspaceInfo(id),demo:false,isCoach:coach,isAdmin:await isAdmin(id),privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>({...normalizeProgram(SaveProgramResponse.parse(r.data)),uploaderId:r.ownerId,uploaderName:ownerNames.get(r.ownerId) || "Coach"})),athletes,
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
       // Legacy assignments predate sharing and were owned by the assigning coach.

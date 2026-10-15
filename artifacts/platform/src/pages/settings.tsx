@@ -9,7 +9,8 @@ import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { convertLoad, daysUntil, fmtNum, LIFT_VAR } from "@/lib/pl";
 import { cn } from "@/lib/utils";
-import { History } from "lucide-react";
+import { Building2, History } from "lucide-react";
+import { WorkspaceBadge, useWorkspaceScope } from "@/components/workspace-badge";
 import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
 import { LatestBodyweight } from "@/components/bodyweight-tracking";
 import { LegacyAccessDetails, PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
@@ -20,6 +21,7 @@ export default function Settings() {
   const invalidate = useInvalidateAll();
   const guard = useMutationGuard();
   const { toast } = useToast();
+  const scope = useWorkspaceScope();
   const [form, setForm] = useState<ProfileInput | null>(null);
   const init = useRef<string | null>(null);
 
@@ -64,6 +66,10 @@ export default function Settings() {
       {data.demo && <div className="mb-5"><SignInCallout text="Demo profile shown. Sign in to set your own maxes and meet date." /></div>}
       {!data.demo && form.squatMax + form.benchMax + form.deadliftMax === 0 && <div className="mb-5 rounded-md border border-primary/30 bg-primary/5 p-4 text-sm">Enter your reference maxes so percentage work (e.g. 85%) turns into real target loads.</div>}
       <div className="space-y-5">
+        <Panel title={<span className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-[#B4975A]" /> Workspace</span>}>
+          <div data-testid="section-workspace"><WorkspaceBadge /></div>
+          <p className="mt-2 text-sm text-muted-foreground">{scope.isTeam ? `You are signed in to the ${scope.name} team workspace. Clients, programs and coaches you see here belong only to this workspace.` : "You are signed in to a personal coaching workspace. Your clients and program library are private to this workspace."} Each workspace has its own username login; sign out and sign in with the other account to reach a different one.</p>
+        </Panel>
         <LatestBodyweight unit={form.unit} />
         <OwnPasswordAccount />
         <PasswordAccountsPanel />

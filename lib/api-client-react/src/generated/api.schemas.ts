@@ -607,6 +607,8 @@ export interface FeedbackInput {
 }
 
 export interface Workspace {
+  workspaceId?: string;
+  workspaceName?: string;
   privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;

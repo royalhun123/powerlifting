@@ -89,6 +89,77 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getGetClientBodyweightsUrl = (athleteId: string,) => {
+
+
+
+
+  return `/api/athletes/${athleteId}/bodyweights`
+}
+
+export const getClientBodyweights = async (athleteId: string, options?: Parameters<typeof customFetch>[1]): Promise<Bodyweight[]> => {
+
+  return customFetch<Bodyweight[]>(getGetClientBodyweightsUrl(athleteId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClientBodyweightsQueryKey = (athleteId: string,) => {
+    return [
+    `/api/athletes/${athleteId}/bodyweights`
+    ] as const;
+    }
+
+
+export const getGetClientBodyweightsQueryOptions = <TData = Awaited<ReturnType<typeof getClientBodyweights>>, TError = ErrorType<unknown>>(athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClientBodyweights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClientBodyweightsQueryKey(athleteId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClientBodyweights>>> = ({ signal }) => getClientBodyweights(athleteId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteId !== null && athleteId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClientBodyweights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClientBodyweightsQueryResult = NonNullable<Awaited<ReturnType<typeof getClientBodyweights>>>
+export type GetClientBodyweightsQueryError = ErrorType<unknown>
+
+
+
+export function useGetClientBodyweights<TData = Awaited<ReturnType<typeof getClientBodyweights>>, TError = ErrorType<unknown>>(
+ athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClientBodyweights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClientBodyweightsQueryOptions(athleteId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetSessionDiscussionUrl = (id: string,) => {
 
 

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { randomBytes, randomUUID } from "node:crypto";
-import { eq, inArray } from "drizzle-orm";
-import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable } from "@workspace/db";
+import { and, eq, inArray } from "drizzle-orm";
+import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable, workspaceMembersTable } from "@workspace/db";
+import { sameWorkspace, workspaceId, workspaceUserIds } from "../lib/workspace-access";
 import { CreateCoachBody, ListCoachesResponse, SaveProgramResponse, AssignProgramResponse, ListAdminSessionsResponse } from "@workspace/api-zod";
 import { normalizeProgram } from "../lib/program-defaults";
 import { isAdmin } from "../lib/coach-access";
@@ -16,6 +17,7 @@ router.use("/coaches", async (req,res,next)=>{
 });
 router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
   const athleteId = req.params.athleteId;
+  if (!await sameWorkspace(req.user!.id,athleteId)) fail(403,"This athlete belongs to another workspace.");
   const [coach] = await db.select({id:coachesTable.userId}).from(coachesTable).where(eq(coachesTable.userId,athleteId)).limit(1);
   const [client] = await db.select({id:coachingTable.athleteId}).from(coachingTable)
     .innerJoin(coachesTable,eq(coachingTable.coachId,coachesTable.userId))
@@ -29,16 +31,17 @@ router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
   res.json(sessions);
 });
 router.get("/coaches", async (req,res)=>{
-  const coaches = await db.select().from(coachesTable);
+  const allowedIds = await workspaceUserIds(req.user!.id);
+  const coaches = await db.select().from(coachesTable).where(inArray(coachesTable.userId,allowedIds));
   if (!coaches.length) {res.json([]);return;}
   const ids = coaches.map(c=>c.userId);
-  const links = await db.select().from(coachingTable).where(inArray(coachingTable.coachId,ids));
+  const links = await db.select().from(coachingTable).where(and(inArray(coachingTable.coachId,ids),inArray(coachingTable.athleteId,allowedIds)));
   const profiles = await db.select().from(profilesTable).where(inArray(profilesTable.userId,[...ids,...links.map(l=>l.athleteId)]));
   const names = new Map(profiles.map(p=>[p.userId,(p.data as {name:string}).name]));
   const credentials = await db.select().from(credentialsTable).where(inArray(credentialsTable.userId,ids));
   const programs = await db.select().from(programsTable).where(inArray(programsTable.ownerId,ids));
   const assignmentRows = await db.select().from(assignmentsTable).where(inArray(assignmentsTable.athleteId,[...ids,...links.map(l=>l.athleteId)]));
-  const assignments=assignmentRows.map(r=>({coachId:r.coachId,athleteId:r.athleteId,block:AssignProgramResponse.parse(r.data)}));
+  const assignments=assignmentRows.filter(r=>allowedIds.includes(r.coachId)).map(r=>({coachId:r.coachId,athleteId:r.athleteId,block:AssignProgramResponse.parse(r.data)}));
   const blocksFor=(athleteId:string, coachId?:string)=>assignments.filter(r=>r.athleteId===athleteId && (!coachId || r.coachId===coachId))
     .map(r=>({...r.block,program:normalizeProgram(r.block.program)}));
   res.json(ListCoachesResponse.parse(coaches.map(c=>{
@@ -51,6 +54,8 @@ router.get("/coaches", async (req,res)=>{
 });
 router.post("/coaches", async(req,res)=>{
   const input = CreateCoachBody.parse(req.body);
+  const scope = await workspaceId(req.user!.id);
+  if (input.userId && !await sameWorkspace(req.user!.id,input.userId)) fail(403,"This coach belongs to another workspace.");
   if(!input.userId && !input.name?.trim()) fail(400,"Enter a coach name.");
   const userId=input.userId || randomUUID(), username=normalizeUsername(input.username);
   const token=randomBytes(32).toString("base64url"), expiresAt=new Date(Date.now()+86400000);
@@ -66,6 +71,7 @@ router.post("/coaches", async(req,res)=>{
       } else {
         const name=input.name!.trim();
         await tx.insert(usersTable).values({id:userId,firstName:name});
+        await tx.insert(workspaceMembersTable).values({userId,workspaceId:scope});
         await tx.insert(profilesTable).values({userId,data:{id:userId,name,unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""}});
         await tx.insert(credentialsTable).values({userId,username});
         await tx.insert(coachesTable).values({userId,createdBy:req.user!.id});

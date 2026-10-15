@@ -43,6 +43,7 @@ try {
   await pool.query("DELETE FROM sessions WHERE sess->'user'->>'id'=ANY($1::text[])",[ids]);
   for(const table of ["password_credentials","password_setups","training_profiles"]) await pool.query(`DELETE FROM ${table} WHERE user_id=ANY($1::text[])`,[ids]);
   await pool.query("DELETE FROM training_programs WHERE owner_id=ANY($1::text[])",[ids]);
+  await pool.query("DELETE FROM app_workspace_members WHERE user_id=ANY($1::text[])",[ids]);
   await pool.query("DELETE FROM users WHERE id=ANY($1::text[])",[ids]);
   server.closeAllConnections();await new Promise(r=>server.close(r));await pool.end();
 }

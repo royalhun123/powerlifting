@@ -12,6 +12,8 @@ import type { Program } from './program';
 import type { Session } from './session';
 
 export interface Workspace {
+  workspaceId?: string;
+  workspaceName?: string;
   privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;

@@ -7,6 +7,25 @@
 import * as zod from 'zod';
 
 
+export const GetClientBodyweightsParams = zod.object({
+  "athleteId": zod.coerce.string()
+})
+
+export const getClientBodyweightsResponseDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getClientBodyweightsResponseWeightExclusiveMin = 0;
+export const getClientBodyweightsResponseWeightMax = 2000;
+
+export const getClientBodyweightsResponseTimeOfDayDefault = `unspecified`;
+
+export const GetClientBodyweightsResponseItem = zod.object({
+  "date": zod.string().regex(getClientBodyweightsResponseDateRegExp),
+  "weight": zod.number().gt(getClientBodyweightsResponseWeightExclusiveMin).max(getClientBodyweightsResponseWeightMax),
+  "unit": zod.enum(['lb', 'kg']),
+  "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified']).default(getClientBodyweightsResponseTimeOfDayDefault)
+})
+export const GetClientBodyweightsResponse = zod.array(GetClientBodyweightsResponseItem)
+
+
 export const GetSessionDiscussionParams = zod.object({
   "id": zod.coerce.string()
 })
@@ -901,6 +920,8 @@ export const getWorkspaceResponseSessionsItemTwoDiscussionsItemMessagesItemOneTe
 
 
 export const GetWorkspaceResponse = zod.object({
+  "workspaceId": zod.string().optional(),
+  "workspaceName": zod.string().optional(),
   "privateLogin": zod.boolean().optional(),
   "demo": zod.boolean(),
   "isCoach": zod.boolean(),
