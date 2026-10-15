@@ -15,6 +15,7 @@ export interface Workspace {
   privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;
+  isAdmin?: boolean;
   profile: Profile;
   programs: Program[];
   athletes: Athlete[];

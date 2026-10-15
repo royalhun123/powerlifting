@@ -20,6 +20,8 @@ export * from './authUserEnvelope';
 export * from './bodyweight';
 export * from './bodyweightTimeOfDay';
 export * from './bodyweightUnit';
+export * from './coachDirectoryEntry';
+export * from './coachDirectoryEntryClientsItem';
 export * from './createdAccessLink';
 export * from './exercise';
 export * from './exerciseLift';

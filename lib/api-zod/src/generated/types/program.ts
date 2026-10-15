@@ -10,4 +10,7 @@ export type Program = ProgramInput & {
   id: string;
   source: string;
   reviewCount: number;
+  /** Server-owned identity of the uploader or copy creator */
+  uploaderId?: string;
+  uploaderName?: string;
 };

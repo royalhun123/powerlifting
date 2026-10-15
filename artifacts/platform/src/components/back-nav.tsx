@@ -5,7 +5,9 @@ import { ChevronLeft } from "lucide-react";
 const TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/workouts": "Workouts",
-  "/programs": "All programs",
+  "/programs": "Program library",
+  "/my-training": "My training",
+  "/coaches": "Coaches",
   "/my-programs": "My programs",
   "/progress": "Progress",
   "/clients": "Clients",
@@ -19,7 +21,7 @@ const TITLES: Record<string, string> = {
 export function backTarget(loc: string): { href: string; label: string } | null {
   if (loc === "/" || loc === "") return null;
   if (loc === "/set-password") return { href: "/sign-in", label: "Sign in" };
-  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "All programs" };
+  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "Program library" };
   return { href: "/", label: "Dashboard" };
 }
 

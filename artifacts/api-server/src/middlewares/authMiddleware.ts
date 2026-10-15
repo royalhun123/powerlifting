@@ -91,7 +91,7 @@ export async function authMiddleware(
   }
   if(session.provider==="private-link") {
     const [link]=session.privateLinkId ? await db.select().from(invitationsTable).where(eq(invitationsTable.id,session.privateLinkId)) : [];
-    if(!link || !link.token.startsWith(PRIVATE_PREFIX) || link.acceptedBy!==session.user.id || link.expiresAt.getTime()<=Date.now() || !isCoach(link.coachId)) {
+    if(!link || !link.token.startsWith(PRIVATE_PREFIX) || link.acceptedBy!==session.user.id || link.expiresAt.getTime()<=Date.now() || !await isCoach(link.coachId)) {
       await clearSession(res,sid);next();return;
     }
     req.user=session.user;

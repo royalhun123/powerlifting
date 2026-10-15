@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Anchor } from "lucide-react";
 import { BackNav, pageTitle, useDocumentTitle } from "@/components/back-nav";
-import { BarChart3, ClipboardList, Dumbbell, LayoutGrid, LogIn, LogOut, Menu, Settings, Users, X } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardList, Dumbbell, ShieldCheck, LayoutGrid, LogIn, LogOut, Menu, Settings, Users, X } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/hooks/use-platform";
@@ -13,9 +13,10 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/my-programs", label: "My programs", icon: ClipboardList },
-  { href: "/programs", label: "All programs", icon: ClipboardList },
+  { href: "/my-training", label: "My training", icon: BookOpen },
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/coaches", label: "Coaches", icon: ShieldCheck },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -24,8 +25,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { data } = useWorkspace();
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.filter(item => data?.isCoach || !["/programs","/clients"].includes(item.href)).map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? loc === "/" : loc.startsWith(href);
+      {NAV.filter(item => (data?.isCoach || !["/my-training","/clients"].includes(item.href)) && (item.href !== "/coaches" || (!!data?.isCoach && !!data?.isAdmin))).map(({ href, label, icon: Icon }) => {
+        const active = href === "/" ? loc === "/" : loc.startsWith(href) || (href === "/my-programs" && !!data?.isCoach && loc.startsWith("/programs"));
         return (
           <Link
             key={href}

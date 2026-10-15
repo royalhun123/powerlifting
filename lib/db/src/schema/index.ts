@@ -1,3 +1,4 @@
+export * from "./coaches";
 export * from "./bodyweights";
 export * from "./password-auth";
 export * from "./true-maxes";

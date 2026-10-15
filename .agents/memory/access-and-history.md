@@ -39,11 +39,17 @@ Handle credential fragments on same-route hash navigation as well as initial mou
 
 **How to apply:** Listen for hash changes, strip each incoming fragment, and revalidate each visit without rendering the token.
 
-Only the app owner is the coach and may see All programs and Clients. Everyone, including the owner, gets My programs containing only their personal assignments.
+The existing owner (Bhatta) is the sole admin and also a coach. The admin creates independent coaches, who manage their own clients. The admin may see the coaches they added and their client names, but cannot edit those clients or manage established coaches' passwords.
 
-**Why:** The owner needs to write programs for clients without adding them to their own training, and clients must not manage the shared program library.
+**Why:** The user explicitly requested independent coaching rosters with read-only administrative oversight, not an admin override for every client.
 
-**How to apply:** Keep coach authority server-controlled and separate templates from assignments; never let a profile edit or first-time signup grant coach access.
+**How to apply:** Keep coach authority server-controlled. Never infer admin rights from a username, allow a profile edit to grant roles, or link newly created coaches as managed clients of the admin.
+
+For coaches, My programs is a global shared template library. Personal assignments stay separate in My training; clients' My programs remains only their own assignments. Only the uploader may edit/rename/delete a template; other coaches can make independently owned copies.
+
+**Why:** Coaches should share programming without controlling each other's work or changing already logged client training.
+
+**How to apply:** Preserve original ownership and stable user IDs, show uploader attribution, and retain assignment snapshots. Spreadsheet imports create prescriptions only, never historical workouts or measurements.
 
 Clients can archive and restore their assigned programs, but only the assigning coach can remove them. Keep workout history and progress after removal.
 

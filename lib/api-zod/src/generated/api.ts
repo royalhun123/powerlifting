@@ -7,6 +7,44 @@
 import * as zod from 'zod';
 
 
+export const ListCoachesResponseItem = zod.object({
+  "userId": zod.string(),
+  "name": zod.string(),
+  "username": zod.string(),
+  "passwordEnabled": zod.boolean(),
+  "createdAt": zod.string(),
+  "clients": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+}))
+})
+export const ListCoachesResponse = zod.array(ListCoachesResponseItem)
+
+
+
+export const createCoachBodyNameMax = 100;
+
+export const createCoachBodyUsernameMin = 3;
+export const createCoachBodyUsernameMax = 32;
+
+
+export const createCoachBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$');
+
+
+export const CreateCoachBody = zod.object({
+  "userId": zod.string().min(1).optional(),
+  "name": zod.string().min(1).max(createCoachBodyNameMax).optional(),
+  "username": zod.string().min(createCoachBodyUsernameMin).max(createCoachBodyUsernameMax).regex(createCoachBodyUsernameRegExp)
+})
+
+export const CreateCoachResponse = zod.object({
+  "userId": zod.string(),
+  "username": zod.string(),
+  "path": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
 export const ListPasswordAccountsResponseItem = zod.object({
   "userId": zod.string(),
   "name": zod.string(),
@@ -435,6 +473,7 @@ export const GetWorkspaceResponse = zod.object({
   "privateLogin": zod.boolean().optional(),
   "demo": zod.boolean(),
   "isCoach": zod.boolean(),
+  "isAdmin": zod.boolean().optional(),
   "profile": zod.object({
   "name": zod.string().min(1).max(getWorkspaceResponseProfileOneNameMax),
   "unit": zod.enum(['lb', 'kg']),
@@ -475,7 +514,9 @@ export const GetWorkspaceResponse = zod.object({
 }).and(zod.object({
   "id": zod.string(),
   "source": zod.string(),
-  "reviewCount": zod.number().int()
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
 }))),
   "athletes": zod.array(zod.object({
   "id": zod.string(),
@@ -520,7 +561,9 @@ export const GetWorkspaceResponse = zod.object({
 }).and(zod.object({
   "id": zod.string(),
   "source": zod.string(),
-  "reviewCount": zod.number().int()
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
 })),
   "startDate": zod.string(),
   "coachName": zod.string()
@@ -738,7 +781,9 @@ export const SaveProgramResponse = zod.object({
 }).and(zod.object({
   "id": zod.string(),
   "source": zod.string(),
-  "reviewCount": zod.number().int()
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
 }))
 
 
@@ -871,7 +916,9 @@ export const AssignProgramResponse = zod.object({
 }).and(zod.object({
   "id": zod.string(),
   "source": zod.string(),
-  "reviewCount": zod.number().int()
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
 })),
   "startDate": zod.string(),
   "coachName": zod.string()
@@ -958,7 +1005,9 @@ export const ArchiveAssignmentResponse = zod.object({
 }).and(zod.object({
   "id": zod.string(),
   "source": zod.string(),
-  "reviewCount": zod.number().int()
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
 })),
   "startDate": zod.string(),
   "coachName": zod.string()

@@ -6,7 +6,7 @@ import imported from "../data/imported-programs.json";
 import type { Profile, Workspace } from "./training-types";
 import { convert, round } from "./training-types";
 import { normalizeProgram } from "./program-defaults";
-import { isCoach } from "./coach-access";
+import { isCoach, isAdmin } from "./coach-access";
 import { privateLoginEnabled, PRIVATE_PREFIX } from "./private-access";
 
 export async function ensureProfile(id: string, name: string): Promise<Profile> {
@@ -15,7 +15,7 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
   const profile:Profile = {id,name:name || "Athlete",unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""};
   await db.transaction(async tx => {
     const inserted = await tx.insert(profilesTable).values({userId:id,data:profile}).onConflictDoNothing().returning();
-    if (!inserted.length || !isCoach(id)) return;
+    if (!inserted.length || !isAdmin(id)) return;
     // Each account owns its own editable copies. Source cells are prescriptions,
     // never seeded as completed sessions or counted in progress.
     const templates = imported.map(raw => {
@@ -30,18 +30,19 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
 
 export async function linked(coachId: string, athleteId: string): Promise<boolean> {
   if (coachId === athleteId) return true;
+  if (await isCoach(athleteId)) return false;
   const rows = await db.select().from(coachingTable).where(and(eq(coachingTable.coachId,coachId),eq(coachingTable.athleteId,athleteId)));
   return rows.length > 0;
 }
 
 export async function loadWorkspace(id: string, name: string): Promise<Workspace> {
   const profile = await ensureProfile(id,name);
-  const coach = isCoach(id);
+  const coach = await isCoach(id);
   const links = coach ? await db.select().from(coachingTable).where(eq(coachingTable.coachId,id)) : [];
   const athleteIds = links.map(l => l.athleteId);
   const ids = [id,...athleteIds];
   const [programRows, assignmentRows, sessionRows, invitationRows, profileRows, coachLinks] = await Promise.all([
-    coach ? db.select().from(programsTable).where(eq(programsTable.ownerId,id)) : Promise.resolve([]),
+    coach ? db.select().from(programsTable) : Promise.resolve([]),
     db.select().from(assignmentsTable).where(coach ? or(eq(assignmentsTable.coachId,id),eq(assignmentsTable.athleteId,id)) : eq(assignmentsTable.athleteId,id)),
     db.select().from(workoutsTable).where(inArray(workoutsTable.athleteId,ids)),
     coach ? db.select().from(invitationsTable).where(eq(invitationsTable.coachId,id)) : Promise.resolve([]),
@@ -58,10 +59,17 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     const coaches = await db.select().from(profilesTable).where(inArray(profilesTable.userId,coachLinks.map(c=>c.coachId)));
     profile.coachName=coaches.map(r=>UpdateProfileResponse.parse(r.data).name).join(", ");
   }
-  return {demo:false,isCoach:coach,privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>normalizeProgram(SaveProgramResponse.parse(r.data))),athletes,
+  const ownerIds = [...new Set([...programRows.map(r=>r.ownerId), ...assignmentRows.map(r=>r.coachId)])];
+  const owners = ownerIds.length ? await db.select().from(profilesTable).where(inArray(profilesTable.userId,ownerIds)) : [];
+  const ownerNames = new Map(owners.map(r=>[r.userId,UpdateProfileResponse.parse(r.data).name]));
+  return {demo:false,isCoach:coach,isAdmin:isAdmin(id),privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>({...normalizeProgram(SaveProgramResponse.parse(r.data)),uploaderId:r.ownerId,uploaderName:ownerNames.get(r.ownerId) || "Coach"})),athletes,
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
-      return {...assignment,program:normalizeProgram(assignment.program)};
+      // Legacy assignments predate sharing and were owned by the assigning coach.
+      // Add provenance to the response only, never rewrite a historical snapshot.
+      return {...assignment,program:{...normalizeProgram(assignment.program),
+        uploaderId:assignment.program.uploaderId || r.coachId,
+        uploaderName:assignment.program.uploaderName || ownerNames.get(r.coachId) || "Coach"}};
     }).filter(a=>!a.removed),
     sessions,invitations:(invitationRows as (typeof invitationsTable.$inferSelect)[]).filter(r=>!r.token.startsWith(PRIVATE_PREFIX)).map(r=>({id:r.id,name:r.name,path:r.acceptedBy ? "" : `/join?token=${r.token}`,expiresAt:r.expiresAt.toISOString(),status:r.acceptedBy ? "accepted" as const : r.expiresAt.getTime()<Date.now() ? "expired" as const : "pending" as const}))};
 }

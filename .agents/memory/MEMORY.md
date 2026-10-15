@@ -1,2 +1,2 @@
-- [Access and history](access-and-history.md) — coach-managed password login, Vercel/Neon independence, safe history preservation, and credential-fragment handling.
+- [Access and history](access-and-history.md) — independent coaches, read-only admin oversight, shared uploader-owned programs, password login, and safe history preservation.
 - [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.

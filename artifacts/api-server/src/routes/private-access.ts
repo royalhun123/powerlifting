@@ -27,7 +27,7 @@ router.post("/auth/private-link",async(req,res)=>{
   await authLimit(req, "private-link-ip", 30);
   const {token}=RedeemAccessLinkBody.parse(req.body);
   const [link]=await db.select().from(invitationsTable).where(eq(invitationsTable.token,hashPrivateToken(token)));
-  if(!link?.acceptedBy || link.expiresAt.getTime()<=Date.now() || !isCoach(link.coachId)) fail(401,"This private link is invalid, revoked, or expired. Ask your coach for a new link.");
+  if(!link?.acceptedBy || link.expiresAt.getTime()<=Date.now() || !await isCoach(link.coachId)) fail(401,"This private link is invalid, revoked, or expired. Ask your coach for a new link.");
   if ((await passwordCredential(link.acceptedBy))?.passwordHash) fail(401, "This account now uses a username and password.");
   const old=getSessionId(req);
   if(old) await clearSession(res,old);
@@ -62,12 +62,12 @@ router.post("/auth/bootstrap",async(req,res)=>{
 });
 
 router.get("/access-links",async(req,res)=>{
-  if(!req.user || !isCoach(req.user.id)) fail(403,"Coach access required.");
+  if(!req.user || !await isCoach(req.user.id)) fail(403,"Coach access required.");
   const rows=await db.select().from(invitationsTable).where(and(eq(invitationsTable.coachId,req.user.id),like(invitationsTable.token,`${PRIVATE_PREFIX}%`)));
   res.json(rows.map(metadata));
 });
 router.post("/access-links",async(req,res)=>{
-  if(!req.user || !isCoach(req.user.id)) fail(403,"Coach access required.");
+  if(!req.user || !await isCoach(req.user.id)) fail(403,"Coach access required.");
   const input=CreateAccessLinkBody.parse(req.body);
   if(!input.userId && !input.name?.trim()) fail(400,"Enter a client name or select an existing account.");
   const coach=req.user.id;
@@ -93,7 +93,7 @@ router.post("/access-links",async(req,res)=>{
   res.json({...metadata(row),path:`/sign-in#key=${token}`});
 });
 router.delete("/access-links/:id",async(req,res)=>{
-  if(!req.user || !isCoach(req.user.id)) fail(403,"Coach access required.");
+  if(!req.user || !await isCoach(req.user.id)) fail(403,"Coach access required.");
   const rows=await db.delete(invitationsTable).where(and(eq(invitationsTable.id,req.params.id as string),eq(invitationsTable.coachId,req.user.id),like(invitationsTable.token,`${PRIVATE_PREFIX}%`))).returning();
   if(!rows.length) fail(404,"Link not found.");
   res.json({success:true});

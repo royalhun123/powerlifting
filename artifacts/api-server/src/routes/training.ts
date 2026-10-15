@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, profilesTable, programsTable, assignmentsTable, workoutsTable, coachingTable, invitationsTable, bodyweightsTable, trueMaxesTable } from "@workspace/db";
 import {
   GetWorkspaceResponse, UpdateProfileBody, UpdateProfileResponse, SaveProgramBody, SaveProgramResponse,
@@ -51,7 +51,7 @@ router.get("/analytics", async (req,res) => {
 router.use(async (req,res,next) => {
   if (!req.isAuthenticated()) {res.status(401).json({error:"Sign in to save training or manage clients."});return;}
   const ownArchive = req.method==="PATCH" && /^\/assignments\/[^/]+\/?$/i.test(req.path);
-  if (!ownArchive && /^\/(programs|invitations|assignments|feedback)(\/|$)/i.test(req.path) && !isCoach(req.user.id)) {
+  if (!ownArchive && /^\/(programs|invitations|assignments|feedback)(\/|$)/i.test(req.path) && !await isCoach(req.user.id)) {
     res.status(403).json({error:"Only the coach can manage programs and clients."});return;
   }
   await ensureProfile(req.user.id,req.user.firstName || "Athlete");
@@ -116,7 +116,8 @@ router.post("/programs", async (req,res) => {
     if(!row) fail(404,"Program not found.");
     source=SaveProgramResponse.parse(row.data).source;
   }
-  const program:Program=normalizeProgram(SaveProgramResponse.parse({...input,id:input.id || randomUUID(),source,reviewCount:input.workouts.reduce((n,w)=>n+w.exercises.filter(e=>e.review).length,0)}));
+  const uploader=await ensureProfile(req.user!.id,req.user!.firstName || "Coach");
+  const program:Program=normalizeProgram(SaveProgramResponse.parse({...input,id:input.id || randomUUID(),source,uploaderId:req.user!.id,uploaderName:uploader.name,reviewCount:input.workouts.reduce((n,w)=>n+w.exercises.filter(e=>e.review).length,0)}));
   if(input.id) await db.update(programsTable).set({data:program}).where(and(eq(programsTable.id,input.id),eq(programsTable.ownerId,req.user!.id)));
   else await db.insert(programsTable).values({id:program.id,ownerId:req.user!.id,data:program});
   res.json(program);
@@ -144,9 +145,14 @@ router.delete("/invitations/:id", async (req,res) => {
 router.post("/join", async (req,res) => {
   const {token}=AcceptInvitationBody.parse(req.body);
   await db.transaction(async tx=>{
+    // Serialize joining across different invitations for the same athlete.
+    await tx.execute(sql`SELECT id FROM users WHERE id=${req.user!.id} FOR UPDATE`);
     const [invite]=await tx.select().from(invitationsTable).where(eq(invitationsTable.token,token)).for("update");
     if(!invite || invite.expiresAt.getTime()<Date.now()) fail(400,"This invitation has expired or was revoked.");
-    if(!isCoach(invite.coachId)) fail(400,"This invitation is no longer valid. Ask your coach for a new link.");
+    if(!await isCoach(invite.coachId)) fail(400,"This invitation is no longer valid. Ask your coach for a new link.");
+    if(await isCoach(req.user!.id)) fail(403,"Coach accounts cannot become managed clients.");
+    const existingLinks=await tx.select().from(coachingTable).where(eq(coachingTable.athleteId,req.user!.id));
+    if(existingLinks.some(l=>l.coachId!==invite.coachId)) fail(409,"This athlete already belongs to another coach.");
     if(invite.coachId===req.user!.id) fail(400,"You cannot accept your own invitation.");
     if(invite.acceptedBy && invite.acceptedBy!==req.user!.id) fail(409,"This invitation has already been used.");
     await tx.insert(coachingTable).values({coachId:invite.coachId,athleteId:req.user!.id}).onConflictDoNothing();
@@ -158,9 +164,10 @@ router.post("/assignments", async (req,res) => {
   const input=AssignProgramBody.parse(req.body);
   if(!dateValid(input.startDate)) fail(400,"Enter a valid start date.");
   if(!await linked(req.user!.id,input.athleteId)) fail(403,"Invite this athlete and wait for them to accept first.");
-  const [row]=await db.select().from(programsTable).where(and(eq(programsTable.id,input.programId),eq(programsTable.ownerId,req.user!.id)));
+  const [row]=await db.select().from(programsTable).where(eq(programsTable.id,input.programId));
   if(!row) fail(404,"Program not found.");
-  const program=normalizeProgram(SaveProgramResponse.parse(row.data));
+  const owner=await ensureProfile(row.ownerId,"Coach");
+  const program=normalizeProgram(SaveProgramResponse.parse({...row.data as object,uploaderId:row.ownerId,uploaderName:owner.name}));
   const [athlete]=await db.select().from(profilesTable).where(eq(profilesTable.userId,input.athleteId));
   const coach=await ensureProfile(req.user!.id,req.user!.firstName || "Coach");
   if(!athlete) fail(404,"Athlete not found.");
@@ -232,7 +239,7 @@ router.delete("/sessions/:id", async (req,res) => {
   res.json({success:true});
 });
 router.patch("/sessions/:id/feedback", async (req,res) => {
-  if(!isCoach(req.user!.id)) fail(403,"Only the coach can leave feedback.");
+  if(!await isCoach(req.user!.id)) fail(403,"Only the coach can leave feedback.");
   const {id}=UpdateFeedbackParams.parse(req.params);
   const {feedback}=UpdateFeedbackBody.parse(req.body);
   const saved=await db.transaction(async tx=>{

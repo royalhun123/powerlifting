@@ -38,7 +38,7 @@ async function accounts(ids: string[]) {
 }
 
 router.get("/password-accounts", async (req, res) => {
-  if (!req.user || !isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
   const linkedClients = await db.select().from(coachingTable).where(eq(coachingTable.coachId, req.user.id));
   res.json(await accounts([req.user.id, ...linkedClients.map(c => c.athleteId)]));
 });
@@ -50,7 +50,7 @@ router.get("/auth/password-account", async (req, res) => {
 });
 
 router.post("/password-accounts", async (req, res) => {
-  if (!req.user || !isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
   const input = CreatePasswordSetupBody.parse(req.body);
   const coach = req.user.id;
   if (!input.userId && !input.name?.trim()) fail(400, "Enter a client name.");
@@ -88,7 +88,7 @@ router.post("/password-accounts", async (req, res) => {
 });
 
 router.delete("/password-accounts/:userId/setup", async (req, res) => {
-  if (!req.user || !isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
   const userId = req.params.userId as string;
   if (!await linked(req.user.id, userId)) fail(403, "Choose your account or a linked client.");
   await db.delete(passwordSetupsTable).where(eq(passwordSetupsTable.userId, userId));

@@ -21,6 +21,21 @@ import { INVITE_KEY } from '@/lib/pl';
 import { useWorkspace } from '@/hooks/use-platform';
 import { EmptyState, LoadingPage } from '@/components/common';
 import MyPrograms from '@/pages/my-programs';
+import Coaches from '@/pages/coaches';
+
+/** Coaches see the shared library; clients keep their assigned snapshots. */
+function MyProgramsRoute() {
+  const {data,isLoading}=useWorkspace();
+  if(isLoading) return <LoadingPage />;
+  return data?.isCoach ? <Programs /> : <MyPrograms />;
+}
+
+function AdminOnly({children}:{children:ReactNode}) {
+  const {data,isLoading}=useWorkspace();
+  if(isLoading) return <LoadingPage />;
+  if(!data?.isCoach || !data.isAdmin) return <EmptyState title="Admin-only page" body="Only the team administrator can onboard coaches." />;
+  return <>{children}</>;
+}
 
 function CoachOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
@@ -54,7 +69,9 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/sign-in" component={SignIn} />
           <Route path="/set-password" component={SetPassword} />
-          <Route path="/my-programs" component={MyPrograms} />
+          <Route path="/my-programs" component={MyProgramsRoute} />
+          <Route path="/my-training"><CoachOnly><MyPrograms /></CoachOnly></Route>
+          <Route path="/coaches"><AdminOnly><Coaches /></AdminOnly></Route>
           <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
           <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>
           <Route path="/workouts" component={Workouts} />

@@ -4,6 +4,20 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export type CoachDirectoryEntryClientsItem = {
+  id: string;
+  name: string;
+};
+
+export interface CoachDirectoryEntry {
+  userId: string;
+  name: string;
+  username: string;
+  passwordEnabled: boolean;
+  createdAt: string;
+  clients: CoachDirectoryEntryClientsItem[];
+}
+
 export interface PasswordAccount {
   userId: string;
   name: string;
@@ -351,6 +365,9 @@ export type Program = ProgramInput & {
   id: string;
   source: string;
   reviewCount: number;
+  /** Server-owned identity of the uploader or copy creator */
+  uploaderId?: string;
+  uploaderName?: string;
 };
 
 export type AthleteUnit = typeof AthleteUnit[keyof typeof AthleteUnit];
@@ -518,6 +535,7 @@ export interface Workspace {
   privateLogin?: boolean;
   demo: boolean;
   isCoach: boolean;
+  isAdmin?: boolean;
   profile: Profile;
   programs: Program[];
   athletes: Athlete[];

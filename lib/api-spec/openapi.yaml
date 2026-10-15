@@ -5,6 +5,28 @@ info:
 servers:
   - url: /api
 paths:
+  /coaches:
+    get:
+      operationId: listCoaches
+      responses:
+        "200":
+          description: Admin-only read-only directory of independent coaches and their client names
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CoachDirectoryEntry" } }
+    post:
+      operationId: createCoach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordSetupInput" }
+      responses:
+        "200":
+          description: New independent coach and one-time setup link; userId may renew an unredeemed initial invitation only
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PasswordSetupLink" }
   /password-accounts:
     get:
       operationId: listPasswordAccounts
@@ -473,6 +495,23 @@ paths:
               schema: { $ref: "#/components/schemas/Analytics" }
 components:
   schemas:
+    CoachDirectoryEntry:
+      type: object
+      required: [userId, name, username, passwordEnabled, createdAt, clients]
+      properties:
+        userId: { type: string }
+        name: { type: string }
+        username: { type: string }
+        passwordEnabled: { type: boolean }
+        createdAt: { type: string }
+        clients:
+          type: array
+          items:
+            type: object
+            required: [id, name]
+            properties:
+              id: { type: string }
+              name: { type: string }
     PasswordAccount:
       type: object
       required: [userId, name, username, passwordEnabled, setupExpiresAt]
@@ -694,6 +733,8 @@ components:
             id: { type: string }
             source: { type: string }
             reviewCount: { type: integer }
+            uploaderId: { type: string, description: Server-owned identity of the uploader or copy creator }
+            uploaderName: { type: string }
     Athlete:
       type: object
       required: [id, name, unit, sessions, lastActive, totalVolume]
@@ -800,6 +841,7 @@ components:
         privateLogin: { type: boolean }
         demo: { type: boolean }
         isCoach: { type: boolean }
+        isAdmin: { type: boolean }
         profile: { $ref: "#/components/schemas/Profile" }
         programs: { type: array, items: { $ref: "#/components/schemas/Program" } }
         athletes: { type: array, items: { $ref: "#/components/schemas/Athlete" } }

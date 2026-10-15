@@ -28,6 +28,7 @@ import type {
   AssignmentInput,
   AuthUserEnvelope,
   Bodyweight,
+  CoachDirectoryEntry,
   CreatedAccessLink,
   FeedbackInput,
   GetAnalyticsParams,
@@ -84,6 +85,159 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListCoachesUrl = () => {
+
+
+
+
+  return `/api/coaches`
+}
+
+export const listCoaches = async ( options?: Parameters<typeof customFetch>[1]): Promise<CoachDirectoryEntry[]> => {
+
+  return customFetch<CoachDirectoryEntry[]>(getListCoachesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCoachesQueryKey = () => {
+    return [
+    `/api/coaches`
+    ] as const;
+    }
+
+
+export const getListCoachesQueryOptions = <TData = Awaited<ReturnType<typeof listCoaches>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoaches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCoachesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCoaches>>> = ({ signal }) => listCoaches({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCoaches>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCoachesQueryResult = NonNullable<Awaited<ReturnType<typeof listCoaches>>>
+export type ListCoachesQueryError = ErrorType<unknown>
+
+
+
+export function useListCoaches<TData = Awaited<ReturnType<typeof listCoaches>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoaches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCoachesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCoachUrl = () => {
+
+
+
+
+  return `/api/coaches`
+}
+
+export const createCoach = async (passwordSetupInput: PasswordSetupInput, options?: Parameters<typeof customFetch>[1]): Promise<PasswordSetupLink> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PasswordSetupLink>(getCreateCoachUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordSetupInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCoachMutationKey = () => ['createCoach'] as const;
+
+export const getCreateCoachMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCoach>>, TError,CreateCoachMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCoach>>, TError,CreateCoachMutationVariables, TContext> => {
+
+const mutationKey = getCreateCoachMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCoach>>, CreateCoachMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCoach(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCoachMutationResult = NonNullable<Awaited<ReturnType<typeof createCoach>>>
+    export type CreateCoachMutationBody = BodyType<PasswordSetupInput>
+    export type CreateCoachMutationError = ErrorType<unknown>
+    export type CreateCoachMutationVariables = {data: BodyType<PasswordSetupInput>}
+
+    export const useCreateCoach = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCoach>>, TError,CreateCoachMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCoach>>,
+        TError,
+        CreateCoachMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCoachMutationOptions(options));
+    }
 
 export const getListPasswordAccountsUrl = () => {
 
