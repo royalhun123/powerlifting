@@ -15,6 +15,12 @@ The Vercel migration must also move data hosting off Replit.
 
 **How to apply:** Treat connecting Vercel to the Replit production database as temporary, not the final solution. Back up production data and verify an independent PostgreSQL destination and account access before retiring the source.
 
+The user subsequently chose to start the Neon database from scratch for a new training block rather than transfer old history.
+
+**Why:** The user explicitly said they would redo the database and asked for coach access.
+
+**How to apply:** Allow initialization of a fresh Neon database and coach account without requiring the old-data migration first. This does not authorize deleting the original Replit database.
+
 Do not populate a form field with a private key taken from a sign-in URL fragment.
 
 **Why:** Browser automation can expose the value of even a masked password input in its accessibility output. This was observed with a subsequently revoked test-only link.
