@@ -5,6 +5,74 @@ info:
 servers:
   - url: /api
 paths:
+  /groups:
+    get:
+      operationId: listLiftingGroups
+      responses:
+        "200":
+          description: Current group for lifters, workspace groups for admins
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LiftingGroup" } }
+    post:
+      operationId: createLiftingGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GroupNameInput" }
+      responses:
+        "200":
+          description: Created group
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiftingGroup" }
+  /groups/current:
+    delete:
+      operationId: deleteLiftingGroup
+      responses:
+        "200": { description: Group deleted without deleting training }
+  /groups/leave:
+    post:
+      operationId: leaveLiftingGroup
+      responses:
+        "200": { description: Left group without deleting training }
+  /groups/invitations:
+    post:
+      operationId: createGroupInvitation
+      responses:
+        "200":
+          description: One-time group link
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [path, expiresAt]
+                properties: { path: { type: string }, expiresAt: { type: string } }
+  /groups/invitations/info:
+    post:
+      operationId: getGroupInvitationInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GroupTokenInput" }
+      responses:
+        "200":
+          description: Invitation destination
+          content:
+            application/json:
+              schema: { type: object, required: [name, workspaceName], properties: { name: { type: string }, workspaceName: { type: string } } }
+  /groups/invitations/accept:
+    post:
+      operationId: acceptGroupInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GroupAcceptInput" }
+      responses:
+        "200": { description: Joined group }
   /athletes/{athleteId}/bodyweights:
     get:
       operationId: getClientBodyweights
@@ -16,6 +84,17 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/Bodyweight" } }
+  /athletes/{athleteId}/true-maxes:
+    get:
+      operationId: getLifterTrueMaxes
+      parameters:
+        - { in: path, name: athleteId, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Read-only max history for the current leader or workspace admin
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/TrueMax" } }
   /sessions/{id}/discussion:
     parameters:
       - { in: path, name: id, required: true, schema: { type: string } }
@@ -610,6 +689,9 @@ components:
       type: object
       required: [userId, name, username, passwordEnabled, createdAt, clients, programs, blocks]
       properties:
+        groupName: { type: [string, "null"] }
+        groupId: { type: [string, "null"] }
+        isGroupLeader: { type: boolean }
         userId: { type: string }
         name: { type: string }
         username: { type: string }
@@ -952,10 +1034,48 @@ components:
       required: [feedback]
       properties:
         feedback: { type: string, maxLength: 5000 }
+    GroupNameInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+    GroupTokenInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 43, maxLength: 43 }
+    GroupAcceptInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 43, maxLength: 43 }
+        username: { type: string, minLength: 3, maxLength: 32, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$" }
+        password: { type: string, minLength: 12, maxLength: 128 }
+        name: { type: string, minLength: 1, maxLength: 100 }
+    LiftingGroup:
+      type: object
+      required: [id, name, workspaceId, leaderId]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        workspaceId: { type: string }
+        leaderId: { type: string }
+        members:
+          type: array
+          items:
+            type: object
+            required: [id, name]
+            properties: { id: { type: string }, name: { type: string } }
     Workspace:
       type: object
       required: [demo, isCoach, profile, programs, athletes, assignments, sessions, invitations]
       properties:
+        isLifter: { type: boolean }
+        isGroupLeader: { type: boolean }
+        group:
+          anyOf:
+            - { $ref: "#/components/schemas/LiftingGroup" }
+            - { type: "null" }
         workspaceId: { type: string }
         workspaceName: { type: string }
         privateLogin: { type: boolean }

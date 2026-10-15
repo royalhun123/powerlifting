@@ -29,15 +29,21 @@ import type {
   AuthUserEnvelope,
   Bodyweight,
   CoachDirectoryEntry,
+  CreateGroupInvitation200,
   CreatedAccessLink,
   DiscussionMessageInput,
   DiscussionThreadInput,
   FeedbackInput,
   GetAnalyticsParams,
+  GetGroupInvitationInfo200,
+  GroupAcceptInput,
+  GroupNameInput,
+  GroupTokenInput,
   HealthStatus,
   Invitation,
   InvitationAccept,
   InvitationInput,
+  LiftingGroup,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   PasswordAccount,
@@ -88,6 +94,527 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListLiftingGroupsUrl = () => {
+
+
+
+
+  return `/api/groups`
+}
+
+export const listLiftingGroups = async ( options?: Parameters<typeof customFetch>[1]): Promise<LiftingGroup[]> => {
+
+  return customFetch<LiftingGroup[]>(getListLiftingGroupsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLiftingGroupsQueryKey = () => {
+    return [
+    `/api/groups`
+    ] as const;
+    }
+
+
+export const getListLiftingGroupsQueryOptions = <TData = Awaited<ReturnType<typeof listLiftingGroups>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiftingGroups>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLiftingGroupsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLiftingGroups>>> = ({ signal }) => listLiftingGroups({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLiftingGroups>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListLiftingGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof listLiftingGroups>>>
+export type ListLiftingGroupsQueryError = ErrorType<unknown>
+
+
+
+export function useListLiftingGroups<TData = Awaited<ReturnType<typeof listLiftingGroups>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiftingGroups>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListLiftingGroupsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateLiftingGroupUrl = () => {
+
+
+
+
+  return `/api/groups`
+}
+
+export const createLiftingGroup = async (groupNameInput: GroupNameInput, options?: Parameters<typeof customFetch>[1]): Promise<LiftingGroup> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<LiftingGroup>(getCreateLiftingGroupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(groupNameInput)
+  }
+);}
+
+
+
+
+
+export const getCreateLiftingGroupMutationKey = () => ['createLiftingGroup'] as const;
+
+export const getCreateLiftingGroupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLiftingGroup>>, TError,CreateLiftingGroupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createLiftingGroup>>, TError,CreateLiftingGroupMutationVariables, TContext> => {
+
+const mutationKey = getCreateLiftingGroupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createLiftingGroup>>, CreateLiftingGroupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createLiftingGroup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateLiftingGroupMutationResult = NonNullable<Awaited<ReturnType<typeof createLiftingGroup>>>
+    export type CreateLiftingGroupMutationBody = BodyType<GroupNameInput>
+    export type CreateLiftingGroupMutationError = ErrorType<unknown>
+    export type CreateLiftingGroupMutationVariables = {data: BodyType<GroupNameInput>}
+
+    export const useCreateLiftingGroup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLiftingGroup>>, TError,CreateLiftingGroupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createLiftingGroup>>,
+        TError,
+        CreateLiftingGroupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateLiftingGroupMutationOptions(options));
+    }
+
+export const getDeleteLiftingGroupUrl = () => {
+
+
+
+
+  return `/api/groups/current`
+}
+
+export const deleteLiftingGroup = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteLiftingGroupUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLiftingGroupMutationKey = () => ['deleteLiftingGroup'] as const;
+
+export const getDeleteLiftingGroupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLiftingGroup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLiftingGroup>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteLiftingGroupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLiftingGroup>>, void> = () => {
+
+
+          return  deleteLiftingGroup(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLiftingGroupMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLiftingGroup>>>
+
+    export type DeleteLiftingGroupMutationError = ErrorType<unknown>
+
+
+    export const useDeleteLiftingGroup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLiftingGroup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLiftingGroup>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteLiftingGroupMutationOptions(options));
+    }
+
+export const getLeaveLiftingGroupUrl = () => {
+
+
+
+
+  return `/api/groups/leave`
+}
+
+export const leaveLiftingGroup = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getLeaveLiftingGroupUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLeaveLiftingGroupMutationKey = () => ['leaveLiftingGroup'] as const;
+
+export const getLeaveLiftingGroupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof leaveLiftingGroup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof leaveLiftingGroup>>, TError,void, TContext> => {
+
+const mutationKey = getLeaveLiftingGroupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof leaveLiftingGroup>>, void> = () => {
+
+
+          return  leaveLiftingGroup(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LeaveLiftingGroupMutationResult = NonNullable<Awaited<ReturnType<typeof leaveLiftingGroup>>>
+
+    export type LeaveLiftingGroupMutationError = ErrorType<unknown>
+
+
+    export const useLeaveLiftingGroup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof leaveLiftingGroup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof leaveLiftingGroup>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLeaveLiftingGroupMutationOptions(options));
+    }
+
+export const getCreateGroupInvitationUrl = () => {
+
+
+
+
+  return `/api/groups/invitations`
+}
+
+export const createGroupInvitation = async ( options?: Parameters<typeof customFetch>[1]): Promise<CreateGroupInvitation200> => {
+
+  return customFetch<CreateGroupInvitation200>(getCreateGroupInvitationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateGroupInvitationMutationKey = () => ['createGroupInvitation'] as const;
+
+export const getCreateGroupInvitationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGroupInvitation>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGroupInvitation>>, TError,void, TContext> => {
+
+const mutationKey = getCreateGroupInvitationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGroupInvitation>>, void> = () => {
+
+
+          return  createGroupInvitation(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGroupInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof createGroupInvitation>>>
+
+    export type CreateGroupInvitationMutationError = ErrorType<unknown>
+
+
+    export const useCreateGroupInvitation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGroupInvitation>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGroupInvitation>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateGroupInvitationMutationOptions(options));
+    }
+
+export const getGetGroupInvitationInfoUrl = () => {
+
+
+
+
+  return `/api/groups/invitations/info`
+}
+
+export const getGroupInvitationInfo = async (groupTokenInput: GroupTokenInput, options?: Parameters<typeof customFetch>[1]): Promise<GetGroupInvitationInfo200> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GetGroupInvitationInfo200>(getGetGroupInvitationInfoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(groupTokenInput)
+  }
+);}
+
+
+
+
+
+export const getGetGroupInvitationInfoMutationKey = () => ['getGroupInvitationInfo'] as const;
+
+export const getGetGroupInvitationInfoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getGroupInvitationInfo>>, TError,GetGroupInvitationInfoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getGroupInvitationInfo>>, TError,GetGroupInvitationInfoMutationVariables, TContext> => {
+
+const mutationKey = getGetGroupInvitationInfoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getGroupInvitationInfo>>, GetGroupInvitationInfoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  getGroupInvitationInfo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetGroupInvitationInfoMutationResult = NonNullable<Awaited<ReturnType<typeof getGroupInvitationInfo>>>
+    export type GetGroupInvitationInfoMutationBody = BodyType<GroupTokenInput>
+    export type GetGroupInvitationInfoMutationError = ErrorType<unknown>
+    export type GetGroupInvitationInfoMutationVariables = {data: BodyType<GroupTokenInput>}
+
+    export const useGetGroupInvitationInfo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getGroupInvitationInfo>>, TError,GetGroupInvitationInfoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getGroupInvitationInfo>>,
+        TError,
+        GetGroupInvitationInfoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGetGroupInvitationInfoMutationOptions(options));
+    }
+
+export const getAcceptGroupInvitationUrl = () => {
+
+
+
+
+  return `/api/groups/invitations/accept`
+}
+
+export const acceptGroupInvitation = async (groupAcceptInput: GroupAcceptInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getAcceptGroupInvitationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(groupAcceptInput)
+  }
+);}
+
+
+
+
+
+export const getAcceptGroupInvitationMutationKey = () => ['acceptGroupInvitation'] as const;
+
+export const getAcceptGroupInvitationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptGroupInvitation>>, TError,AcceptGroupInvitationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptGroupInvitation>>, TError,AcceptGroupInvitationMutationVariables, TContext> => {
+
+const mutationKey = getAcceptGroupInvitationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptGroupInvitation>>, AcceptGroupInvitationMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  acceptGroupInvitation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptGroupInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof acceptGroupInvitation>>>
+    export type AcceptGroupInvitationMutationBody = BodyType<GroupAcceptInput>
+    export type AcceptGroupInvitationMutationError = ErrorType<unknown>
+    export type AcceptGroupInvitationMutationVariables = {data: BodyType<GroupAcceptInput>}
+
+    export const useAcceptGroupInvitation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptGroupInvitation>>, TError,AcceptGroupInvitationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptGroupInvitation>>,
+        TError,
+        AcceptGroupInvitationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcceptGroupInvitationMutationOptions(options));
+    }
 
 export const getGetClientBodyweightsUrl = (athleteId: string,) => {
 
@@ -148,6 +675,77 @@ export function useGetClientBodyweights<TData = Awaited<ReturnType<typeof getCli
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetClientBodyweightsQueryOptions(athleteId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetLifterTrueMaxesUrl = (athleteId: string,) => {
+
+
+
+
+  return `/api/athletes/${athleteId}/true-maxes`
+}
+
+export const getLifterTrueMaxes = async (athleteId: string, options?: Parameters<typeof customFetch>[1]): Promise<TrueMax[]> => {
+
+  return customFetch<TrueMax[]>(getGetLifterTrueMaxesUrl(athleteId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLifterTrueMaxesQueryKey = (athleteId: string,) => {
+    return [
+    `/api/athletes/${athleteId}/true-maxes`
+    ] as const;
+    }
+
+
+export const getGetLifterTrueMaxesQueryOptions = <TData = Awaited<ReturnType<typeof getLifterTrueMaxes>>, TError = ErrorType<unknown>>(athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLifterTrueMaxes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLifterTrueMaxesQueryKey(athleteId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLifterTrueMaxes>>> = ({ signal }) => getLifterTrueMaxes(athleteId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteId !== null && athleteId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLifterTrueMaxes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLifterTrueMaxesQueryResult = NonNullable<Awaited<ReturnType<typeof getLifterTrueMaxes>>>
+export type GetLifterTrueMaxesQueryError = ErrorType<unknown>
+
+
+
+export function useGetLifterTrueMaxes<TData = Awaited<ReturnType<typeof getLifterTrueMaxes>>, TError = ErrorType<unknown>>(
+ athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLifterTrueMaxes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLifterTrueMaxesQueryOptions(athleteId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

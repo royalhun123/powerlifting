@@ -7,11 +7,15 @@
 import type { Assignment } from './assignment';
 import type { Athlete } from './athlete';
 import type { Invitation } from './invitation';
+import type { LiftingGroup } from './liftingGroup';
 import type { Profile } from './profile';
 import type { Program } from './program';
 import type { Session } from './session';
 
 export interface Workspace {
+  isLifter?: boolean;
+  isGroupLeader?: boolean;
+  group?: LiftingGroup | null;
   workspaceId?: string;
   workspaceName?: string;
   privateLogin?: boolean;

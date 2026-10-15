@@ -1,3 +1,4 @@
+export * from "./groups";
 export * from "./coaches";
 export * from "./workspaces";
 export * from "./bodyweights";

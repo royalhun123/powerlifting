@@ -20,10 +20,16 @@ import { sameWorkspace } from "../lib/workspace-access";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
+router.get("/athletes/:athleteId/true-maxes", async (req,res) => {
+  res.setHeader("Cache-Control","no-store");
+  if (!req.user || !await sameWorkspace(req.user.id,req.params.athleteId) || !(await isAdmin(req.user.id) || await isCoach(req.user.id) && await linked(req.user.id,req.params.athleteId))) fail(403,"Only the current group leader or workspace administrator can view these maxes.");
+  const rows=await db.select().from(trueMaxesTable).where(eq(trueMaxesTable.athleteId,req.params.athleteId));
+  res.json(GetTrueMaxesResponse.parse(rows.map(r=>r.data)));
+});
 
 router.get("/athletes/:athleteId/bodyweights", async (req,res) => {
   res.setHeader("Cache-Control","no-store");
-  if (!req.user || !await isCoach(req.user.id) || !await linked(req.user.id,req.params.athleteId)) fail(403,"Only this athlete's linked coach can view their bodyweight logs.");
+  if (!req.user || !await sameWorkspace(req.user.id,req.params.athleteId) || !(await isAdmin(req.user.id) || await isCoach(req.user.id) && await linked(req.user.id,req.params.athleteId))) fail(403,"Only the current group leader or workspace administrator can view these bodyweight logs.");
   const rows=await db.select().from(bodyweightsTable).where(eq(bodyweightsTable.athleteId,req.params.athleteId)).orderBy(bodyweightsTable.date);
   const times=["morning","day","night","unspecified"];
   res.json(GetBodyweightsResponse.parse(rows.map(r=>r.data)).sort((a,b)=>a.date.localeCompare(b.date)||times.indexOf(a.timeOfDay)-times.indexOf(b.timeOfDay)));
@@ -59,8 +65,14 @@ router.get("/analytics", async (req,res) => {
 router.use(async (req,res,next) => {
   if (!req.isAuthenticated()) {res.status(401).json({error:"Sign in to save training or manage clients."});return;}
   const ownArchive = req.method==="PATCH" && /^\/assignments\/[^/]+\/?$/i.test(req.path);
-  if (!ownArchive && /^\/(programs|invitations|assignments|feedback)(\/|$)/i.test(req.path) && !await isCoach(req.user.id)) {
-    res.status(403).json({error:"Only the coach can manage programs and clients."});return;
+  if (await isAdmin(req.user.id)) {
+    res.status(403).json({error:"Administrators have read-only access to training data."});return;
+  }
+  if (/^\/(invitations|join)(\/|$)/i.test(req.path)) {
+    res.status(410).json({error:"Use a lifting-group invitation instead."});return;
+  }
+  if (!ownArchive && /^\/feedback(\/|$)/i.test(req.path) && !await isCoach(req.user.id)) {
+    res.status(403).json({error:"Only a group leader can leave feedback."});return;
   }
   await ensureProfile(req.user.id,req.user.firstName || "Athlete");
   next();
@@ -201,7 +213,7 @@ router.patch("/assignments/:id", async (req,res) => {
 router.delete("/assignments/:id", async (req,res) => {
   await db.transaction(async tx=>{
     const [row]=await tx.select().from(assignmentsTable).where(eq(assignmentsTable.id,req.params.id as string)).for("update");
-    if(!row || row.coachId!==req.user!.id) fail(403,"Only the assigning coach can remove this program.");
+    if(!row || row.coachId!==req.user!.id || !await linked(req.user!.id,row.athleteId)) fail(403,"Only the assigning lifter or current group leader can remove this program.");
     // Keep the snapshot and all session rows; removal must not erase training history.
     await tx.update(assignmentsTable).set({data:{...AssignProgramResponse.parse(row.data),removed:true}}).where(eq(assignmentsTable.id,row.id));
   });

@@ -180,7 +180,7 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
           );
         })}
         <Panel title="Session notes">
-          <Textarea value={state.notes} onChange={(e) => setState({ ...state, notes: e.target.value })} placeholder="How did it move? Sleep, bar speed, anything your coach should know." data-testid="input-session-notes" />
+          <Textarea value={state.notes} onChange={(e) => setState({ ...state, notes: e.target.value })} placeholder="How did it move? Sleep, bar speed, anything your group leader should know." data-testid="input-session-notes" />
         </Panel>
         <WorkoutDiscussion session={state.id ? { id: state.id, sets: state.sets } : null} />
       </div>
@@ -307,7 +307,7 @@ export default function Workouts() {
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div>
           {!active ? (
-            <EmptyState title="No block assigned to you" body={data.isCoach ? "Open Programs and assign a block to yourself to start logging." : "Your coach will assign your training. You can see your assignments in My blocks."} action={<Button variant="outline" onClick={() => setLocation(data.isCoach ? "/programs" : "/my-blocks")} data-testid="button-go-programs">{data.isCoach ? "Programs" : "My blocks"}</Button>} />
+            <EmptyState title="No block assigned to you" body={"Open Programs and assign a block to yourself to start logging."} action={<Button variant="outline" onClick={() => setLocation("/programs")} data-testid="button-go-programs">Programs</Button>} />
           ) : (
             <div className="space-y-5">
               {[...byWeek.entries()].sort((a, b) => a[0] - b[0]).map(([wk, ws]) => (
@@ -377,7 +377,7 @@ export default function Workouts() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this session?</AlertDialogTitle>
-            <AlertDialogDescription>{toDelete?.name} on {toDelete ? fmtDate(toDelete.date) : ""}. Sets and coach feedback are removed permanently and analytics will update.</AlertDialogDescription>
+            <AlertDialogDescription>{toDelete?.name} on {toDelete ? fmtDate(toDelete.date) : ""}. Sets and group leader feedback are removed permanently and analytics will update.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

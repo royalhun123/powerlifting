@@ -24,12 +24,6 @@ router.use("/sessions/:id/discussion", (req, res, next) => {
 async function access(row: WorkoutRow, userId: string) {
   if (!await sameWorkspace(userId,row.athleteId)) fail(403,"This workout belongs to another workspace.");
   if (await isAdmin(userId)) {
-    const [client] = await db.select({ id: coachingTable.athleteId }).from(coachingTable)
-      .innerJoin(coachesTable, eq(coachingTable.coachId, coachesTable.userId))
-      .where(eq(coachingTable.athleteId, row.athleteId)).limit(1);
-    if (row.athleteId !== userId && !client && !await isCoach(row.athleteId)) {
-      fail(403, "This athlete is not in the coach directory.");
-    }
     return { canPost: false, role: "coach" as const };
   }
   if (row.athleteId === userId) return { canPost: true, role: "athlete" as const };

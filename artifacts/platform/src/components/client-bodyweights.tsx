@@ -39,7 +39,7 @@ export function ClientBodyweights({ athleteId, athleteName, days }: { athleteId:
           </Button>
         </div>
       ) : !latest ? (
-        <p className="py-4 text-center text-sm text-muted-foreground" data-testid="client-bodyweight-empty">{athleteName} has not logged any bodyweight yet. Athletes record weigh-ins from their own dashboard.</p>
+        <p className="py-4 text-center text-sm text-muted-foreground" data-testid="client-bodyweight-empty">{athleteName} has not logged any bodyweight yet. Lifters record weigh-ins from their own dashboard.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-[220px_1fr]">
           <div className="relative border-l-[3px] border-[#B4975A] bg-secondary/50 p-3" data-testid="client-bodyweight-latest">

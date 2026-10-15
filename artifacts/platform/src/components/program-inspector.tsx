@@ -1,3 +1,4 @@
+import { LifterMeasurements } from "@/components/lifter-measurements";
 import { useState, type ReactNode } from "react";
 import type { Assignment, CoachDirectoryEntry, Program } from "@workspace/api-client-react";
 import { ChevronRight } from "lucide-react";
@@ -60,7 +61,7 @@ function ProgramCard({ p, meta, archived, testId }: { p: Program; meta: string; 
 }
 
 function blockMeta(a: Assignment) {
-  return `${a.program.weeks} wks · starts ${fmtDate(a.startDate)} · by ${a.program.uploaderName || a.coachName}`;
+  return `${a.program.weeks} wks · starts ${fmtDate(a.startDate)} · by ${a.program.uploaderName || a.coachName || "lifter"}`;
 }
 const blockCard = (prefix: string) => (a: Assignment) => <ProgramCard p={a.program} testId={`${prefix}-${a.id}`} meta={`Prescription · ${blockMeta(a)}`} />;
 
@@ -95,14 +96,18 @@ export function CoachDetail({ c }: { c: CoachDirectoryEntry }) {
         )}
       </Section>
 
-      <Section title="Coach's blocks" count={blocks.length}>
+      <Section title="Measurements" count={0}>
+        <LifterMeasurements athleteId={c.userId} athleteName={c.name || "This lifter"} />
+      </Section>
+
+      <Section title="Own blocks" count={blocks.length}>
         <GroupedHistory personId={c.userId} blocks={blocks} renderBlock={blockCard(`block-${c.userId}`)} />
       </Section>
 
-      <Section title="Client's blocks" count={clients.reduce((n, cl) => n + (cl.blocks?.length ?? 0), 0)}>
-        {clients.length === 0 ? <p className="text-xs text-muted-foreground">No clients.</p> : (
+      <Section title="Group members' blocks" count={clients.reduce((n, cl) => n + (cl.blocks?.length ?? 0), 0)}>
+        {clients.length === 0 ? <p className="text-xs text-muted-foreground">No group members.</p> : (
           <div className="space-y-3">
-            <div role="tablist" aria-label="Clients" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+            <div role="tablist" aria-label="Group members" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
               {clients.map((cl) => (
                 <button key={cl.id} type="button" role="tab" aria-selected={client?.id === cl.id} onClick={() => setClientId(cl.id)} data-testid={`tab-client-${cl.id}`}
                   className={cn("shrink-0 border px-2.5 py-1 text-xs transition-colors", client?.id === cl.id ? "border-primary bg-primary text-primary-foreground" : "bg-secondary hover:bg-primary/15")}>
@@ -112,6 +117,7 @@ export function CoachDetail({ c }: { c: CoachDirectoryEntry }) {
             </div>
             {client && (
               <div role="tabpanel" aria-label={client.name}>
+                <div className="mb-4"><LifterMeasurements key={`m-${client.id}`} athleteId={client.id} athleteName={client.name} /></div>
                 <GroupedHistory key={client.id} personId={client.id} blocks={client.blocks ?? []} renderBlock={blockCard(`client-block-${client.id}`)} />
               </div>
             )}

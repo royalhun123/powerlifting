@@ -67,7 +67,7 @@ export default function Dashboard() {
         <div className="rise mb-6 grid gap-3 rounded-md border border-dashed border-primary/40 bg-card p-5 md:grid-cols-3" data-testid="panel-getting-started">
           <div className="md:col-span-3 font-display text-2xl font-bold uppercase">Get on the platform</div>
           <Link href="/settings" className={`rounded-sm border p-3 text-sm hover:border-primary ${total > 0 ? "opacity-50" : ""}`} data-testid="link-start-maxes"><b className="font-num text-primary">01</b> Set reference maxes and meet date</Link>
-          <Link href={data.isCoach ? "/programs" : "/my-blocks"} className={`rounded-sm border p-3 text-sm hover:border-primary ${current ? "opacity-50" : ""}`} data-testid="link-start-assign"><b className="font-num text-primary">02</b> {data.isCoach ? "Open Programs and assign a block to yourself" : "View training assigned by your coach"}</Link>
+          <Link href={(data.isLifter ?? !data.isAdmin) ? "/programs" : "/my-blocks"} className={`rounded-sm border p-3 text-sm hover:border-primary ${current ? "opacity-50" : ""}`} data-testid="link-start-assign"><b className="font-num text-primary">02</b> {(data.isLifter ?? !data.isAdmin) ? "Open Programs and assign a block to yourself" : "View your assigned training"}</Link>
           <Link href="/workouts" className="rounded-sm border p-3 text-sm hover:border-primary" data-testid="link-start-log"><b className="font-num text-primary">03</b> Log your first session</Link>
         </div>
       )}
@@ -125,7 +125,7 @@ export default function Dashboard() {
 
         <Panel title="Up next" className="rise-3" action={current && <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">{PHASE_LABEL[current.program.phase]}</span>}>
           {!current ? (
-            <EmptyState title="No block assigned" body={data.isCoach ? "Assign a program to yourself from Programs." : "Your coach will assign your day-by-day plan."} action={<Link href={data.isCoach ? "/programs" : "/my-blocks"} className="text-sm text-primary underline" data-testid="link-assign-first">{data.isCoach ? "Browse Programs" : "My blocks"}</Link>} />
+            <EmptyState title="No block assigned" body={(data.isLifter ?? !data.isAdmin) ? "Assign a program to yourself from Programs." : "No assigned plan yet."} action={<Link href={(data.isLifter ?? !data.isAdmin) ? "/programs" : "/my-blocks"} className="text-sm text-primary underline" data-testid="link-assign-first">{(data.isLifter ?? !data.isAdmin) ? "Browse Programs" : "My blocks"}</Link>} />
           ) : !next ? (
             <div className="text-sm text-muted-foreground">Every workout in <b>{current.program.name}</b> is complete. Time for the next block.</div>
           ) : (

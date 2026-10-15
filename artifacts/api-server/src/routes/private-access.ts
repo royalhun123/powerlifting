@@ -23,12 +23,13 @@ async function issueSession(res:Response,userId:string,linkId:string) {
   res.cookie(SESSION_COOKIE,sid,{httpOnly:true,secure:true,sameSite:"lax",path:"/",maxAge:PRIVATE_SESSION_TTL});
 }
 
+router.use("/access-links",(_req,res)=>{res.status(410).json({error:"Use lifting-group invitations and your own password settings."});});
 router.get("/auth/mode",(_req,res)=>res.json({privateLogin:privateLoginEnabled()}));
 router.post("/auth/private-link",async(req,res)=>{
   await authLimit(req, "private-link-ip", 30);
   const {token}=RedeemAccessLinkBody.parse(req.body);
   const [link]=await db.select().from(invitationsTable).where(eq(invitationsTable.token,hashPrivateToken(token)));
-  if(!link?.acceptedBy || link.expiresAt.getTime()<=Date.now() || !await isCoach(link.coachId)) fail(401,"This private link is invalid, revoked, or expired. Ask your coach for a new link.");
+  if(!link?.acceptedBy || link.expiresAt.getTime()<=Date.now()) fail(401,"This private link is invalid, revoked, or expired.");
   if (!await sameWorkspace(link.coachId,link.acceptedBy)) fail(403,"This link crosses workspace boundaries.");
   if ((await passwordCredential(link.acceptedBy))?.passwordHash) fail(401, "This account now uses a username and password.");
   const old=getSessionId(req);

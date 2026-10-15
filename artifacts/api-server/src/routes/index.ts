@@ -5,12 +5,14 @@ import trainingRouter from "./training";
 import privateAccessRouter from "./private-access";
 import passwordAccessRouter from "./password-access";
 import coachesRouter from "./coaches";
+import groupsRouter from "./groups";
 import workoutDiscussionRouter from "./workout-discussion";
 import { privateLoginEnabled } from "../lib/private-access";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(groupsRouter);
 router.use(passwordAccessRouter);
 router.use(coachesRouter);
 router.use(workoutDiscussionRouter);

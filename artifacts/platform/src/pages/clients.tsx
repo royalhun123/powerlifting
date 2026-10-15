@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AssignmentOverview } from "@/components/assignment-overview";
-import { LegacyAccessDetails, PasswordAccountsPanel } from "@/components/password-accounts-panel";
 import { CalendarPlus, MessageSquare } from "lucide-react";
 import { useAssignProgram, type GetAnalyticsDays } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,9 @@ import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EmptyState, ErrorState, LiftTag, LoadingPage, PageHeader, Panel } from "@/components/common";
+import { EmptyState, ErrorState, LiftTag, LoadingPage, Panel } from "@/components/common";
 import { ClientBodyweights } from "@/components/client-bodyweights";
-import { WorkspaceBadge } from "@/components/workspace-badge";
+import { LifterTrueMaxes } from "@/components/lifter-measurements";
 import { AnalyticsView } from "@/components/analytics-view";
 import { DaysToggle } from "@/components/days-toggle";
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
@@ -21,9 +20,8 @@ import { fmtCompact, fmtDate, fmtNum, initials, todayISO } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 
 
-export default function Clients() {
+export default function GroupLeaderReview() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
-  const refreshRoster = () => { void refetch(); void invalidate(); };
   const assign = useAssignProgram();
   const invalidate = useInvalidateAll();
   const guard = useMutationGuard();
@@ -60,13 +58,12 @@ export default function Clients() {
 
   return (
     <div>
-      <PageHeader kicker="Coaching" title="My clients"><WorkspaceBadge /></PageHeader>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <div className="space-y-5">
-          <Panel title={`Athletes (${data.athletes.length})`}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-5">
+          <Panel title={`Lifters (${data.athletes.length})`}>
             {data.athletes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No linked clients yet. Use “Create invitation link” under Password accounts below; clients appear here once they finish setup.</p>
+              <p className="text-sm text-muted-foreground">No members yet. Create a group invitation link above; lifters appear here once they join.</p>
             ) : (
               <ul className="-mx-2 space-y-1">
                 {data.athletes.map((a) => (
@@ -85,20 +82,20 @@ export default function Clients() {
           </Panel>
         </div>
 
-        <div>
+        <div className="min-w-0">
           {!athlete ? (
-            <EmptyState title="No athlete selected" body="Linked clients appear here with their sessions, analytics and a place for your feedback. Coaches review and comment; athletes log their own sessions." />
+            <EmptyState title="No lifter selected" body="Group members appear here with their sessions, analytics and a place for your feedback. Group leaders review and comment; lifters log their own sessions." />
           ) : (
             <div className="space-y-5">
               <div className="rise flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <div className="font-num text-[11px] uppercase tracking-[0.22em] text-primary">Athlete review</div>
+                  <div className="font-num text-[11px] uppercase tracking-[0.22em] text-primary">Lifter review · group leader</div>
                   <h2 className="font-display text-4xl font-bold uppercase leading-none" data-testid="text-athlete-name">{athlete.name}</h2>
                   <div className="mt-1 font-num text-xs text-muted-foreground">
                     {athleteAssignments.length ? athleteAssignments.map((a) => `${a.program.name} from ${a.startDate}`).join(" · ") : "No block assigned"}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <DaysToggle value={days} onChange={setDays} />
                   <Button variant="outline" size="sm" onClick={() => (guard() ? setAssignOpen(true) : undefined)} data-testid="button-assign-client"><CalendarPlus className="mr-1.5 h-4 w-4" /> Assign block</Button>
                 </div>
@@ -107,6 +104,8 @@ export default function Clients() {
               <AnalyticsView athleteId={athlete.id} days={days} />
 
               <ClientBodyweights key={athlete.id} athleteId={athlete.id} athleteName={athlete.name} days={days} />
+
+              <LifterTrueMaxes key={`tm-${athlete.id}`} athleteId={athlete.id} athleteName={athlete.name} />
 
               <Panel title="Sessions">
                 {athleteSessions.length === 0 ? (
@@ -130,7 +129,7 @@ export default function Clients() {
                               <div className="overflow-x-auto">
                               <table className="w-full font-num text-xs">
                                 <thead className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                                  <tr><th className="text-left">Exercise</th><th>Set</th><th>{s.unit}</th><th>Reps</th><th>RPE</th><th>Done</th><th className="px-3 text-left">Client set notes</th></tr>
+                                  <tr><th className="text-left">Exercise</th><th>Set</th><th>{s.unit}</th><th>Reps</th><th>RPE</th><th>Done</th><th className="px-3 text-left">Lifter set notes</th></tr>
                                 </thead>
                                 <tbody>
                                   {s.sets.map((x, i) => (
@@ -147,8 +146,8 @@ export default function Clients() {
                                 </tbody>
                               </table>
                               </div>
-                              <section className="mt-3 border bg-card p-3" aria-label="Client session notes">
-                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Client session notes</h3>
+                              <section className="mt-3 border bg-card p-3" aria-label="Lifter session notes">
+                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Lifter session notes</h3>
                                 <p className="whitespace-pre-wrap break-words text-sm" data-testid={`client-session-notes-${s.id}`}>{s.notes || <span className="text-muted-foreground">No session notes recorded.</span>}</p>
                               </section>
                               <WorkoutDiscussion session={s} className="mt-3" />
@@ -166,10 +165,8 @@ export default function Clients() {
       </div>
 
       <div className="mt-10 border-t pt-6" data-testid="section-account-management">
-        <div className="mb-4 font-num text-[11px] uppercase tracking-[0.22em] text-primary">Accounts</div>
+        <div className="mb-4 font-num text-[11px] uppercase tracking-[0.22em] text-primary">Assignments</div>
         <AssignmentOverview />
-        <PasswordAccountsPanel onCreated={refreshRoster} />
-        <LegacyAccessDetails />
 
 
       </div>

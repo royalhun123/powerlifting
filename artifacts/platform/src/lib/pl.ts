@@ -184,3 +184,6 @@ export function convertLoad(w: number, from: string, to: string): number {
   const v = from === "lb" ? w / 2.20462 : w * 2.20462;
   return Math.round(roundLoad(v, to) * 10) / 10;
 }
+
+/** Group invitation token held only for the sign-in round-trip (sessionStorage). */
+export const GROUP_INVITE_KEY = "platform.groupInviteToken";

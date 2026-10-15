@@ -70,7 +70,7 @@ function DiscussionBody({ id, sets, readOnly }: { id: string; sets: LoggedSet[];
       {q.isError && <ErrorState message={`Could not refresh comments. Your draft is kept. ${errMessage(q.error)}`} onRetry={() => q.refetch()} />}
       {d.legacyFeedback && (
         <div className="border border-[#B4975A]/50 bg-[#B4975A]/5 p-2.5" data-testid="text-legacy-feedback">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Earlier coach feedback · whole workout</div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Earlier group leader feedback · whole workout</div>
           <p className="whitespace-pre-wrap text-sm">{d.legacyFeedback}</p>
         </div>
       )}
@@ -101,7 +101,7 @@ function ThreadView({ t, sessionId, canPost, onSaved }: { t: DiscussionThread; s
         {t.messages.map((m) => (
           <li key={m.id} className={cn("max-w-[92%] border-l-2 pl-2", m.authorRole === "coach" ? "border-[#B4975A]" : "border-primary")}>
             <div className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">
-              <span className="font-semibold text-foreground">{m.authorName}</span> · {m.authorRole} · {fmtStamp(m.createdAt)}
+              <span className="font-semibold text-foreground">{m.authorName}</span> · {m.authorRole === "coach" ? "group leader" : "lifter"} · {fmtStamp(m.createdAt)}
             </div>
             <p className="whitespace-pre-wrap break-words text-sm">{m.text}</p>
           </li>
@@ -202,7 +202,7 @@ function NewThread({ sessionId, sets, onSaved }: { sessionId: string; sets: Logg
           </label>
         )}
       </div>
-      <Textarea aria-label="Comment" value={text} disabled={create.isPending} maxLength={2000} onChange={(e) => { setText(e.target.value); touch(); }} className="min-h-[70px] text-sm" placeholder="Bar speed, depth, RPE calibration, a question for your coach…" data-testid="input-new-thread" />
+      <Textarea aria-label="Comment" value={text} disabled={create.isPending} maxLength={2000} onChange={(e) => { setText(e.target.value); touch(); }} className="min-h-[70px] text-sm" placeholder="Bar speed, depth, RPE calibration, a question for your group leader…" data-testid="input-new-thread" />
       {create.isError && <p role="alert" className="text-xs text-destructive">Not sent: {errMessage(create.error)}. Your text is kept; try again.</p>}
       <div className="flex justify-end">
         <Button size="sm" onClick={send} disabled={!valid || create.isPending} data-testid="button-send-thread"><Send className="mr-1.5 h-3.5 w-3.5" />{create.isPending ? "Sending…" : create.isError ? "Retry" : "Post comment"}</Button>

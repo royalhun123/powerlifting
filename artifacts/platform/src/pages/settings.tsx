@@ -13,7 +13,7 @@ import { Building2, History } from "lucide-react";
 import { WorkspaceBadge, useWorkspaceScope } from "@/components/workspace-badge";
 import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
 import { LatestBodyweight } from "@/components/bodyweight-tracking";
-import { LegacyAccessDetails, PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
+import { PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
 
 export default function Settings() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
@@ -36,7 +36,7 @@ export default function Settings() {
   if (isLoading || (data && !form)) return <LoadingPage />;
   if (isError || !data || !form) return <ErrorState message={errMessage(error)} onRetry={() => refetch()} />;
 
-  const adminOnly = !!data.isAdmin && !data.isCoach;
+  const adminOnly = !!data.isAdmin && !(data.isLifter ?? false);
   const set = (p: Partial<ProfileInput>) => setForm({ ...form, ...p });
   const num = (v: string) => Math.max(0, Math.min(2000, Number(v) || 0));
   const valid = form.name.trim().length > 0;
@@ -68,12 +68,11 @@ export default function Settings() {
       <div className="space-y-5">
         <Panel title={<span className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-[#B4975A]" /> Workspace</span>}>
           <div data-testid="section-workspace"><WorkspaceBadge /></div>
-          <p className="mt-2 text-sm text-muted-foreground">{scope.isTeam ? `You are signed in to the ${scope.name} team workspace. Clients, programs and coaches you see here belong only to this workspace.` : "You are signed in to a personal coaching workspace. Your clients and program library are private to this workspace."} Each workspace has its own username login; sign out and sign in with the other account to reach a different one.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{scope.isTeam ? `You are signed in to the ${scope.name} team workspace. Lifters, groups and programs you see here belong only to this workspace.` : "You are signed in to a personal workspace. Your groups and program library are private to this workspace."} Each workspace has its own username login; sign out and sign in with the other account to reach a different one.</p>
         </Panel>
         <LatestBodyweight unit={form.unit} />
         <OwnPasswordAccount />
         <PasswordAccountsPanel />
-        <LegacyAccessDetails />
         <Panel title="Lifter">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">

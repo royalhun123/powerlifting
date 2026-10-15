@@ -200,6 +200,11 @@ export type CoachDirectoryEntryClientsItem = {
 };
 
 export interface CoachDirectoryEntry {
+  /** @nullable */
+  groupName?: string | null;
+  /** @nullable */
+  groupId?: string | null;
+  isGroupLeader?: boolean;
   userId: string;
   name: string;
   username: string;
@@ -619,7 +624,63 @@ export interface FeedbackInput {
   feedback: string;
 }
 
+export interface GroupNameInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+}
+
+export interface GroupTokenInput {
+  /**
+     * @minLength 43
+     * @maxLength 43
+     */
+  token: string;
+}
+
+export interface GroupAcceptInput {
+  /**
+     * @minLength 43
+     * @maxLength 43
+     */
+  token: string;
+  /**
+     * @minLength 3
+     * @maxLength 32
+     * @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$
+     */
+  username?: string;
+  /**
+     * @minLength 12
+     * @maxLength 128
+     */
+  password?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+}
+
+export type LiftingGroupMembersItem = {
+  id: string;
+  name: string;
+};
+
+export interface LiftingGroup {
+  id: string;
+  name: string;
+  workspaceId: string;
+  leaderId: string;
+  members?: LiftingGroupMembersItem[];
+}
+
 export interface Workspace {
+  isLifter?: boolean;
+  isGroupLeader?: boolean;
+  group?: LiftingGroup | null;
   workspaceId?: string;
   workspaceName?: string;
   privateLogin?: boolean;
@@ -672,6 +733,16 @@ export interface Analytics {
   records: LiftRecord[];
   trend: TrendPoint[];
 }
+
+export type CreateGroupInvitation200 = {
+  path: string;
+  expiresAt: string;
+};
+
+export type GetGroupInvitationInfo200 = {
+  name: string;
+  workspaceName: string;
+};
 
 export type RemoveAssignment200 = {
   success: boolean;

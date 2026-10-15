@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Panel, ErrorState } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PrivateAccessPanel } from "@/components/private-access-panel";
 
 export const USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$/;
 
@@ -54,9 +53,7 @@ export function OwnPasswordAccount() {
       {own.data.setupExpiresAt && <p className="text-xs text-muted-foreground">A password setup link is pending until {fmtWhen(own.data.setupExpiresAt)}.</p>}
       <p className="text-sm text-muted-foreground" data-testid="text-own-reset-help">
         {data?.isAdmin && !data?.isCoach ? "To set or reset your own password, create a setup link for “My admin account” in Password accounts below. Your current password keeps working until the new link is used."
-          : data?.isCoach ? "To set or reset your own password, create a setup link for “My coach account” in Password accounts below."
-          : own.data.passwordEnabled ? "Forgot or want to change your password? Ask your coach for a reset link. Your current password keeps working until the new link is used."
-          : "Your coach can send you a one-time link to choose a password. Until then, keep using your private link."}
+          : "To set or reset your own password, create a setup link for “My account” in Password accounts below. Your current password keeps working until the new link is used."}
       </p>
     </div>}
   </Panel>;
@@ -65,8 +62,8 @@ export function OwnPasswordAccount() {
 export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } = {}) {
   const { signedIn, data } = useSignedIn();
   const adminOnly = signedIn && !!data?.isAdmin && !data?.isCoach;
-  const isCoach = signedIn && (!!data?.isCoach || adminOnly);
-  const selfLabel = adminOnly ? "My admin account" : "My coach account";
+  const isCoach = signedIn && (!!data?.isAdmin || (data?.isLifter ?? !data?.isAdmin));
+  const selfLabel = adminOnly ? "My admin account" : "My account";
   const qc = useQueryClient(), invalidate = useInvalidateAll(), guard = useMutationGuard();
   const { toast } = useToast();
   const list = useListPasswordAccounts({ query: { queryKey: getListPasswordAccountsQueryKey(), enabled: isCoach, staleTime: 15_000, refetchInterval: 30_000 } });
@@ -75,7 +72,7 @@ export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } 
   const [fresh, setFresh] = useState<{ url: string; label: string; expiresAt: string; invite: boolean } | null>(null);
   if (!isCoach || !data) return null;
 
-  const accounts = adminOnly ? (list.data ?? []).filter(a => a.userId === data.profile.id) : (list.data ?? []);
+  const accounts = (list.data ?? []).filter(a => a.userId === data.profile.id);
   const targetId = target === "self" ? data.profile.id : target;
   const existing = accounts.find(a => a.userId === targetId);
   const label = (a?: PasswordAccount) => a?.userId === data.profile.id ? selfLabel : a?.name || "Invited client";
@@ -87,17 +84,6 @@ export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } 
     await Promise.all([invalidate(), qc.invalidateQueries({ queryKey: getListPasswordAccountsQueryKey() }), qc.invalidateQueries({ queryKey: getGetOwnPasswordAccountQueryKey() })]);
   }
   const onErr = (e: unknown) => toast({ title: "Could not create link", description: errMessage(e), variant: "destructive" });
-  function invite() {
-    if (!guard() || create.isPending) return;
-    create.mutate({ data: {} }, {
-      onSuccess: async r => {
-        setFresh({ url: window.location.origin + r.path, label: "your new client", expiresAt: r.expiresAt, invite: true });
-        await refresh(); onCreated?.();
-        toast({ title: "Invitation link created. Copy it now." });
-      },
-      onError: onErr,
-    });
-  }
   function reset() {
     if (!guard() || !canReset) return;
     if (pendingTarget && !window.confirm("This account already has a pending setup link. Creating a new one immediately invalidates the previous link. Continue?")) return;
@@ -112,16 +98,7 @@ export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } 
   }
 
   return <div className="mb-5"><Panel title={<span className="inline-flex items-center gap-2"><KeyRound className="h-4 w-4 text-[#B4975A]" /> Password accounts</span>}>
-    {!adminOnly && <div className="mb-5 border border-[#B4975A]/60 bg-[#B4975A]/5 p-4" data-testid="panel-invite-client">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-lg font-bold uppercase leading-none">Add a client</p>
-          <p className="mt-1 text-sm text-muted-foreground">Creates a one-time invitation link (24 hours). Your client opens it and chooses their own name, username and password, then joins your roster.</p>
-        </div>
-        <Button onClick={invite} disabled={create.isPending} data-testid="button-invite-client"><UserPlus className="mr-1.5 h-4 w-4" />{create.isPending ? "Creating…" : "Create invitation link"}</Button>
-      </div>
-    </div>}
-    <p className="mb-3 text-sm text-muted-foreground">{adminOnly ? "Set or reset the password for your own admin account with a one-time setup link (valid 24 hours). Your current password keeps working until the link is used. Coach accounts are created from the Coaches page." : "Reset an existing account with a one-time link (valid 24 hours). The username stays the same and the current password keeps working until the link is used. Completing setup signs that account out everywhere and retires its old private links."}</p>
+    <p className="mb-3 text-sm text-muted-foreground">{adminOnly ? "Set or reset the password for your own admin account with a one-time setup link (valid 24 hours). Your current password keeps working until the link is used. Lifter accounts are invited from Lifters & groups." : "Set or reset your own password with a one-time link (valid 24 hours). Your username stays the same and your current password keeps working until the link is used. Completing setup signs you out everywhere."}</p>
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <label className="grid gap-1 text-sm">Account
         <select className="border bg-background p-2" value={target} onChange={e => { setTarget(e.target.value); setFresh(null); create.reset(); }} data-testid="select-password-account">
@@ -152,7 +129,7 @@ export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } 
           const pending = a.setupExpiresAt && Date.parse(a.setupExpiresAt) > Date.now();
           return <li key={a.userId} className="flex flex-wrap items-center justify-between gap-2 py-2.5" data-testid={`row-password-account-${a.userId}`}>
             <div className="min-w-0">
-              <b className="text-sm">{a.name || "Invited client"}</b>{a.userId === data.profile.id && <span className="ml-2 text-xs text-muted-foreground">{adminOnly ? "Admin" : "Coach"}</span>}
+              <b className="text-sm">{a.name || "Invited client"}</b>{a.userId === data.profile.id && <span className="ml-2 text-xs text-muted-foreground">{adminOnly ? "Admin" : "You"}</span>}
               <p className="font-num text-xs text-muted-foreground">{a.username ?? "Username chosen on setup"}{pending && a.setupExpiresAt ? ` · link expires ${fmtWhen(a.setupExpiresAt)}` : ""}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -170,14 +147,4 @@ export function PasswordAccountsPanel({ onCreated }: { onCreated?: () => void } 
         })}</ul>}
     </div>
   </Panel></div>;
-}
-
-export function LegacyAccessDetails() {
-  const { signedIn, data } = useSignedIn();
-  if (!signedIn || !data?.isCoach) return null;
-  return <details className="mb-5 border p-4" data-testid="details-legacy-access">
-    <summary className="cursor-pointer text-sm font-medium">Legacy migration details: reusable private links</summary>
-    <p className="my-3 text-xs text-muted-foreground">For existing accounts not yet converted to passwords. To add a new client, use “Create invitation link” above instead.</p>
-    <PrivateAccessPanel />
-  </details>;
 }

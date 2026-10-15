@@ -39,9 +39,8 @@ async function accounts(ids: string[]) {
 }
 
 router.get("/password-accounts", async (req, res) => {
-  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
-  const linkedClients = await db.select().from(coachingTable).where(and(eq(coachingTable.coachId, req.user.id),inArray(coachingTable.athleteId,await workspaceUserIds(req.user.id))));
-  res.json(await accounts([req.user.id, ...linkedClients.map(c => c.athleteId)]));
+  if (!req.user) fail(401, "Sign in first.");
+  res.json(await accounts([req.user.id]));
 });
 router.get("/auth/password-account", async (req, res) => {
   if (!req.user) fail(401, "Sign in first.");
@@ -51,8 +50,9 @@ router.get("/auth/password-account", async (req, res) => {
 });
 
 router.post("/password-accounts", async (req, res) => {
-  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
+  if (!req.user) fail(401, "Sign in first.");
   const input = CreatePasswordSetupBody.parse(req.body);
+  if(input.userId!==req.user.id) fail(403,"You may manage only your own password. Use a lifting-group invitation to add a lifter.");
   const coach = req.user.id;
   const scope = await workspaceId(coach);
   if(!await isCoach(coach) && input.userId!==coach) fail(403,"The admin may manage only their own password.");
@@ -91,8 +91,9 @@ router.post("/password-accounts", async (req, res) => {
 });
 
 router.delete("/password-accounts/:userId/setup", async (req, res) => {
-  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
+  if (!req.user) fail(401, "Sign in first.");
   const userId = req.params.userId as string;
+  if(userId!==req.user.id) fail(403,"You may manage only your own password.");
   if (!await linked(req.user.id, userId)) fail(403, "Choose your account or a linked client.");
   await db.delete(passwordSetupsTable).where(eq(passwordSetupsTable.userId, userId));
   res.json({ success: true });

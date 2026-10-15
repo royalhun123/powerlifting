@@ -9,6 +9,11 @@ import type { CoachDirectoryEntryClientsItem } from './coachDirectoryEntryClient
 import type { Program } from './program';
 
 export interface CoachDirectoryEntry {
+  /** @nullable */
+  groupName?: string | null;
+  /** @nullable */
+  groupId?: string | null;
+  isGroupLeader?: boolean;
   userId: string;
   name: string;
   username: string;

@@ -40,7 +40,7 @@ export function UploaderTag({ p, profileId }: { p: Program; profileId: string })
   const mine = isProgramOwner(p, profileId);
   return (
     <span className={cn("inline-flex items-center border px-1.5 py-0.5 font-num text-[10px] uppercase tracking-widest", mine ? "border-[#B4975A]/60 text-accent-foreground" : "text-muted-foreground")} data-testid={`text-uploader-${p.id}`}>
-      {mine ? "Yours" : `By ${p.uploaderName || "another coach"}`}
+      {mine ? "Yours" : `By ${p.uploaderName || "another lifter"}`}
     </span>
   );
 }
@@ -123,7 +123,7 @@ export default function Programs() {
 
   return (
     <div>
-      <PageHeader kicker="Workspace library · Shared only with coaches in this workspace" title="Programs">
+      <PageHeader kicker="Workspace library · Shared with lifters in this workspace" title="Programs">
         <WorkspaceBadge />
         {archivedCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)} data-testid="button-toggle-archived">
@@ -136,7 +136,7 @@ export default function Programs() {
       </PageHeader>
 
       <div className="mb-4 flex flex-wrap items-center gap-1" role="tablist">
-        {([["all", "All coaches here"], ["mine", "Uploaded by me"], ["others", "Other coaches"]] as const).map(([k, l]) => (
+        {([["all", "All lifters here"], ["mine", "Uploaded by me"], ["others", "Other lifters"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={scope === k ? "default" : "outline"} onClick={() => setScope(k)} data-testid={`button-scope-${k}`}>{l}</Button>
         ))}
         <span className="ml-auto font-num text-[11px] text-muted-foreground">Your own assigned training lives in <Link href="/my-blocks" className="text-primary underline" data-testid="link-my-blocks">My blocks</Link>.</span>
@@ -171,7 +171,7 @@ export default function Programs() {
                   <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{p.description || "No description"}</p>
                   <div className="mt-1 font-num text-[11px] text-muted-foreground">
                     {days} workouts across {weeks} weeks · {p.workouts.reduce((n, w) => n + w.exercises.length, 0)} exercises · source: {p.source || "manual"}{p.uploaderName ? ` · uploaded by ${p.uploaderName}` : ""}
-                    <div>{data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && !a.archived).length} active client assignments · {data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && a.archived).length} archived</div>
+                    <div>{data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && !a.archived).length} active lifter assignments · {data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && a.archived).length} archived</div>
                   </div>
                 </Link>
                 <div className="flex gap-1">

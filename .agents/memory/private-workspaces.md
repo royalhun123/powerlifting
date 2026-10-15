@@ -5,7 +5,7 @@ description: The user's team and non-team coaching must remain mutually private
 
 Team and personal coaching are separate workspaces. Neither admin can see the
 other workspace's programs, coaches, clients, logs, bodyweights or conversations.
-Each workspace has its own admin and shared coach library. Separate personas
+Each workspace has its own admin and shared lifter library. Separate personas
 use separate usernames; no account or data transfer is implied.
 
 **Why:** The user explicitly chose a separate private workspace for coaching
@@ -18,7 +18,7 @@ Missing workspace schema must fail closed. Do not roll back to older globally
 shared-library code after private data exists. Preserve original user IDs,
 training records, password hashes and assignment snapshots during migrations.
 
-Coaches may read their own linked clients' bodyweight logs but cannot edit or
+Current group leaders may read their members' bodyweight logs but cannot edit or
 delete them.
 
 **Why:** The user requested coach visibility into clients' bodyweight history,

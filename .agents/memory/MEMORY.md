@@ -1,3 +1,4 @@
+- [Lifting groups](lifting-groups.md) — all non-admins are lifters; membership adds leadership without restricting personal programming or erasing history.
 - [Private workspaces](private-workspaces.md) — team and personal coaching are mutually private; every account-creation and data-access path must retain that boundary.
 - [Vite peer identity](vite-peer-identity.md) — package removal can split Vite peer instances and break root builds despite matching versions.
 - [Access and history](access-and-history.md) — independent coaches, read-only admin oversight, shared uploader-owned programs, password login, and safe history preservation.

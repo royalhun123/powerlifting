@@ -44,15 +44,15 @@ export default function SignIn() {
         {login.isError && <p role="alert" className="text-sm text-destructive" data-testid="status-signin-error">{errMessage(login.error)}</p>}
         <Button type="submit" disabled={login.isPending || !username.trim() || !password} data-testid="button-signin-password">{login.isPending ? "Signing in…" : "Sign in"}</Button>
       </form>
-      <p className="mt-4 text-xs text-muted-foreground">New here? Open the invitation link your coach sent you to choose a username and password. Forgot your password? Ask your coach for a reset link. There is no email reset. On a shared device, sign out when finished.</p>
+      <p className="mt-4 text-xs text-muted-foreground">New here? Open the invitation link you were sent to choose a username and password. Forgot your password? Create a reset link from Settings while signed in, or ask the team administrator. There is no email reset. On a shared device, sign out when finished.</p>
     </Panel>
     <details className="mt-6 border p-4">
-      <summary className="cursor-pointer text-sm">Coach setup or recovery</summary>
+      <summary className="cursor-pointer text-sm">Account setup or recovery</summary>
       <p className="my-3 text-xs text-muted-foreground">For the site owner only. Use the private setup key configured in your hosting environment. This cannot create an owner in an empty database.</p>
       <form className="space-y-3" onSubmit={e => { e.preventDefault(); bootstrap.mutate({ data: { setupKey } }, { onSuccess: () => { setSetupKey(""); window.location.replace("/settings"); } }); }}>
-        <Input aria-label="Coach setup key" type="password" autoComplete="off" value={setupKey} onChange={e => setSetupKey(e.target.value)} data-testid="input-coach-setup-key" />
+        <Input aria-label="Account setup key" type="password" autoComplete="off" value={setupKey} onChange={e => setSetupKey(e.target.value)} data-testid="input-coach-setup-key" />
         {bootstrap.isError && <p role="alert" className="text-sm text-destructive">{errMessage(bootstrap.error)}</p>}
-        <Button variant="outline" disabled={bootstrap.isPending || setupKey.length < 32} data-testid="button-coach-recover">Recover coach access</Button>
+        <Button variant="outline" disabled={bootstrap.isPending || setupKey.length < 32} data-testid="button-coach-recover">Recover account access</Button>
       </form>
     </details>
   </div>;

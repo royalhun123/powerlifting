@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
-import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable, workspaceMembersTable } from "@workspace/db";
+import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable, workspaceMembersTable, groupsTable, groupMembersTable, administrationTable } from "@workspace/db";
 import { sameWorkspace, workspaceId, workspaceUserIds } from "../lib/workspace-access";
 import { CreateCoachBody, ListCoachesResponse, SaveProgramResponse, AssignProgramResponse, ListAdminSessionsResponse } from "@workspace/api-zod";
 import { normalizeProgram } from "../lib/program-defaults";
@@ -18,11 +18,8 @@ router.use("/coaches", async (req,res,next)=>{
 router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
   const athleteId = req.params.athleteId;
   if (!await sameWorkspace(req.user!.id,athleteId)) fail(403,"This athlete belongs to another workspace.");
-  const [coach] = await db.select({id:coachesTable.userId}).from(coachesTable).where(eq(coachesTable.userId,athleteId)).limit(1);
-  const [client] = await db.select({id:coachingTable.athleteId}).from(coachingTable)
-    .innerJoin(coachesTable,eq(coachingTable.coachId,coachesTable.userId))
-    .where(eq(coachingTable.athleteId,athleteId)).limit(1);
-  if (!coach && !client) fail(404,"Athlete not found in the coach directory.");
+  const [lifter] = await db.select().from(usersTable).where(eq(usersTable.id,athleteId));
+  if (!lifter || await isAdmin(athleteId)) fail(404,"Lifter not found.");
   // Read the athlete's historical sessions, never reconstruct from current templates
   // or filter out sessions whose original assignment was archived or removed.
   const rows = await db.select().from(workoutsTable).where(eq(workoutsTable.athleteId,athleteId));
@@ -31,8 +28,10 @@ router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
   res.json(sessions);
 });
 router.get("/coaches", async (req,res)=>{
-  const allowedIds = await workspaceUserIds(req.user!.id);
-  const coaches = await db.select().from(coachesTable).where(inArray(coachesTable.userId,allowedIds));
+  const admins=await db.select().from(administrationTable);
+  const allowedIds = (await workspaceUserIds(req.user!.id)).filter(id=>!admins.some(a=>a.userId===id));
+  const coaches = await db.select({userId:usersTable.id,createdAt:usersTable.createdAt}).from(usersTable).where(inArray(usersTable.id,allowedIds));
+  const memberships=await db.select({userId:groupMembersTable.userId,group:groupsTable}).from(groupMembersTable).innerJoin(groupsTable,eq(groupsTable.id,groupMembersTable.groupId)).where(inArray(groupMembersTable.userId,allowedIds));
   if (!coaches.length) {res.json([]);return;}
   const ids = coaches.map(c=>c.userId);
   const links = await db.select().from(coachingTable).where(and(inArray(coachingTable.coachId,ids),inArray(coachingTable.athleteId,allowedIds)));
@@ -46,10 +45,11 @@ router.get("/coaches", async (req,res)=>{
     .map(r=>({...r.block,program:normalizeProgram(r.block.program)}));
   res.json(ListCoachesResponse.parse(coaches.map(c=>{
     const credential = credentials.find(x=>x.userId===c.userId);
-    return {userId:c.userId,name:names.get(c.userId)||"Coach",username:credential?.username||"",passwordEnabled:!!credential?.passwordHash,
+    const group=memberships.find(m=>m.userId===c.userId)?.group;
+    return {groupName:group?.name??null,groupId:group?.id??null,isGroupLeader:group?.leaderId===c.userId,userId:c.userId,name:names.get(c.userId)||"Lifter",username:credential?.username||"",passwordEnabled:!!credential?.passwordHash,
       programs:programs.filter(p=>p.ownerId===c.userId).map(p=>({...normalizeProgram(SaveProgramResponse.parse(p.data)),uploaderId:p.ownerId,uploaderName:names.get(p.ownerId)||"Coach"})),
       blocks:blocksFor(c.userId),
-      createdAt:c.createdAt.toISOString(),clients:links.filter(l=>l.coachId===c.userId).map(l=>({id:l.athleteId,name:names.get(l.athleteId)||"Athlete",blocks:blocksFor(l.athleteId,c.userId)}))};
+      createdAt:c.createdAt?.toISOString()??"",clients:links.filter(l=>l.coachId===c.userId).map(l=>({id:l.athleteId,name:names.get(l.athleteId)||"Lifter",blocks:blocksFor(l.athleteId)}))};
   })));
 });
 router.post("/coaches", async(req,res)=>{
@@ -63,12 +63,12 @@ router.post("/coaches", async(req,res)=>{
       if(input.userId) {
         // Admin may renew onboarding only, never reset a working coach account.
         const [coach]=await tx.select().from(coachesTable).where(eq(coachesTable.userId,userId));
-        if(!coach) fail(403,"Not an invited coach.");
+        if(!coach || coach.createdBy!==req.user!.id) fail(403,"Not an account you invited.");
         await tx.select().from(usersTable).where(eq(usersTable.id,userId)).for("update");
         const [credential]=await tx.select().from(credentialsTable).where(eq(credentialsTable.userId,userId));
         if(credential?.passwordHash || (username && credential && credential.username!==username)) fail(403,"This coach manages their own account.");
       } else {
-        const name=input.name?.trim() || "Invited coach";
+        const name=input.name?.trim() || "Invited lifter";
         await tx.insert(usersTable).values({id:userId,firstName:name});
         await tx.insert(workspaceMembersTable).values({userId,workspaceId:scope});
         await tx.insert(profilesTable).values({userId,data:{id:userId,name,unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""}});

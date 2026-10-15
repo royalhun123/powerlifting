@@ -15,9 +15,9 @@ const NAV = [
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/my-blocks", label: "My blocks", icon: BookOpen, alias: ["/my-training", "/my-programs"] },
   { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/clients", label: "My clients", icon: Users, coach: true },
+  { href: "/group", label: "Lifting group", icon: Users, coach: true, alias: ["/clients"] },
   { href: "/programs", label: "Programs", icon: ClipboardList, coach: true },
-  { href: "/coaches", label: "Coaches", icon: ShieldCheck },
+  { href: "/coaches", label: "Lifters & groups", icon: ShieldCheck },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -27,10 +27,10 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-0.5">
       {NAV.filter(item => {
-        const adminOnly = !!data?.isAdmin && !data?.isCoach;
-        if (adminOnly) return item.href === "/coaches" || item.href === "/settings";
+        const lifter = data ? (data.isLifter ?? !data.isAdmin) : false;
+        if (!lifter) return item.href === "/settings" || (item.href === "/coaches" && !!data?.isAdmin);
         if (item.href === "/coaches") return !!data?.isAdmin;
-        return !!data?.isCoach || !item.coach;
+        return true;
       }).map(({ href, label, icon: Icon, alias }) => {
         const active = href === "/" ? loc === "/" : loc.startsWith(href) || !!alias?.some(a => loc.startsWith(a));
         return (

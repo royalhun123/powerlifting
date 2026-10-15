@@ -157,9 +157,9 @@ export default function ProgramDetail() {
           <p className="text-sm text-muted-foreground">The athlete receives a snapshot of the saved program.{owner ? " Save any edits first." : " Later edits by the uploader do not change this snapshot."}</p>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
-              <Label>Athlete</Label>
+              <Label>Lifter</Label>
               <Select value={athleteId} onValueChange={setAthleteId}>
-                <SelectTrigger data-testid="select-athlete"><SelectValue placeholder="Choose athlete" /></SelectTrigger>
+                <SelectTrigger data-testid="select-athlete"><SelectValue placeholder="Choose lifter" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={data.profile.id}>Myself ({data.profile.name || "me"})</SelectItem>
                   {data.athletes.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
@@ -184,7 +184,7 @@ export default function ProgramDetail() {
   const meta = (
     <div className="flex flex-wrap items-center gap-2 font-num text-[11px] text-muted-foreground" data-testid="text-program-meta">
       <UploaderTag p={program} profileId={data.profile.id} />
-      <span>uploaded by {program.uploaderName || (owner ? "you" : "another coach")}</span>
+      <span>uploaded by {program.uploaderName || (owner ? "you" : "another lifter")}</span>
       <span>· source: {program.source || "manual"}</span>
       <span>· {program.workouts.length} workouts · {program.workouts.reduce((n, w) => n + w.exercises.length, 0)} exercises</span>
     </div>
@@ -220,7 +220,7 @@ export default function ProgramDetail() {
         </div>
         <div className="mb-5 flex items-start gap-3 border border-[#B4975A]/60 bg-[#B4975A]/5 p-3 text-sm" data-testid="alert-read-only">
           <Eye className="mt-0.5 h-4 w-4 shrink-0 text-[#B4975A]" />
-          <span>Read-only. Only {program.uploaderName || "the uploader"} can edit, rename, archive or delete this program. Copy it to make your own editable version, or assign the saved version to yourself or your clients.</span>
+          <span>Read-only. Only {program.uploaderName || "the uploader"} can edit, rename, archive or delete this program. Copy it to make your own editable version, or assign the saved version to yourself (or, as group leader, your lifters).</span>
         </div>
         {assignedTo.length > 0 && (
           <div className="mb-5 flex flex-wrap gap-2 font-num text-[11px] text-muted-foreground">

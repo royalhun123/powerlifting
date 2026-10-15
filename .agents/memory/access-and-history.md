@@ -57,13 +57,13 @@ Handle credential fragments on same-route hash navigation as well as initial mou
 
 **How to apply:** Listen for hash changes, strip each incoming fragment, and revalidate each visit without rendering the token.
 
-The original coach is coach-only after team administration is handed to a separate team-owned admin account. The admin can add coaches, but must not remove coaches. Coaches manage their own clients; the admin may see the directory but cannot edit those clients or manage established coaches' passwords.
+Team administration belongs to a separate team-owned admin account. The later lifting-group model supersedes coach/client roles: admins invite independent lifters but cannot edit their training or established passwords.
 
 **Why:** Team administration must pass to successors while the original coach can keep using the app after leaving the team. The user explicitly requested independent rosters, read-only administrative oversight, and no coach removal.
 
 **How to apply:** Keep authority server-controlled. Preserve the original coach ID and records during handoff; do not change the original coach environment ID to the team admin. Never infer roles from usernames, grant them through profile edits, or link new coaches as managed clients of the admin.
 
-Navigation order is Dashboard, Workouts, My blocks, Progress, My clients, Programs, Settings. My clients and Programs are coach-only. My blocks contains personal assignments for coaches and clients; Programs is shared only within the current workspace. Only the uploader may edit/rename/delete a template; other coaches in that workspace can make independently owned copies.
+Navigation order is Dashboard, Workouts, My blocks, Progress, Lifting group, Programs, Settings. Programs is shared among all lifters within the current workspace. Only the uploader may edit/rename/delete a template; other lifters can make independently owned copies.
 
 **Why:** Coaches should share programming without controlling each other's work or changing already logged client training. The user later explicitly required private coaching to be isolated from the team.
 

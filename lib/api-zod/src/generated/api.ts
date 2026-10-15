@@ -7,6 +7,91 @@
 import * as zod from 'zod';
 
 
+export const ListLiftingGroupsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "workspaceId": zod.string(),
+  "leaderId": zod.string(),
+  "members": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})).optional()
+})
+export const ListLiftingGroupsResponse = zod.array(ListLiftingGroupsResponseItem)
+
+
+export const createLiftingGroupBodyNameMax = 100;
+
+
+
+export const CreateLiftingGroupBody = zod.object({
+  "name": zod.string().min(1).max(createLiftingGroupBodyNameMax)
+})
+
+export const CreateLiftingGroupResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "workspaceId": zod.string(),
+  "leaderId": zod.string(),
+  "members": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})).optional()
+})
+
+
+export const DeleteLiftingGroupResponse = zod.unknown()
+
+
+export const LeaveLiftingGroupResponse = zod.unknown()
+
+
+export const CreateGroupInvitationResponse = zod.object({
+  "path": zod.string(),
+  "expiresAt": zod.string()
+})
+
+
+export const getGroupInvitationInfoBodyTokenMin = 43;
+export const getGroupInvitationInfoBodyTokenMax = 43;
+
+
+
+export const GetGroupInvitationInfoBody = zod.object({
+  "token": zod.string().min(getGroupInvitationInfoBodyTokenMin).max(getGroupInvitationInfoBodyTokenMax)
+})
+
+export const GetGroupInvitationInfoResponse = zod.object({
+  "name": zod.string(),
+  "workspaceName": zod.string()
+})
+
+
+export const acceptGroupInvitationBodyTokenMin = 43;
+export const acceptGroupInvitationBodyTokenMax = 43;
+
+export const acceptGroupInvitationBodyUsernameMin = 3;
+export const acceptGroupInvitationBodyUsernameMax = 32;
+
+
+export const acceptGroupInvitationBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$');
+export const acceptGroupInvitationBodyPasswordMin = 12;
+export const acceptGroupInvitationBodyPasswordMax = 128;
+
+export const acceptGroupInvitationBodyNameMax = 100;
+
+
+
+export const AcceptGroupInvitationBody = zod.object({
+  "token": zod.string().min(acceptGroupInvitationBodyTokenMin).max(acceptGroupInvitationBodyTokenMax),
+  "username": zod.string().min(acceptGroupInvitationBodyUsernameMin).max(acceptGroupInvitationBodyUsernameMax).regex(acceptGroupInvitationBodyUsernameRegExp).optional(),
+  "password": zod.string().min(acceptGroupInvitationBodyPasswordMin).max(acceptGroupInvitationBodyPasswordMax).optional(),
+  "name": zod.string().min(1).max(acceptGroupInvitationBodyNameMax).optional()
+})
+
+export const AcceptGroupInvitationResponse = zod.unknown()
+
+
 export const GetClientBodyweightsParams = zod.object({
   "athleteId": zod.coerce.string()
 })
@@ -24,6 +109,28 @@ export const GetClientBodyweightsResponseItem = zod.object({
   "timeOfDay": zod.enum(['morning', 'day', 'night', 'unspecified']).default(getClientBodyweightsResponseTimeOfDayDefault)
 })
 export const GetClientBodyweightsResponse = zod.array(GetClientBodyweightsResponseItem)
+
+
+export const GetLifterTrueMaxesParams = zod.object({
+  "athleteId": zod.coerce.string()
+})
+
+export const getLifterTrueMaxesResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getLifterTrueMaxesResponseOneWeightExclusiveMin = 0;
+export const getLifterTrueMaxesResponseOneWeightMax = 2000;
+
+
+
+export const GetLifterTrueMaxesResponseItem = zod.object({
+  "id": zod.string(),
+  "date": zod.string().regex(getLifterTrueMaxesResponseOneDateRegExp),
+  "lift": zod.enum(['squat', 'bench', 'deadlift']),
+  "weight": zod.number().gt(getLifterTrueMaxesResponseOneWeightExclusiveMin).max(getLifterTrueMaxesResponseOneWeightMax),
+  "unit": zod.enum(['lb', 'kg'])
+}).and(zod.object({
+  "id": zod.string()
+}))
+export const GetLifterTrueMaxesResponse = zod.array(GetLifterTrueMaxesResponseItem)
 
 
 export const GetSessionDiscussionParams = zod.object({
@@ -339,6 +446,9 @@ export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsMax = 364
 
 
 export const ListCoachesResponseItem = zod.object({
+  "groupName": zod.string().nullish(),
+  "groupId": zod.string().nullish(),
+  "isGroupLeader": zod.boolean().optional(),
   "userId": zod.string(),
   "name": zod.string(),
   "username": zod.string(),
@@ -931,6 +1041,18 @@ export const getWorkspaceResponseSessionsItemTwoDiscussionsItemMessagesItemOneTe
 
 
 export const GetWorkspaceResponse = zod.object({
+  "isLifter": zod.boolean().optional(),
+  "isGroupLeader": zod.boolean().optional(),
+  "group": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "workspaceId": zod.string(),
+  "leaderId": zod.string(),
+  "members": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})).optional()
+}),zod.null()]).optional(),
   "workspaceId": zod.string().optional(),
   "workspaceName": zod.string().optional(),
   "privateLogin": zod.boolean().optional(),

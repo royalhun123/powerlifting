@@ -14,10 +14,11 @@ import Programs from '@/pages/programs';
 import ProgramDetail from '@/pages/program-detail';
 import Workouts from '@/pages/workouts';
 import Progress from '@/pages/progress';
-import Clients from '@/pages/clients';
+import LiftingGroupPage from '@/pages/group';
+import JoinGroup from '@/pages/join-group';
 import Settings from '@/pages/settings';
 import Join from '@/pages/join';
-import { INVITE_KEY } from '@/lib/pl';
+import { GROUP_INVITE_KEY, INVITE_KEY } from '@/lib/pl';
 import { useWorkspace } from '@/hooks/use-platform';
 import { EmptyState, LoadingPage } from '@/components/common';
 import MyPrograms from '@/pages/my-programs';
@@ -26,7 +27,7 @@ import Coaches from '@/pages/coaches';
 function AdminOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  if(!data?.isAdmin) return <EmptyState title="Admin-only page" body="Only the team administrator can onboard coaches." />;
+  if(!data?.isAdmin) return <EmptyState title="Admin-only page" body="Only the team administrator can view lifters and groups." />;
   return <>{children}</>;
 }
 
@@ -34,21 +35,34 @@ function AdminOnly({children}:{children:ReactNode}) {
 function NotAdminOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  if(data?.isAdmin && !data.isCoach) return <EmptyState title="Not available for admin accounts" body="Admin accounts manage coaches and settings. Training, clients and the program library belong to coach and athlete accounts." />;
+  if(data && !isLifter(data)) return <EmptyState title="Not available for admin accounts" body="Admin accounts have a read-only directory of lifters and groups. Training and the program library belong to lifter accounts." />;
   return <>{children}</>;
 }
 
 function HomeRoute() {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  return data?.isAdmin && !data.isCoach ? <Coaches /> : <Dashboard />;
+  return data && !isLifter(data) ? <Coaches /> : <Dashboard />;
 }
 
-function CoachOnly({children}:{children:ReactNode}) {
+function isLifter(d:{isLifter?:boolean;isAdmin?:boolean}) { return d.isLifter ?? !d.isAdmin; }
+
+/** Every non-admin account is a lifter with full library and self-assignment access. */
+function LifterOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  if(!data?.isCoach) return <EmptyState title="Coach-only page" body="Your assigned training is available under My blocks." />;
+  if(!data || !isLifter(data)) return <EmptyState title="Lifter-only page" body="Admin accounts have read-only access to the Lifters & groups directory." />;
   return <>{children}</>;
+}
+
+/** Resume a group invitation after a full-reload sign-in. Independent of InviteResume. */
+function GroupInviteResume() {
+  const [loc, setLocation] = useLocation();
+  useEffect(() => {
+    if (loc === '/join-group') return;
+    if (sessionStorage.getItem(GROUP_INVITE_KEY)) setLocation('/join-group');
+  }, [loc, setLocation]);
+  return null;
 }
 
 const queryClient = new QueryClient({
@@ -77,6 +91,7 @@ function Router() {
           <Route path="/sign-in" component={SignIn} />
           <Route path="/set-password" component={SetPassword} />
           <Route path="/join" component={Join} />
+          <Route path="/join-group" component={JoinGroup} />
           <Route><Redirect to="/sign-in" replace /></Route>
         </Switch>
       </RoutedErrorBoundary>
@@ -85,6 +100,7 @@ function Router() {
   return (
     <Shell>
       <InviteResume />
+      <GroupInviteResume />
       <RoutedErrorBoundary>
         <Switch>
           <Route path="/" component={HomeRoute} />
@@ -94,13 +110,15 @@ function Router() {
           <Route path="/my-training"><NotAdminOnly><MyPrograms /></NotAdminOnly></Route>
           <Route path="/my-blocks"><NotAdminOnly><MyPrograms /></NotAdminOnly></Route>
           <Route path="/coaches"><AdminOnly><Coaches /></AdminOnly></Route>
-          <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
-          <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>
+          <Route path="/programs"><LifterOnly><Programs /></LifterOnly></Route>
+          <Route path="/programs/:id"><LifterOnly><ProgramDetail /></LifterOnly></Route>
           <Route path="/workouts"><NotAdminOnly><Workouts /></NotAdminOnly></Route>
           <Route path="/progress"><NotAdminOnly><Progress /></NotAdminOnly></Route>
-          <Route path="/clients"><CoachOnly><Clients /></CoachOnly></Route>
+          <Route path="/group"><LifterOnly><LiftingGroupPage /></LifterOnly></Route>
+          <Route path="/clients"><Redirect to="/group" replace /></Route>
           <Route path="/settings" component={Settings} />
           <Route path="/join" component={Join} />
+          <Route path="/join-group" component={JoinGroup} />
           <Route component={NotFound} />
         </Switch>
       </RoutedErrorBoundary>
