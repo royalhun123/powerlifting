@@ -66,6 +66,19 @@ router.delete("/groups/current",async(req,res)=>{
   });
   res.json({success:true});
 });
+router.delete("/groups/members/:userId",async(req,res)=>{
+  const id=await lifter(req), target=req.params.userId;
+  if(id===target) fail(403,"Group leaders cannot remove themselves. Use Delete group instead.");
+  await db.transaction(async tx=>{
+    const [group]=await tx.select().from(groupsTable).where(eq(groupsTable.leaderId,id)).for("update");
+    if(!group) fail(403,"Only the group leader may remove a lifter.");
+    await tx.select().from(usersTable).where(eq(usersTable.id,target)).for("update");
+    const removed=await tx.delete(groupMembersTable).where(and(eq(groupMembersTable.userId,target),eq(groupMembersTable.groupId,group.id))).returning();
+    if(!removed.length) fail(404,"This lifter is not in your group.");
+    await tx.delete(coachingTable).where(and(eq(coachingTable.coachId,id),eq(coachingTable.athleteId,target)));
+  });
+  res.json({success:true});
+});
 router.post("/groups/invitations",async(req,res)=>{
   const id=await lifter(req), token=randomBytes(32).toString("base64url");
   const expiresAt=new Date(Date.now()+86400000);

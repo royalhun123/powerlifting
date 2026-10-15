@@ -316,6 +316,74 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDeleteLiftingGroupMutationOptions(options));
     }
 
+export const getRemoveGroupMemberUrl = (userId: string,) => {
+
+
+
+
+  return `/api/groups/members/${userId}`
+}
+
+export const removeGroupMember = async (userId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemoveGroupMemberUrl(userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveGroupMemberMutationKey = () => ['removeGroupMember'] as const;
+
+export const getRemoveGroupMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeGroupMember>>, TError,RemoveGroupMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeGroupMember>>, TError,RemoveGroupMemberMutationVariables, TContext> => {
+
+const mutationKey = getRemoveGroupMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeGroupMember>>, RemoveGroupMemberMutationVariables> = (props) => {
+          const {userId} = props ?? {};
+
+          return  removeGroupMember(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveGroupMemberMutationResult = NonNullable<Awaited<ReturnType<typeof removeGroupMember>>>
+
+    export type RemoveGroupMemberMutationError = ErrorType<unknown>
+    export type RemoveGroupMemberMutationVariables = {userId: string}
+
+    export const useRemoveGroupMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeGroupMember>>, TError,RemoveGroupMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeGroupMember>>,
+        TError,
+        RemoveGroupMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveGroupMemberMutationOptions(options));
+    }
+
 export const getLeaveLiftingGroupUrl = () => {
 
 

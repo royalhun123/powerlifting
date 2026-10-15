@@ -26,6 +26,7 @@ export default function Coaches() {
   const scope = useWorkspaceScope();
   const [fresh, setFresh] = useState<Fresh | null>(null);
   const [renewingId, setRenewingId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"groups" | "independent" | "all">("groups");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const canCreate = !create.isPending;
@@ -135,14 +136,26 @@ export default function Coaches() {
         <EmptyState title="No lifters yet" body="Create the first invitation link above." />
       ) : (
         <div className="space-y-6">
-          {groups.map((g) => (
+          <div className="flex flex-wrap gap-1 border-b" role="tablist" aria-label="Lifter directory">
+            {([["groups", "Groups", lifters.length - independent.length], ["independent", "Independent lifters", independent.length], ["all", "All lifters", lifters.length]] as const).map(([k, l, n]) => (
+              <button key={k} role="tab" id={`tab-dir-${k}`} aria-selected={tab === k} aria-controls="panel-directory" onClick={() => { setTab(k); setOpenId(null); }} className={`relative shrink-0 px-4 py-2 font-display text-lg uppercase tracking-wide ${tab === k ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`} data-testid={`tab-directory-${k}`}>
+                {l} <span className="font-num text-xs">({n})</span>
+                {tab === k && <span className="absolute inset-x-2 -bottom-px h-[3px] bg-primary" />}
+              </button>
+            ))}
+          </div>
+          <div id="panel-directory" role="tabpanel" aria-labelledby={`tab-dir-${tab}`} className="space-y-6">
+          {tab === "groups" && groups.length === 0 && <EmptyState title="No groups yet" body="No lifter in this workspace leads or belongs to a group." />}
+          {tab === "groups" && groups.map((g) => (
             <Panel key={g.id} title={<span className="inline-flex items-center gap-2"><Users className="h-4 w-4 text-[#B4975A]" /> {g.name}</span>} action={<span className="font-num text-xs text-muted-foreground" data-testid={`text-group-count-${g.id}`}>{g.members.length} lifter{g.members.length === 1 ? "" : "s"}</span>}>
               {renderList(g.members)}
             </Panel>
           ))}
-          <Panel title="Independent lifters" action={<span className="font-num text-xs text-muted-foreground" data-testid="text-coach-count">{independent.length} of {lifters.length} lifters</span>}>
+          {tab === "independent" && <Panel title="Independent lifters" action={<span className="font-num text-xs text-muted-foreground" data-testid="text-coach-count">{independent.length} of {lifters.length} lifters</span>}>
             {independent.length === 0 ? <p className="text-sm text-muted-foreground">Every lifter belongs to a group.</p> : renderList(independent)}
-          </Panel>
+          </Panel>}
+          {tab === "all" && <Panel title="All lifters" action={<span className="font-num text-xs text-muted-foreground">{lifters.length} lifters</span>}>{renderList(lifters)}</Panel>}
+          </div>
           <p className="text-xs text-muted-foreground">Read-only. Lists lifters in {scope.name} only. View details to see a lifter's uploaded programs, their own blocks with logged workouts and, for group leaders, each member's blocks. Invitations can only be renewed until the lifter finishes setup.</p>
         </div>
       )}

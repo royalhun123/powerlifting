@@ -235,6 +235,12 @@ try {
   })).status, 200);
   assert.equal((await request(base, "/groups/current", { method: "DELETE", cookie: memberCookie })).status, 403);
   const beforeDelete = await trainingFingerprint([memberId, invited.data.userId]);
+  assert.equal((await request(base, `/groups/members/${memberId}`, {method:"DELETE",cookie:adminCookie})).status,403);
+  assert.equal((await request(base, `/groups/members/${invited.data.userId}`, {method:"DELETE",cookie:memberCookie})).status,403);
+  assert.equal((await request(base, `/groups/members/${invited.data.userId}`, {method:"DELETE",cookie:lifterCookie})).status,403);
+  assert.equal((await request(base, `/groups/members/${memberId}`, {method:"DELETE",cookie:lifterCookie})).status,200);
+  assert.deepEqual(await trainingFingerprint([memberId,invited.data.userId]),beforeDelete);
+  assert.equal((await request(base, `/athletes/${memberId}/bodyweights`, {cookie:lifterCookie})).status,403);
   assert.deepEqual(beforeDelete, fingerprintsBeforeLeave);
   assert.equal((await request(base, "/groups/current", { method: "DELETE", cookie: lifterCookie })).status, 200);
   assert.deepEqual(await trainingFingerprint([memberId, invited.data.userId]), beforeDelete);

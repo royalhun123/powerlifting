@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCreateGroupInvitation, useCreateLiftingGroup, useDeleteLiftingGroup, useLeaveLiftingGroup, useListLiftingGroups, getListLiftingGroupsQueryKey } from "@workspace/api-client-react";
-import { Copy, Crown, EyeOff, Link2, LogOut, Trash2, Users } from "lucide-react";
+import { useCreateGroupInvitation, useCreateLiftingGroup, useDeleteLiftingGroup, useLeaveLiftingGroup, useListLiftingGroups, useRemoveGroupMember, getListLiftingGroupsQueryKey } from "@workspace/api-client-react";
+import { Copy, Crown, EyeOff, Link2, LogOut, Trash2, UserMinus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -23,11 +23,13 @@ export default function LiftingGroupPage() {
   const guard = useMutationGuard();
   const { toast } = useToast();
   const group = data?.group ?? null;
-  const groups = useListLiftingGroups({ query: { queryKey: getListLiftingGroupsQueryKey(), enabled: !!group } });
+  const groups = useListLiftingGroups({ query: { queryKey: getListLiftingGroupsQueryKey(), enabled: !!group, refetchInterval: 15_000 } });
   const create = useCreateLiftingGroup();
   const leave = useLeaveLiftingGroup();
   const del = useDeleteLiftingGroup();
   const invite = useCreateGroupInvitation();
+  const removeMember = useRemoveGroupMember();
+  const [toRemove, setToRemove] = useState<{ id: string; name: string } | null>(null);
   const [name, setName] = useState("");
   const [confirm, setConfirm] = useState<"leave" | "delete" | null>(null);
   const [fresh, setFresh] = useState<{ url: string; expiresAt: string } | null>(null);
@@ -53,6 +55,14 @@ export default function LiftingGroupPage() {
     invite.mutate(undefined, {
       onSuccess: (r) => { setFresh({ url: window.location.origin + r.path, expiresAt: r.expiresAt }); toast({ title: "Group link created. Copy it now." }); },
       onError: (e) => toast({ title: "Could not create link", description: errMessage(e), variant: "destructive" }),
+    });
+  };
+  const doRemove = () => {
+    if (!toRemove || !guard()) return;
+    const who = toRemove.name || "Lifter";
+    removeMember.mutate({ userId: toRemove.id }, {
+      onSuccess: async () => { setToRemove(null); await refreshAll(); toast({ title: `${who} removed from the group`, description: "They now train independently. All their training is kept." }); },
+      onError: (e) => toast({ title: "Could not remove member", description: errMessage(e) + " Try again.", variant: "destructive" }),
     });
   };
   const doConfirm = () => {
@@ -93,6 +103,9 @@ export default function LiftingGroupPage() {
                     <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-sidebar font-num text-xs text-sidebar-foreground">{initials(m.name || "?")}</span>
                     <span className="flex-1 text-sm font-medium">{m.name || "Lifter"}{m.id === data.profile.id && <span className="ml-2 text-xs text-muted-foreground">you</span>}</span>
                     <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">{m.id === group.leaderId ? "Leader" : "Lifter"}</span>
+                    {isLeader && m.id !== group.leaderId && m.id !== data.profile.id && (
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => guard() && setToRemove({ id: m.id, name: m.name })} data-testid={`button-remove-member-${m.id}`}><UserMinus className="mr-1.5 h-3.5 w-3.5" /> Remove</Button>
+                    )}
                   </li>))}</ul>}
           </Panel>
           <div className="space-y-5">
@@ -128,6 +141,33 @@ export default function LiftingGroupPage() {
           <GroupLeaderReview />
         </div>
       )}
+
+      <AlertDialog open={!!toRemove} onOpenChange={(o) => { if (!o && !removeMember.isPending) { setToRemove(null); removeMember.reset(); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {toRemove?.name || "this lifter"} from {group?.name}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="border border-[#B4975A]/60 bg-[#B4975A]/5 p-3 text-foreground" data-testid="alert-remove-member-warning">
+                  <p className="font-medium">What happens</p>
+                  <ul className="mt-1.5 list-disc space-y-1 pl-4">
+                    <li>{toRemove?.name || "The lifter"} becomes an independent lifter in this workspace.</li>
+                    <li>You lose group leader access to their training, sessions and bodyweights.</li>
+                    <li>Nothing is deleted: all their blocks, logged workouts, comments, maxes and bodyweights are preserved.</li>
+                  </ul>
+                </div>
+                {removeMember.isError && <p className="text-destructive" data-testid="text-remove-member-error">{errMessage(removeMember.error)} Try again.</p>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeMember.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={removeMember.isPending} className="bg-destructive text-destructive-foreground" onClick={(e) => { e.preventDefault(); doRemove(); }} data-testid="button-confirm-remove-member">
+              {removeMember.isPending ? "Removing…" : removeMember.isError ? "Retry remove" : "Remove member"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>

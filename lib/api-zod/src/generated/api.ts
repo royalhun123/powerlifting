@@ -43,6 +43,13 @@ export const CreateLiftingGroupResponse = zod.object({
 export const DeleteLiftingGroupResponse = zod.unknown()
 
 
+export const RemoveGroupMemberParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const RemoveGroupMemberResponse = zod.unknown()
+
+
 export const LeaveLiftingGroupResponse = zod.unknown()
 
 

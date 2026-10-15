@@ -144,8 +144,12 @@ router.post("/programs", async (req,res) => {
 });
 router.delete("/programs/:id", async (req,res) => {
   const {id}=DeleteProgramParams.parse(req.params);
-  const rows=await db.delete(programsTable).where(and(eq(programsTable.id,id),eq(programsTable.ownerId,req.user!.id))).returning();
-  if(!rows.length) fail(404,"Program not found.");
+  await db.transaction(async tx=>{
+    const [row]=await tx.select().from(programsTable).where(and(eq(programsTable.id,id),eq(programsTable.ownerId,req.user!.id))).for("update");
+    if(!row) fail(404,"Program not found.");
+    if(!SaveProgramResponse.parse(row.data).archived) fail(409,"Archive this program before deleting it.");
+    await tx.delete(programsTable).where(eq(programsTable.id,id));
+  });
   res.json({success:true});
 });
 router.post("/invitations", async (req,res) => {
@@ -213,7 +217,8 @@ router.patch("/assignments/:id", async (req,res) => {
 router.delete("/assignments/:id", async (req,res) => {
   await db.transaction(async tx=>{
     const [row]=await tx.select().from(assignmentsTable).where(eq(assignmentsTable.id,req.params.id as string)).for("update");
-    if(!row || row.coachId!==req.user!.id || !await linked(req.user!.id,row.athleteId)) fail(403,"Only the assigning lifter or current group leader can remove this program.");
+    if(!row || !(row.athleteId===req.user!.id || row.coachId===req.user!.id && await linked(req.user!.id,row.athleteId))) fail(403,"You cannot remove this block.");
+    if(!AssignProgramResponse.parse(row.data).archived) fail(409,"Archive this block before deleting it.");
     // Keep the snapshot and all session rows; removal must not erase training history.
     await tx.update(assignmentsTable).set({data:{...AssignProgramResponse.parse(row.data),removed:true}}).where(eq(assignmentsTable.id,row.id));
   });

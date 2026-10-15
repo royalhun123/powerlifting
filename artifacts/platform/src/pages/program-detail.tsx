@@ -14,7 +14,7 @@ import { EmptyState, ErrorState, LiftTag, LoadingPage } from "@/components/commo
 import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
 import { LIFT_LABEL, newId, PHASE_LABEL, targetLoad, todayISO } from "@/lib/pl";
-import { isProgramOwner, PhaseBadge, UploaderTag } from "@/pages/programs";
+import { DownloadXlsxButton, isProgramOwner, PhaseBadge, UploaderTag } from "@/pages/programs";
 
 function toInput(p: Program): ProgramInput {
   const { source: _s, reviewCount: _r, uploaderId: _u, uploaderName: _n, ...rest } = p;
@@ -210,6 +210,7 @@ export default function ProgramDetail() {
             {meta}
           </div>
           <div className="flex flex-wrap items-start gap-2">
+            <DownloadXlsxButton program={program} variant="outline" />
             <Button variant="outline" onClick={() => (guard() ? setAssignOpen(true) : undefined)} data-testid="button-assign">
               <CalendarPlus className="mr-2 h-4 w-4" /> Assign
             </Button>
@@ -306,6 +307,7 @@ export default function ProgramDetail() {
           {meta}
         </div>
         <div className="flex flex-wrap items-start gap-2">
+          <DownloadXlsxButton program={program} />
           <Button variant="ghost" onClick={doCopy} disabled={save.isPending} data-testid="button-copy-program">
             <Copy className="mr-2 h-4 w-4" /> Duplicate
           </Button>

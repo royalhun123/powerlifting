@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { AlertTriangle, Archive, Copy, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Archive, Copy, Download, Plus, Trash2 } from "lucide-react";
 import { useDeleteProgram, useSaveProgram, type Program, type ProgramInputPhase } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,20 @@ import { useToast } from "@/hooks/use-toast";
 import { WorkspaceBadge } from "@/components/workspace-badge";
 import { PHASE_LABEL } from "@/lib/pl";
 import { cn } from "@/lib/utils";
+import { exportProgramXlsx } from "@/lib/export-program";
+
+export function DownloadXlsxButton({ program, variant = "ghost" }: { program: Program; variant?: "ghost" | "outline" }) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await exportProgramXlsx(program); toast({ title: "Download started", description: `${program.name}.xlsx` }); }
+    catch (e) { toast({ title: "Could not create .xlsx", description: errMessage(e), variant: "destructive" }); }
+    finally { setBusy(false); }
+  };
+  return <Button variant={variant} size="sm" onClick={run} disabled={busy} data-testid={`button-download-xlsx-${program.id}`}><Download className="mr-1.5 h-4 w-4" /> {busy ? "Preparing…" : "Download .xlsx"}</Button>;
+}
 
 const PHASE_COLOR: Record<string, string> = {
   volume: "hsl(var(--bench))",
@@ -106,8 +120,18 @@ export default function Programs() {
     );
   };
 
+  const archiveProgram = (p: Program) => {
+    if (!guard()) return;
+    const { source: _s, reviewCount: _r, uploaderId: _u, uploaderName: _n, ...rest } = p;
+    void _s; void _r; void _u; void _n;
+    save.mutate({ data: { ...rest, archived: true } }, {
+      onSuccess: async () => { await invalidate(); toast({ title: "Program archived", description: "Archived programs can be deleted." }); },
+      onError: (e) => toast({ title: "Could not archive", description: errMessage(e), variant: "destructive" }),
+    });
+  };
+
   const confirmDelete = () => {
-    if (!toDelete || !guard()) return;
+    if (!toDelete || !toDelete.archived || !guard()) return;
     del.mutate(
       { id: toDelete.id },
       {
@@ -174,11 +198,13 @@ export default function Programs() {
                     <div>{data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && !a.archived).length} active lifter assignments · {data.assignments.filter(a=>a.program.id===p.id && a.athleteId!==data.profile.id && a.archived).length} archived</div>
                   </div>
                 </Link>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
+                  <DownloadXlsxButton program={p} />
                   <Button variant="ghost" size="sm" onClick={() => duplicate(p)} disabled={save.isPending} data-testid={`button-duplicate-${p.id}`}>
                     <Copy className="mr-1.5 h-4 w-4" /> {owner ? "Duplicate" : "Copy to mine"}
                   </Button>
-                  {owner && <Button variant="ghost" size="sm" className="text-destructive" onClick={() => (guard() ? setToDelete(p) : undefined)} data-testid={`button-delete-${p.id}`}>
+                  {owner && !p.archived && <Button variant="ghost" size="sm" onClick={() => archiveProgram(p)} disabled={save.isPending} data-testid={`button-archive-${p.id}`}><Archive className="mr-1.5 h-4 w-4" /> Archive</Button>}
+                  {owner && p.archived && <Button variant="ghost" size="sm" className="text-destructive" onClick={() => (guard() ? setToDelete(p) : undefined)} data-testid={`button-delete-${p.id}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>}
                 </div>
@@ -227,11 +253,11 @@ export default function Programs() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {toDelete?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>The program template is removed. Existing assignments keep their snapshot.</AlertDialogDescription>
+            <AlertDialogDescription>The archived template is permanently removed from the library. Existing assignments keep their snapshot and all completed workout logs are preserved.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground" data-testid="button-confirm-delete">Delete</AlertDialogAction>
+            <AlertDialogAction disabled={del.isPending} onClick={(e) => { e.preventDefault(); confirmDelete(); }} className="bg-destructive text-destructive-foreground" data-testid="button-confirm-delete">{del.isPending ? "Deleting…" : "Delete"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

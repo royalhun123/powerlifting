@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { useState } from "react";
-import { useArchiveAssignment } from "@workspace/api-client-react";
+import { useArchiveAssignment, useRemoveAssignment, type Assignment } from "@workspace/api-client-react";
 import { useWorkspace, errMessage, useInvalidateAll, useMutationGuard } from "@/hooks/use-platform";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EmptyState, ErrorState, LoadingPage, PageHeader, Panel } from "@/components/common";
 import { fmtDate, PHASE_LABEL } from "@/lib/pl";
 
@@ -12,6 +13,8 @@ export default function MyPrograms() {
   const {data,isLoading,isError,error,refetch}=useWorkspace();
   const [showArchived,setShowArchived]=useState(false);
   const archive=useArchiveAssignment();
+  const remove=useRemoveAssignment();
+  const [toDelete,setToDelete]=useState<Assignment|null>(null);
   const invalidate=useInvalidateAll();
   const guard=useMutationGuard();
   const {toast}=useToast();
@@ -40,6 +43,7 @@ export default function MyPrograms() {
                 onSuccess:async()=>{await invalidate();toast({title:assignment.archived ? "Program restored" : "Program archived; workout history kept"});},
                 onError:error=>toast({title:"Could not save archive state",description:errMessage(error),variant:"destructive"})});
             }}>{assignment.archived ? "Restore program" : "Archive program"}</Button>
+            {assignment.archived && <Button variant="outline" size="sm" className="text-destructive" disabled={remove.isPending} onClick={()=>guard() && setToDelete(assignment)} data-testid={`delete-assignment-${assignment.id}`}>Delete</Button>}
             <span className="text-xs text-muted-foreground">{assignment.archived ? "Archived — restore to resume training." : "Archive old training without deleting any workouts."}</span>
           </div>
           <div className="mb-3 text-sm text-muted-foreground">{PHASE_LABEL[assignment.program.phase]} · Starts {fmtDate(assignment.startDate)} · {completed.size}/{workouts.length} workouts completed</div>
@@ -55,5 +59,19 @@ export default function MyPrograms() {
           <Link href={assignment.archived ? "/workouts" : `/workouts?assignment=${encodeURIComponent(assignment.id)}`} className="mt-4 inline-block text-sm text-primary underline">View workout history</Link>
         </Panel>;
       })}</div>}
+    <AlertDialog open={!!toDelete} onOpenChange={o=>!o && !remove.isPending && setToDelete(null)}>
+      <AlertDialogContent><AlertDialogHeader>
+        <AlertDialogTitle>Delete {toDelete?.program.name}?</AlertDialogTitle>
+        <AlertDialogDescription>This permanently removes the archived block from your list. It cannot be restored. Your completed workout logs, progress and the original program template are preserved.</AlertDialogDescription>
+      </AlertDialogHeader><AlertDialogFooter>
+        <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
+        <AlertDialogAction disabled={remove.isPending} className="bg-destructive text-destructive-foreground" data-testid="button-confirm-delete-assignment" onClick={e=>{
+          e.preventDefault();
+          if(!toDelete || !toDelete.archived || !guard()) return;
+          remove.mutate({id:toDelete.id},{onSuccess:async()=>{await invalidate();setToDelete(null);toast({title:"Block deleted; workout logs kept"});},
+            onError:error=>toast({title:"Could not delete block",description:errMessage(error)+" Try again.",variant:"destructive"})});
+        }}>{remove.isPending ? "Deleting…" : "Delete permanently"}</AlertDialogAction>
+      </AlertDialogFooter></AlertDialogContent>
+    </AlertDialog>
   </div>;
 }

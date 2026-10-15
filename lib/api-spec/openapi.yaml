@@ -32,6 +32,13 @@ paths:
       operationId: deleteLiftingGroup
       responses:
         "200": { description: Group deleted without deleting training }
+  /groups/members/{userId}:
+    delete:
+      operationId: removeGroupMember
+      parameters:
+        - { in: path, name: userId, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Membership removed; all training preserved }
   /groups/leave:
     post:
       operationId: leaveLiftingGroup

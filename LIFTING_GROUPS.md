@@ -7,6 +7,8 @@ restricted to its owner.
 
 A lifter belongs to at most one group, including a group they lead. Members may
 leave; a leader leaves by explicitly deleting the group after confirmation.
+Leaders can also remove individual members after a warning and confirmation;
+removed members become independent and retain all their training data.
 Deletion removes membership and outstanding group invitations, never training
 records. Members can still run their existing blocks afterward. Only the current
 leader may review members or assign them programs. Comments remain attached to
@@ -47,7 +49,8 @@ from old historical assignment authors or account-invitation rows.
 
 ## Verification
 
-`scripts/test-lifting-groups.mjs` is the development-only group regression suite.
+`NODE_ENV=development TEST_LIFTING_GROUPS=development node scripts/test-lifting-groups.mjs`
+is the development-only group regression suite.
 It supersedes the old multi-coach role assumptions in
 `scripts/test-multi-coach.mjs`. It uses disposable users/workspaces and verifies
 training fingerprints across leaving/deleting groups.
