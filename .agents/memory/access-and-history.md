@@ -3,6 +3,12 @@ name: Access and history expectations
 description: Client access goal and rules for historical measurements.
 ---
 
+Signed-out visitors should land on login, not a demo dashboard.
+
+**Why:** The user considers the app operational and explicitly removed public demo browsing.
+
+**How to apply:** Keep onboarding and password-setup links accessible without signing in; do not restore demo navigation or redirect already-signed-in users away from their normal home.
+
 The user now wants coach-assigned usernames, single-use links to choose passwords, and subsequent username/password login for both coach and clients.
 
 **Why:** Auth0 was not allowed; after using private links for the initial Vercel migration, they explicitly approved replacing normal sign-in with username/password.

@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useAuth } from '@workspace/replit-auth-web';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -68,6 +68,20 @@ function InviteResume() {
 }
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <LoadingPage />;
+  if (!isAuthenticated) {
+    return <main className="min-h-screen bg-background px-4 py-6">
+      <RoutedErrorBoundary>
+        <Switch>
+          <Route path="/sign-in" component={SignIn} />
+          <Route path="/set-password" component={SetPassword} />
+          <Route path="/join" component={Join} />
+          <Route><Redirect to="/sign-in" replace /></Route>
+        </Switch>
+      </RoutedErrorBoundary>
+    </main>;
+  }
   return (
     <Shell>
       <InviteResume />
