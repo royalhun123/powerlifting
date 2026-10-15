@@ -5,6 +5,11 @@ not an account tier. Every lifter can use the shared library in their own worksp
 create/copy programs, and assign programs to themselves. Template editing remains
 restricted to its owner.
 
+Public signup is available from the login page without an invitation. It always
+creates an independent lifter in the team workspace, never an administrator or
+a member of the private personal workspace. New registrants can access the
+team's shared program library; personal-workspace access remains invite-only.
+
 A lifter belongs to at most one group, including a group they lead. Members may
 leave; a leader leaves by explicitly deleting the group after confirmation.
 Leaders can also remove individual members after a warning and confirmation;

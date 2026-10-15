@@ -8,6 +8,18 @@ its group leader. A lifter may belong to only one group at a time, including
 one they lead. Every lifter retains workspace library access and can create
 and run their own programs even while grouped.
 
+Visitors can create an independent team-workspace lifter account without an
+invitation, using their own username and password. Personal-workspace access
+remains invite-only; public registration cannot choose a workspace or role.
+
+**Why:** The user requested access for anyone with the site link, while the
+earlier requirement keeps personal and team coaching mutually private.
+
+**How to apply:** Public signup grants only independent lifter permissions in
+the team workspace. Explain that its shared program library is available to
+new registrants. Preserve group invitations for joining a specific group and
+private invitations for personal-workspace access.
+
 **Why:** The user replaced fixed coach/client roles and explicitly confirmed
 that joining a group must not restrict independent programming.
 

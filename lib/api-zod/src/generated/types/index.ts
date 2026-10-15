@@ -46,6 +46,7 @@ export * from './invitation';
 export * from './invitationAccept';
 export * from './invitationInput';
 export * from './invitationStatus';
+export * from './lifterRegistrationInput';
 export * from './liftingGroup';
 export * from './liftingGroupMembersItem';
 export * from './liftRecord';

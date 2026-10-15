@@ -9,6 +9,7 @@ import { Shell } from '@/components/shell';
 import NotFound from '@/pages/not-found';
 import Dashboard from '@/pages/dashboard';
 import SignIn from '@/pages/sign-in';
+import SignUp from '@/pages/sign-up';
 import SetPassword from '@/pages/set-password';
 import Programs from '@/pages/programs';
 import ProgramDetail from '@/pages/program-detail';
@@ -89,6 +90,7 @@ function Router() {
       <RoutedErrorBoundary>
         <Switch>
           <Route path="/sign-in" component={SignIn} />
+          <Route path="/sign-up" component={SignUp} />
           <Route path="/set-password" component={SetPassword} />
           <Route path="/join" component={Join} />
           <Route path="/join-group" component={JoinGroup} />

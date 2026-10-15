@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from "react";
+import { Link } from "wouter";
 import { useRedeemAccessLink, useBootstrapPrivateLogin, usePasswordLogin } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,8 @@ export default function SignIn() {
         {login.isError && <p role="alert" className="text-sm text-destructive" data-testid="status-signin-error">{errMessage(login.error)}</p>}
         <Button type="submit" disabled={login.isPending || !username.trim() || !password} data-testid="button-signin-password">{login.isPending ? "Signing in…" : "Sign in"}</Button>
       </form>
-      <p className="mt-4 text-xs text-muted-foreground">New here? Open the invitation link you were sent to choose a username and password. Forgot your password? Create a reset link from Settings while signed in, or ask the team administrator. There is no email reset. On a shared device, sign out when finished.</p>
+      <p className="mt-4 text-sm">New here? <Link href="/sign-up" className="font-semibold underline">Create a lifter account</Link> — no invitation needed.</p>
+      <p className="mt-3 text-xs text-muted-foreground">Have a group or personal-workspace invitation? Open that link instead. Forgot your password? Create a reset link from Settings while signed in, or ask the site owner about recovery. There is no email reset. On a shared device, sign out when finished.</p>
     </Panel>
     <details className="mt-6 border p-4">
       <summary className="cursor-pointer text-sm">Account setup or recovery</summary>

@@ -7,6 +7,27 @@
 import * as zod from 'zod';
 
 
+export const registerLifterBodyUsernameMin = 3;
+export const registerLifterBodyUsernameMax = 32;
+
+
+export const registerLifterBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$');
+export const registerLifterBodyPasswordMin = 12;
+export const registerLifterBodyPasswordMax = 128;
+
+export const registerLifterBodyNameMax = 100;
+
+
+
+export const RegisterLifterBody = zod.object({
+  "username": zod.string().min(registerLifterBodyUsernameMin).max(registerLifterBodyUsernameMax).regex(registerLifterBodyUsernameRegExp),
+  "password": zod.string().min(registerLifterBodyPasswordMin).max(registerLifterBodyPasswordMax),
+  "name": zod.string().min(1).max(registerLifterBodyNameMax).optional()
+})
+
+export const RegisterLifterResponse = zod.unknown()
+
+
 export const ListLiftingGroupsResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),

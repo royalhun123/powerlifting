@@ -5,6 +5,16 @@ info:
 servers:
   - url: /api
 paths:
+  /auth/register:
+    post:
+      operationId: registerLifter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LifterRegistrationInput" }
+      responses:
+        "200": { description: Independent team lifter created and signed in }
   /groups:
     get:
       operationId: listLiftingGroups
@@ -746,6 +756,13 @@ components:
         name: { type: string }
         username: { type: string }
         expiresAt: { type: string, format: date-time }
+    LifterRegistrationInput:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 32, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$" }
+        password: { type: string, minLength: 12, maxLength: 128 }
+        name: { type: string, minLength: 1, maxLength: 100 }
     PasswordLoginInput:
       type: object
       required: [username, password]

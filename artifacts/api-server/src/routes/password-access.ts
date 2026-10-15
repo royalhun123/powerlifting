@@ -7,7 +7,7 @@ import {
 } from "@workspace/db";
 import {
   CreatePasswordSetupBody, PasswordLoginBody, CompletePasswordSetupBody,
-  GetPasswordSetupInfoBody,
+  GetPasswordSetupInfoBody, RegisterLifterBody,
 } from "@workspace/api-zod";
 import { isCoach, isAdmin } from "../lib/coach-access";
 import { linked } from "../lib/training-store";
@@ -20,6 +20,30 @@ import { workspaceId, workspaceUserIds } from "../lib/workspace-access";
 
 const router = Router();
 router.use((_req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
+
+router.post("/auth/register", async (req,res)=>{
+  await authLimit(req,"public-registration",10);
+  if(req.user) fail(409,"Sign out before creating another account.");
+  const input=RegisterLifterBody.parse(req.body);
+  const username=normalizeUsername(input.username), name=input.name?.trim() || username;
+  const id=randomUUID(), passwordHash=await hashPassword(input.password);
+  try {
+    await db.transaction(async tx=>{
+      await tx.insert(usersTable).values({id,firstName:name});
+      // Never accept workspace, role, group or user IDs from public requests.
+      await tx.insert(workspaceMembersTable).values({userId:id,workspaceId:"team"});
+      await tx.insert(profilesTable).values({userId:id,data:{id,name,unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""}});
+      await tx.insert(credentialsTable).values({userId:id,username,passwordHash});
+    });
+  } catch(error) {
+    const e=error as {code?:string;cause?:{code?:string}};
+    if(e.code==="23505" || e.cause?.code==="23505") fail(409,"That username is already taken. Choose another.");
+    throw error;
+  }
+  await clearSession(res,getSessionId(req));
+  await issuePasswordSession(res,id,0);
+  res.json({success:true});
+});
 
 async function accounts(ids: string[]) {
   const rows = await db.select({
