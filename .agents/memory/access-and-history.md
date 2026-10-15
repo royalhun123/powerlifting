@@ -9,11 +9,23 @@ Signed-out visitors should land on login, not a demo dashboard.
 
 **How to apply:** Keep onboarding and password-setup links accessible without signing in; do not restore demo navigation or redirect already-signed-in users away from their normal home.
 
-The user now wants coach-assigned usernames, single-use links to choose passwords, and subsequent username/password login for both coach and clients.
+The user now wants link-only invitations for both new coaches and clients: recipients choose their own username and password. Existing usernames stay fixed on resets, and uniqueness is global across workspaces.
 
 **Why:** Auth0 was not allowed; after using private links for the initial Vercel migration, they explicitly approved replacing normal sign-in with username/password.
 
 **How to apply:** Preserve existing user IDs and training history. Keep legacy access until password setup succeeds, then retire its reusable links and prior sessions. Back up before any external production schema migration.
+
+New invitation recipients choose their credentials directly in the browser; the normal login page must not show a legacy-link option.
+
+**Why:** The user explicitly replaced inviter-assigned usernames and removed the redundant link-pasting sign-in UI.
+
+**How to apply:** Preserve one-time redemption, global username collision checks, and server-bound coach/workspace/role. A taken username must not consume an invitation.
+
+Keep the existing sidebar format, but ensure Sign out stays visible at the bottom across monitor, laptop and fullscreen viewport sizes.
+
+**Why:** The user reported that the existing footer was clipped on a fullscreen monitor and specifically asked not to redesign it.
+
+**How to apply:** Constrain the sidebar to the visible viewport, keep its footer visible, and let navigation scroll on short screens rather than pushing Sign out below the viewport.
 
 The Vercel migration must also move data hosting off Replit.
 

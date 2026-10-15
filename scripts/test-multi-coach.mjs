@@ -46,9 +46,30 @@ try {
   const a=await create("/coaches",adminCookie,"TEST COACH A"), b=await create("/coaches",adminCookie,"TEST COACH B");
   const clientA=await create("/password-accounts",a.cookie,"TEST CLIENT A"), clientB=await create("/password-accounts",b.cookie,"TEST CLIENT B");
   const own=await create("/password-accounts",adminCookie,"TEST ADMIN CLIENT");
+  const selfClients=[];
+  for (const [path,inviter] of [["/coaches",adminCookie],["/password-accounts",a.cookie]]) {
+    const invite=await request(path,{},inviter);
+    assert.equal(invite.status,200);ids.push(invite.data.userId);
+    if(path==="/password-accounts") selfClients.push(invite.data.userId);
+    assert.equal(invite.data.username,"");
+    const setupToken=token(invite);
+    const info=await request("/auth/password-setup-info",{token:setupToken});
+    assert.equal(info.data.chooseUsername,true);
+    const duplicate=await request("/auth/password-setup",{token:setupToken,password,username:a.username.toUpperCase()});
+    assert.equal(duplicate.status,409);
+    assert.equal((await request("/auth/password-setup-info",{token:setupToken})).status,200);
+    const chosen=username();
+    const redeemed=await request("/auth/password-setup",{token:setupToken,password,username:chosen,name:"Self chosen name"});
+    assert.equal(redeemed.status,200);
+    const workspace=(await request("/workspace",null,redeemed.cookie)).data;
+    assert.equal(workspace.profile.name,"Self chosen name");
+    assert.equal(workspace.isCoach,path==="/coaches");
+    assert.equal(workspace.workspaceId,"team");
+    assert.equal((await request("/auth/password-setup",{token:setupToken,password,username:chosen})).status,410);
+  }
   const wa=(await request("/workspace",null,a.cookie)).data, wb=(await request("/workspace",null,b.cookie)).data;
   assert.equal(wa.isCoach,true);assert.equal(wa.isAdmin,false);
-  assert.deepEqual(wa.athletes.map(a=>a.id),[clientA.id]);assert.deepEqual(wb.athletes.map(a=>a.id),[clientB.id]);
+  assert.deepEqual(wa.athletes.map(a=>a.id).sort(),[clientA.id,...selfClients].sort());assert.deepEqual(wb.athletes.map(a=>a.id),[clientB.id]);
   const waAdmin=(await request("/workspace",null,adminCookie)).data;
   assert.equal(waAdmin.isAdmin,true);assert.deepEqual(waAdmin.athletes.map(a=>a.id),[own.id]);
   assert.equal((await request("/coaches",null,a.cookie)).status,403);
@@ -56,7 +77,7 @@ try {
   assert.equal((await request("/coaches",{userId:a.id,username:a.username},adminCookie)).status,403);
   const directory=await request("/coaches",null,adminCookie);
   assert.equal(directory.status,200);
-  assert.deepEqual(directory.data.find(c=>c.userId===a.id).clients.map(c=>c.id),[clientA.id]);
+  assert.deepEqual(directory.data.find(c=>c.userId===a.id).clients.map(c=>c.id).sort(),[clientA.id,...selfClients].sort());
   const program={name:"TEST shared program",description:"",phase:"peak",weeks:1,archived:false,workouts:[{id:randomUUID(),name:"Squat day",week:1,day:1,exercises:[{id:randomUUID(),name:"Comp squat",sets:"1",reps:"1",effort:"RPE 9",weight:"",notes:"",review:false,lift:"squat"}]}]};
   const saved=await request("/programs",program,a.cookie);assert.equal(saved.status,200);
   const p=saved.data;

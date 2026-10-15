@@ -56,8 +56,7 @@ router.post("/coaches", async(req,res)=>{
   const input = CreateCoachBody.parse(req.body);
   const scope = await workspaceId(req.user!.id);
   if (input.userId && !await sameWorkspace(req.user!.id,input.userId)) fail(403,"This coach belongs to another workspace.");
-  if(!input.userId && !input.name?.trim()) fail(400,"Enter a coach name.");
-  const userId=input.userId || randomUUID(), username=normalizeUsername(input.username);
+  const userId=input.userId || randomUUID(), username=input.username ? normalizeUsername(input.username) : "";
   const token=randomBytes(32).toString("base64url"), expiresAt=new Date(Date.now()+86400000);
   try {
     await db.transaction(async tx=>{
@@ -67,13 +66,13 @@ router.post("/coaches", async(req,res)=>{
         if(!coach) fail(403,"Not an invited coach.");
         await tx.select().from(usersTable).where(eq(usersTable.id,userId)).for("update");
         const [credential]=await tx.select().from(credentialsTable).where(eq(credentialsTable.userId,userId));
-        if(!credential || credential.passwordHash || credential.username!==username) fail(403,"This coach manages their own account.");
+        if(credential?.passwordHash || (username && credential && credential.username!==username)) fail(403,"This coach manages their own account.");
       } else {
-        const name=input.name!.trim();
+        const name=input.name?.trim() || "Invited coach";
         await tx.insert(usersTable).values({id:userId,firstName:name});
         await tx.insert(workspaceMembersTable).values({userId,workspaceId:scope});
         await tx.insert(profilesTable).values({userId,data:{id:userId,name,unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""}});
-        await tx.insert(credentialsTable).values({userId,username});
+        if(username) await tx.insert(credentialsTable).values({userId,username});
         await tx.insert(coachesTable).values({userId,createdBy:req.user!.id});
       }
       await tx.insert(passwordSetupsTable).values({userId,tokenHash:hashSetupToken(token),expiresAt})

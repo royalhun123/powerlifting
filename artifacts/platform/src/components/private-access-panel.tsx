@@ -25,14 +25,14 @@ export function PrivateAccessPanel() {
     <div className="flex flex-wrap items-end gap-3">
       <label className="grid gap-1 text-sm">Account
         <select className="rounded border bg-background p-2" value={target} onChange={e=>{setTarget(e.target.value);setFresh("");}} data-testid="private-link-account">
-          <option value="self">My coach account</option><option value="new">Create a new client</option>
+          <option value="self">My coach account</option>
           {data.athletes.map(a=><option key={a.id} value={a.id}>{a.name} — existing client</option>)}
         </select>
       </label>
       {target==="new" && <label className="grid gap-1 text-sm">Client name<Input value={name} onChange={e=>setName(e.target.value)} maxLength={100} data-testid="private-link-client-name" /></label>}
       <Button disabled={create.isPending || target==="new" && !name.trim()} data-testid="create-private-link" onClick={()=>{
         if(!guard()) return;
-        create.mutate({data:target==="new" ? {name:name.trim()} : {userId:target==="self" ? data.profile.id : target}},{
+        create.mutate({data:{userId:target==="self" ? data.profile.id : target}},{
           onSuccess:async result=>{setFresh(window.location.origin+result.path);setName("");await refresh();toast({title:"Private link created. Copy it now."});},
           onError:e=>toast({title:"Could not create link",description:errMessage(e),variant:"destructive"}),
         });

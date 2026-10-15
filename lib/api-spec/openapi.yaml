@@ -637,7 +637,6 @@ components:
         setupExpiresAt: { type: [string, "null"], format: date-time }
     PasswordSetupInput:
       type: object
-      required: [username]
       properties:
         userId: { type: string, minLength: 1 }
         name: { type: string, minLength: 1, maxLength: 100 }
@@ -654,6 +653,8 @@ components:
       type: object
       required: [username, expiresAt]
       properties:
+        chooseUsername: { type: boolean }
+        name: { type: string }
         username: { type: string }
         expiresAt: { type: string, format: date-time }
     PasswordLoginInput:
@@ -666,6 +667,8 @@ components:
       type: object
       required: [token, password]
       properties:
+        username: { type: string, minLength: 3, maxLength: 32, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$" }
+        name: { type: string, minLength: 1, maxLength: 100 }
         token: { type: string, pattern: "^[A-Za-z0-9_-]{43}$" }
         password: { type: string, minLength: 12, maxLength: 128 }
     AccessLinkInput:

@@ -6,6 +6,8 @@
  */
 
 export interface PasswordSetupInfo {
+  chooseUsername?: boolean;
+  name?: string;
   username: string;
   expiresAt: Date;
 }

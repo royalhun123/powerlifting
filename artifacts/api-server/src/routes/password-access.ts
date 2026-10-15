@@ -56,16 +56,15 @@ router.post("/password-accounts", async (req, res) => {
   const coach = req.user.id;
   const scope = await workspaceId(coach);
   if(!await isCoach(coach) && input.userId!==coach) fail(403,"The admin may manage only their own password.");
-  if (!input.userId && !input.name?.trim()) fail(400, "Enter a client name.");
   if (input.userId && !await linked(coach, input.userId)) fail(403, "Choose your account or an existing linked client.");
   const userId = input.userId ?? randomUUID();
-  const username = normalizeUsername(input.username);
+  const username = input.username ? normalizeUsername(input.username) : "";
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   try {
     await db.transaction(async tx => {
       if (!input.userId) {
-        const name = input.name!.trim();
+        const name = input.name?.trim() || "Invited client";
         await tx.insert(usersTable).values({ id: userId, firstName: name });
         await tx.insert(workspaceMembersTable).values({userId,workspaceId:scope});
         await tx.insert(profilesTable).values({
@@ -76,8 +75,8 @@ router.post("/password-accounts", async (req, res) => {
       const [user] = await tx.select().from(usersTable).where(eq(usersTable.id, userId)).for("update");
       if (!user) fail(404, "Existing account not found.");
       const [existing] = await tx.select().from(credentialsTable).where(eq(credentialsTable.userId, userId));
-      if (existing && existing.username !== username) fail(409, `Use this account's assigned username: ${existing.username}.`);
-      if (!existing) await tx.insert(credentialsTable).values({ userId, username });
+      if (existing && username && existing.username !== username) fail(409, `Use this account's assigned username: ${existing.username}.`);
+      if (!existing && username) await tx.insert(credentialsTable).values({ userId, username });
       // One outstanding link per account. Issuing a reset does NOT change the
       // current password or revoke current sessions until it is redeemed.
       await tx.insert(passwordSetupsTable).values({ userId, tokenHash: hashSetupToken(token), expiresAt })
@@ -119,25 +118,38 @@ router.post("/auth/password-setup-info", async (req, res) => {
   const [setup] = await db.select().from(passwordSetupsTable)
     .where(and(eq(passwordSetupsTable.tokenHash, hashSetupToken(token)), gt(passwordSetupsTable.expiresAt, new Date())));
   const credential = setup ? await passwordCredential(setup.userId) : null;
-  if (!setup || !credential) fail(410, "This link is invalid, expired, or already used. Ask your coach for a new link.");
-  res.json({ username: credential.username, expiresAt: setup.expiresAt.toISOString() });
+  if (!setup) fail(410, "This link is invalid, expired, or already used. Ask your coach or admin for a new link.");
+  const [profile]=await db.select().from(profilesTable).where(eq(profilesTable.userId,setup.userId));
+  res.json({ username: credential?.username ?? "", chooseUsername:!credential, name:(profile?.data as {name?:string})?.name ?? "", expiresAt: setup.expiresAt.toISOString() });
 });
 
 router.post("/auth/password-setup", async (req, res) => {
   await authLimit(req, "setup-ip", 20);
-  const { token, password } = CompletePasswordSetupBody.parse(req.body);
+  const { token, password, username:chosenUsername, name } = CompletePasswordSetupBody.parse(req.body);
   const tokenHash = hashSetupToken(token);
   const [candidate] = await db.select().from(passwordSetupsTable)
     .where(and(eq(passwordSetupsTable.tokenHash, tokenHash), gt(passwordSetupsTable.expiresAt, new Date())));
   if (!candidate) fail(410, "This link is invalid, expired, or already used. Ask your coach for a new link.");
   const passwordHash = await hashPassword(password);
-  const credential = await db.transaction(async tx => {
+  let credential;
+  try { credential = await db.transaction(async tx => {
     // Serialize issuing and redeeming a link for this account. Re-check after
     // locking: concurrent redemptions must never both succeed.
     await tx.select().from(usersTable).where(eq(usersTable.id, candidate.userId)).for("update");
     const [setup] = await tx.delete(passwordSetupsTable)
       .where(and(eq(passwordSetupsTable.tokenHash, tokenHash), gt(passwordSetupsTable.expiresAt, new Date()))).returning();
     if (!setup) fail(410, "This link is invalid, expired, or already used. Ask your coach for a new link.");
+    const [existing]=await tx.select().from(credentialsTable).where(eq(credentialsTable.userId,setup.userId));
+    if (!existing) {
+      if(!chosenUsername) fail(400,"Choose your username.");
+      const username=normalizeUsername(chosenUsername);
+      await tx.insert(credentialsTable).values({userId:setup.userId,username});
+      const displayName=name?.trim() || username;
+      await tx.update(usersTable).set({firstName:displayName}).where(eq(usersTable.id,setup.userId));
+      await tx.update(profilesTable).set({data:sql`${profilesTable.data} || ${JSON.stringify({name:displayName})}::jsonb`}).where(eq(profilesTable.userId,setup.userId));
+    } else if(chosenUsername && normalizeUsername(chosenUsername)!==existing.username) {
+      fail(409,"This account already has a username. Password resets cannot change it.");
+    }
     const [updated] = await tx.update(credentialsTable)
       .set({ passwordHash, version: sql`${credentialsTable.version} + 1` })
       .where(eq(credentialsTable.userId, setup.userId)).returning();
@@ -147,7 +159,11 @@ router.post("/auth/password-setup", async (req, res) => {
     ));
     await tx.delete(sessionsTable).where(sql`${sessionsTable.sess}->'user'->>'id' = ${setup.userId}`);
     return updated;
-  });
+  }); } catch(error) {
+    const e=error as {code?:string;cause?:{code?:string}};
+    if(e.code==="23505" || e.cause?.code==="23505") fail(409,"That username is already taken. Choose another; your invitation is still valid.");
+    throw error;
+  }
   await clearSession(res, getSessionId(req));
   await issuePasswordSession(res, credential.userId, credential.version);
   res.json({ success: true });

@@ -482,7 +482,7 @@ export const createCoachBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9.
 export const CreateCoachBody = zod.object({
   "userId": zod.string().min(1).optional(),
   "name": zod.string().min(1).max(createCoachBodyNameMax).optional(),
-  "username": zod.string().min(createCoachBodyUsernameMin).max(createCoachBodyUsernameMax).regex(createCoachBodyUsernameRegExp)
+  "username": zod.string().min(createCoachBodyUsernameMin).max(createCoachBodyUsernameMax).regex(createCoachBodyUsernameRegExp).optional()
 })
 
 export const CreateCoachResponse = zod.object({
@@ -516,7 +516,7 @@ export const createPasswordSetupBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-
 export const CreatePasswordSetupBody = zod.object({
   "userId": zod.string().min(1).optional(),
   "name": zod.string().min(1).max(createPasswordSetupBodyNameMax).optional(),
-  "username": zod.string().min(createPasswordSetupBodyUsernameMin).max(createPasswordSetupBodyUsernameMax).regex(createPasswordSetupBodyUsernameRegExp)
+  "username": zod.string().min(createPasswordSetupBodyUsernameMin).max(createPasswordSetupBodyUsernameMax).regex(createPasswordSetupBodyUsernameRegExp).optional()
 })
 
 export const CreatePasswordSetupResponse = zod.object({
@@ -569,10 +569,19 @@ export const GetPasswordSetupInfoBody = zod.object({
 })
 
 export const GetPasswordSetupInfoResponse = zod.object({
+  "chooseUsername": zod.boolean().optional(),
+  "name": zod.string().optional(),
   "username": zod.string(),
   "expiresAt": zod.coerce.date()
 })
 
+
+export const completePasswordSetupBodyUsernameMin = 3;
+export const completePasswordSetupBodyUsernameMax = 32;
+
+
+export const completePasswordSetupBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$');
+export const completePasswordSetupBodyNameMax = 100;
 
 export const completePasswordSetupBodyTokenRegExp = new RegExp('^[A-Za-z0-9_-]{43}$');
 export const completePasswordSetupBodyPasswordMin = 12;
@@ -581,6 +590,8 @@ export const completePasswordSetupBodyPasswordMax = 128;
 
 
 export const CompletePasswordSetupBody = zod.object({
+  "username": zod.string().min(completePasswordSetupBodyUsernameMin).max(completePasswordSetupBodyUsernameMax).regex(completePasswordSetupBodyUsernameRegExp).optional(),
+  "name": zod.string().min(1).max(completePasswordSetupBodyNameMax).optional(),
   "token": zod.string().regex(completePasswordSetupBodyTokenRegExp),
   "password": zod.string().min(completePasswordSetupBodyPasswordMin).max(completePasswordSetupBodyPasswordMax)
 })
