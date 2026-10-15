@@ -21,6 +21,12 @@ The user subsequently chose to start the Neon database from scratch for a new tr
 
 **How to apply:** Allow initialization of a fresh Neon database and coach account without requiring the old-data migration first. This does not authorize deleting the original Replit database.
 
+Treat Vercel with the new Neon database as the live app, not the older Replit deployment.
+
+**Why:** The user confirmed the fresh Neon database and Vercel coach access are working.
+
+**How to apply:** Continue source changes through GitHub; distinguish Replit preview data from Neon live data. Handle production schema changes explicitly against the external database, not through Replit publishing.
+
 Do not populate a form field with a private key taken from a sign-in URL fragment.
 
 **Why:** Browser automation can expose the value of even a masked password input in its accessibility output. This was observed with a subsequently revoked test-only link.
