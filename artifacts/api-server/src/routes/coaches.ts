@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { randomBytes, randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
-import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable } from "@workspace/db";
-import { CreateCoachBody, ListCoachesResponse, SaveProgramResponse, AssignProgramResponse } from "@workspace/api-zod";
+import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable } from "@workspace/db";
+import { CreateCoachBody, ListCoachesResponse, SaveProgramResponse, AssignProgramResponse, ListAdminSessionsResponse } from "@workspace/api-zod";
 import { normalizeProgram } from "../lib/program-defaults";
 import { isAdmin } from "../lib/coach-access";
 import { fail } from "../lib/training-types";
@@ -13,6 +13,20 @@ router.use("/coaches", async (req,res,next)=>{
   res.setHeader("Cache-Control","no-store");
   if(!req.user || !await isAdmin(req.user.id)) fail(403,"Administrator access required.");
   next();
+});
+router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
+  const athleteId = req.params.athleteId;
+  const [coach] = await db.select({id:coachesTable.userId}).from(coachesTable).where(eq(coachesTable.userId,athleteId)).limit(1);
+  const [client] = await db.select({id:coachingTable.athleteId}).from(coachingTable)
+    .innerJoin(coachesTable,eq(coachingTable.coachId,coachesTable.userId))
+    .where(eq(coachingTable.athleteId,athleteId)).limit(1);
+  if (!coach && !client) fail(404,"Athlete not found in the coach directory.");
+  // Read the athlete's historical sessions, never reconstruct from current templates
+  // or filter out sessions whose original assignment was archived or removed.
+  const rows = await db.select().from(workoutsTable).where(eq(workoutsTable.athleteId,athleteId));
+  const sessions = ListAdminSessionsResponse.parse(rows.map(r=>r.data));
+  sessions.sort((a,b)=>b.date.localeCompare(a.date)||b.updatedAt.localeCompare(a.updatedAt)||a.id.localeCompare(b.id));
+  res.json(sessions);
 });
 router.get("/coaches", async (req,res)=>{
   const coaches = await db.select().from(coachesTable);

@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCoach, useListCoaches, getListCoachesQueryKey, type CoachDirectoryEntry } from "@workspace/api-client-react";
 import { ChevronDown, Clock, Copy, EyeOff, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
 import { CoachProgramInspector } from "@/components/program-inspector";
+import { HistoryIcon, SessionHistoryPanel, type HistoryTarget } from "@/components/session-history";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, PageHeader, Panel } from "@/components/common";
@@ -28,6 +29,8 @@ export default function Coaches() {
   const [fresh, setFresh] = useState<Fresh | null>(null);
   const [renewingId, setRenewingId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryTarget | null>(null);
+  const toggleHistory = (t: HistoryTarget) => setHistory(history?.id === t.id ? null : t);
 
   const u = username.trim();
   const validUser = USERNAME_RE.test(u);
@@ -101,7 +104,7 @@ export default function Coaches() {
       </div>
 
       <Panel title="Coach directory" action={<span className="font-num text-xs text-muted-foreground" data-testid="text-coach-count">{coaches.length} coach{coaches.length === 1 ? "" : "es"}</span>}>
-        <p className="mb-4 text-xs text-muted-foreground">Read-only. Expand a coach to inspect uploaded programs and running blocks. Established coaches manage their own clients and password; invitations can only be renewed until the coach finishes setup.</p>
+        <p className="mb-4 text-xs text-muted-foreground">Read-only. Expand a coach to inspect uploaded programs and running blocks, open History for a coach's own logged workouts, or click any client name for theirs. Established coaches manage their own clients and password; invitations can only be renewed until the coach finishes setup.</p>
         {list.isLoading ? (
           <div className="space-y-2" data-testid="coaches-loading">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse bg-muted" />)}</div>
         ) : list.isError ? (
@@ -125,14 +128,23 @@ export default function Coaches() {
                   <p className="mt-0.5 font-num text-[11px] text-muted-foreground">Added {fmtWhen(c.createdAt)} · {c.clients.length} client{c.clients.length === 1 ? "" : "s"}</p>
                   {c.clients.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5" data-testid={`list-coach-clients-${c.userId}`}>
-                      {c.clients.map((cl) => <span key={cl.id} className="bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground">{cl.name}</span>)}
+                      <span className="self-center font-num text-[10px] uppercase tracking-widest text-muted-foreground">History:</span>
+                      {c.clients.map((cl) => (
+                        <button key={cl.id} type="button" aria-pressed={history?.id === cl.id} onClick={() => toggleHistory({ id: cl.id, name: cl.name, role: "client", coachName: c.name })}
+                          className={`inline-flex items-center px-1.5 py-0.5 text-xs transition-colors ${history?.id === cl.id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/15"}`}
+                          data-testid={`button-history-client-${cl.id}`}>{cl.name}</button>
+                      ))}
                     </div>
                   )}
                   {openId === c.userId && <CoachProgramInspector c={c} />}
+                  {history && (history.id === c.userId || c.clients.some((cl) => cl.id === history.id)) && <SessionHistoryPanel key={history.id} target={history} onClose={() => setHistory(null)} />}
                 </div>
                 <div className="flex flex-wrap gap-2 md:justify-end">
                 <Button variant="ghost" size="sm" aria-expanded={openId === c.userId} onClick={() => setOpenId(openId === c.userId ? null : c.userId)} data-testid={`button-inspect-coach-${c.userId}`}>
                   <ChevronDown className={`mr-1.5 h-3.5 w-3.5 transition-transform ${openId === c.userId ? "rotate-180" : ""}`} /> {openId === c.userId ? "Hide programs" : `Programs (${c.programs?.length ?? 0})`}
+                </Button>
+                <Button variant="ghost" size="sm" aria-pressed={history?.id === c.userId} onClick={() => toggleHistory({ id: c.userId, name: c.name, role: "coach", coachName: c.name })} data-testid={`button-history-coach-${c.userId}`}>
+                  <HistoryIcon /> {history?.id === c.userId ? "Hide history" : "History"}
                 </Button>
                 {!c.passwordEnabled && (
                   <Button variant="outline" size="sm" disabled={create.isPending} onClick={() => renew(c)} data-testid={`button-renew-coach-${c.userId}`}>

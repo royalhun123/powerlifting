@@ -5,6 +5,20 @@ info:
 servers:
   - url: /api
 paths:
+  /coaches/athletes/{athleteId}/sessions:
+    get:
+      operationId: listAdminSessions
+      parameters:
+        - in: path
+          name: athleteId
+          required: true
+          schema: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Admin-only read-only workout history for a directory coach or client, including archived block history and drafts
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Session" } }
   /coaches:
     get:
       operationId: listCoaches

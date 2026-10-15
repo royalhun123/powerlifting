@@ -7,6 +7,68 @@
 import * as zod from 'zod';
 
 
+
+
+
+export const ListAdminSessionsParams = zod.object({
+  "athleteId": zod.coerce.string().min(1)
+})
+
+export const listAdminSessionsResponseOneNameMax = 200;
+
+export const listAdminSessionsResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const listAdminSessionsResponseOneNotesMax = 5000;
+
+export const listAdminSessionsResponseOneSetsItemExerciseNameMax = 200;
+
+export const listAdminSessionsResponseOneSetsItemSetNumberMax = 100;
+
+export const listAdminSessionsResponseOneSetsItemWeightMin = 0;
+export const listAdminSessionsResponseOneSetsItemWeightMax = 2000;
+
+export const listAdminSessionsResponseOneSetsItemRepsMin = 0;
+export const listAdminSessionsResponseOneSetsItemRepsMax = 1000;
+
+export const listAdminSessionsResponseOneSetsItemRpeMin = 0;
+export const listAdminSessionsResponseOneSetsItemRpeMax = 10;
+
+export const listAdminSessionsResponseOneSetsItemNotesMax = 2000;
+
+export const listAdminSessionsResponseOneSetsMax = 300;
+
+
+
+export const ListAdminSessionsResponseItem = zod.object({
+  "id": zod.string(),
+  "assignmentId": zod.string(),
+  "workoutId": zod.string(),
+  "name": zod.string().min(1).max(listAdminSessionsResponseOneNameMax),
+  "date": zod.string().regex(listAdminSessionsResponseOneDateRegExp),
+  "unit": zod.enum(['lb', 'kg']),
+  "status": zod.enum(['draft', 'completed']),
+  "notes": zod.string().max(listAdminSessionsResponseOneNotesMax),
+  "sets": zod.array(zod.object({
+  "exerciseId": zod.string(),
+  "exerciseName": zod.string().min(1).max(listAdminSessionsResponseOneSetsItemExerciseNameMax),
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "setNumber": zod.number().int().min(1).max(listAdminSessionsResponseOneSetsItemSetNumberMax),
+  "weight": zod.number().min(listAdminSessionsResponseOneSetsItemWeightMin).max(listAdminSessionsResponseOneSetsItemWeightMax),
+  "reps": zod.number().int().min(listAdminSessionsResponseOneSetsItemRepsMin).max(listAdminSessionsResponseOneSetsItemRepsMax),
+  "rpe": zod.number().min(listAdminSessionsResponseOneSetsItemRpeMin).max(listAdminSessionsResponseOneSetsItemRpeMax),
+  "completed": zod.boolean(),
+  "notes": zod.string().max(listAdminSessionsResponseOneSetsItemNotesMax)
+})).max(listAdminSessionsResponseOneSetsMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "athleteName": zod.string(),
+  "coachFeedback": zod.string(),
+  "volume": zod.number(),
+  "updatedAt": zod.string()
+}))
+export const ListAdminSessionsResponse = zod.array(ListAdminSessionsResponseItem)
+
+
 export const listCoachesResponseProgramsItemOneNameMax = 120;
 
 export const listCoachesResponseProgramsItemOneDescriptionMax = 2000;

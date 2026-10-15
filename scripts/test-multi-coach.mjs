@@ -76,6 +76,20 @@ try {
   assert.equal(oversight.clients.some(c=>c.id===clientB.id),false);
   const session={assignmentId:assignment.id,workoutId:p.workouts[0].id,name:"Squat day",date:"2026-10-15",unit:"lb",status:"completed",notes:"preserve",sets:[{exerciseId:p.workouts[0].exercises[0].id,exerciseName:"Comp squat",lift:"squat",setNumber:1,weight:315,reps:1,rpe:9,completed:true,notes:"preserve"}]};
   const logged=await request("/sessions",session,clientA.cookie);assert.equal(logged.status,200);
+  const historyPath=`/coaches/athletes/${clientA.id}/sessions`;
+  const history=await request(historyPath,null,adminCookie);
+  assert.equal(history.status,200);
+  assert.deepEqual(history.data,[logged.data]);
+  for (const cookie of [a.cookie,b.cookie,clientA.cookie,clientB.cookie]) {
+    assert.equal((await request(historyPath,null,cookie)).status,403);
+  }
+  assert.equal((await request("/coaches/athletes/not-in-directory/sessions",null,adminCookie)).status,404);
+  assert.deepEqual((await request(`/coaches/athletes/${clientB.id}/sessions`,null,adminCookie)).data,[]);
+  const ownAssignment=await request("/assignments",{programId:p.id,athleteId:a.id,startDate:"2026-10-15"},a.cookie);
+  assert.equal(ownAssignment.status,200);
+  const ownLog=await request("/sessions",{...session,assignmentId:ownAssignment.data.id,status:"draft"},a.cookie);
+  assert.equal(ownLog.status,200);
+  assert.deepEqual((await request(`/coaches/athletes/${a.id}/sessions`,null,adminCookie)).data,[ownLog.data]);
   assert.equal((await request("/bodyweights",{date:"2026-10-15",weight:180,unit:"lb",timeOfDay:"morning"},clientA.cookie)).status,200);
   assert.equal((await request("/maxes",{date:"2026-10-15",lift:"squat",weight:325,unit:"lb"},clientA.cookie)).status,200);
   const before=await historicalFingerprint(clientA.id);
@@ -104,6 +118,9 @@ try {
   assert.equal(clientWorkspace.programs.length,0);
   assert.equal(clientWorkspace.assignments[0].program.name,"TEST shared program");
   assert.equal(clientWorkspace.sessions[0].sets[0].weight,315);
+  // Exercise archived/removed history using this test's assignment only.
+  await pool.query(`UPDATE training_assignments SET data=data || '{"archived":true,"removed":true}'::jsonb WHERE id=$1`,[assignment.id]);
+  assert.deepEqual((await request(historyPath,null,adminCookie)).data,[logged.data]);
   console.log("PASS: admin onboarding; independent coaches/clients; global library; uploader-only changes; copy ownership; cross-coach mutation and credential denial; assignment/session/1RM/bodyweight fingerprints unchanged after template rename/delete.");
 } finally {
   for(const table of ["training_sessions","training_assignments","training_bodyweights","training_true_maxes"]) await pool.query(`DELETE FROM ${table} WHERE athlete_id=ANY($1::text[])`,[ids]);

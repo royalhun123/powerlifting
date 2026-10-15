@@ -26,6 +26,8 @@ Never invoke the handoff automatically at startup or during deployment builds.
 
 The admin's Coaches directory includes each coach's uploaded programs, personal active blocks, and their clients' active blocks. Expand a program to inspect its prescribed workouts. No edit, copy, assign, archive or removal controls are available to the admin.
 
+The team president can also inspect each coach's and client's workout history: completed sessions, drafts, actual logged sets and notes, and existing coach feedback. Historical logs remain visible after a block is archived or removed. This is read-only access; the admin cannot alter logs or submit feedback on another coach's clients.
+
 Spreadsheet uploading has been removed. Previously saved programs and all training history remain intact.
 
 True 1RM backfill is under **Settings → Prior lifting history**. Enter the date the lift actually occurred.

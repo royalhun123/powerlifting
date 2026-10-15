@@ -51,11 +51,11 @@ Navigation order is Dashboard, Workouts, My blocks, Progress, My clients, Progra
 
 **How to apply:** Preserve original ownership and stable user IDs, show uploader attribution, and retain assignment snapshots. The user subsequently removed spreadsheet uploading; do not restore it without a new request.
 
-The team admin can inspect every coach's uploaded programs and the current blocks assigned to that coach and their clients, but cannot edit, copy, assign, archive or remove them.
+The team admin can inspect every coach's uploaded programs, current blocks, and actual workout history, including their clients' logs, but cannot edit, copy, assign, archive or remove them.
 
-**Why:** The user requested program visibility for team oversight while retaining the no-edit/no-removal boundary.
+**Why:** The user describes this as the team president's account for tracking and monitoring everyone's progress while retaining the no-edit/no-removal boundary.
 
-**How to apply:** Expose prescriptions through a separate read-only admin view, including assignment snapshots even if their library template was deleted. Do not broaden coach or client mutation permissions.
+**How to apply:** Expose prescriptions and actual logged sets/notes through separate read-only admin views, including historical sessions even if their block was archived or removed. Do not broaden coach or client mutation permissions.
 
 Clients can archive and restore their assigned programs, but only the assigning coach can remove them. Keep workout history and progress after removal.
 

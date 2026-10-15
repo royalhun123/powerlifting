@@ -86,6 +86,77 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getListAdminSessionsUrl = (athleteId: string,) => {
+
+
+
+
+  return `/api/coaches/athletes/${athleteId}/sessions`
+}
+
+export const listAdminSessions = async (athleteId: string, options?: Parameters<typeof customFetch>[1]): Promise<Session[]> => {
+
+  return customFetch<Session[]>(getListAdminSessionsUrl(athleteId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminSessionsQueryKey = (athleteId: string,) => {
+    return [
+    `/api/coaches/athletes/${athleteId}/sessions`
+    ] as const;
+    }
+
+
+export const getListAdminSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminSessions>>, TError = ErrorType<unknown>>(athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminSessionsQueryKey(athleteId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminSessions>>> = ({ signal }) => listAdminSessions(athleteId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteId !== null && athleteId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminSessions>>>
+export type ListAdminSessionsQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminSessions<TData = Awaited<ReturnType<typeof listAdminSessions>>, TError = ErrorType<unknown>>(
+ athleteId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminSessionsQueryOptions(athleteId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getListCoachesUrl = () => {
 
 
