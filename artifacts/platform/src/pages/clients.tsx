@@ -127,9 +127,10 @@ export default function Clients() {
                           </button>
                           {open && (
                             <div className="mt-3 rounded-sm border bg-background/60 p-3">
+                              <div className="overflow-x-auto">
                               <table className="w-full font-num text-xs">
                                 <thead className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                                  <tr><th className="text-left">Exercise</th><th>Set</th><th>{s.unit}</th><th>Reps</th><th>RPE</th><th>Done</th></tr>
+                                  <tr><th className="text-left">Exercise</th><th>Set</th><th>{s.unit}</th><th>Reps</th><th>RPE</th><th>Done</th><th className="px-3 text-left">Client set notes</th></tr>
                                 </thead>
                                 <tbody>
                                   {s.sets.map((x, i) => (
@@ -140,11 +141,16 @@ export default function Clients() {
                                       <td className="text-center">{x.reps}</td>
                                       <td className="text-center">{x.rpe || "—"}</td>
                                       <td className="text-center">{x.completed ? "yes" : "no"}</td>
+                                      <td className="min-w-36 max-w-xs whitespace-pre-wrap break-words px-3 py-2 font-sans text-sm" data-testid={`client-set-notes-${s.id}-${i}`}>{x.notes || <span className="text-muted-foreground">No notes</span>}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
-                              {s.notes && <p className="mt-2 text-xs"><b>Athlete notes:</b> {s.notes}</p>}
+                              </div>
+                              <section className="mt-3 border bg-card p-3" aria-label="Client session notes">
+                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Client session notes</h3>
+                                <p className="whitespace-pre-wrap break-words text-sm" data-testid={`client-session-notes-${s.id}`}>{s.notes || <span className="text-muted-foreground">No session notes recorded.</span>}</p>
+                              </section>
                               <WorkoutDiscussion session={s} className="mt-3" />
                             </div>
                           )}
