@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { AlertTriangle, Archive, Copy, FileSpreadsheet, Plus, Trash2 } from "lucide-react";
-import { WorkbookImport } from "@/components/workbook-import";
+import { AlertTriangle, Archive, Copy, Plus, Trash2 } from "lucide-react";
 import { useDeleteProgram, useSaveProgram, type Program, type ProgramInputPhase } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +58,6 @@ export default function Programs() {
   const [phase, setPhase] = useState<ProgramInputPhase>("volume");
   const [weeks, setWeeks] = useState("4");
   const [toDelete, setToDelete] = useState<Program | null>(null);
-  const [importing, setImporting] = useState(false);
   const [scope, setScope] = useState<"all" | "mine" | "others">("all");
 
   // Pick up library changes from other coaches more often than the workspace default.
@@ -124,15 +122,12 @@ export default function Programs() {
 
   return (
     <div>
-      <PageHeader kicker="Shared coach library · Every coach can view, copy and assign" title="My programs">
+      <PageHeader kicker="Shared coach library · Every coach can view, copy and assign" title="Programs">
         {archivedCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => setShowArchived(!showArchived)} data-testid="button-toggle-archived">
             <Archive className="mr-2 h-4 w-4" /> {showArchived ? "Hide" : "Show"} archived ({archivedCount})
           </Button>
         )}
-        <Button variant="outline" size="sm" onClick={() => (guard() ? setImporting(true) : undefined)} data-testid="button-import-workbook">
-          <FileSpreadsheet className="mr-2 h-4 w-4" /> Import .xlsx
-        </Button>
         <Button size="sm" onClick={() => (guard() ? setCreating(true) : undefined)} data-testid="button-new-program">
           <Plus className="mr-2 h-4 w-4" /> New block
         </Button>
@@ -142,11 +137,11 @@ export default function Programs() {
         {([["all", "All coaches"], ["mine", "Uploaded by me"], ["others", "Other coaches"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={scope === k ? "default" : "outline"} onClick={() => setScope(k)} data-testid={`button-scope-${k}`}>{l}</Button>
         ))}
-        <span className="ml-auto font-num text-[11px] text-muted-foreground">Your own assigned training lives in <Link href="/my-training" className="text-primary underline" data-testid="link-my-training">My training</Link>.</span>
+        <span className="ml-auto font-num text-[11px] text-muted-foreground">Your own assigned training lives in <Link href="/my-blocks" className="text-primary underline" data-testid="link-my-blocks">My blocks</Link>.</span>
       </div>
 
       {programs.length === 0 ? (
-        <EmptyState title="No programs" body="Create a block, or sign in to see your imported blocks." />
+        <EmptyState title="No programs" body="Create a block to start the shared library." />
       ) : (
         <div className="grid gap-3">
           {programs.map((p, i) => {
@@ -225,8 +220,6 @@ export default function Programs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <WorkbookImport open={importing} onOpenChange={setImporting} />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>

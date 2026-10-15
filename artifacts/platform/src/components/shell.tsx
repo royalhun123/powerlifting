@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
-  { href: "/my-programs", label: "My programs", icon: ClipboardList },
-  { href: "/my-training", label: "My training", icon: BookOpen },
+  { href: "/my-blocks", label: "My blocks", icon: BookOpen, alias: ["/my-training", "/my-programs"] },
   { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/clients", label: "Clients", icon: Users },
+  { href: "/clients", label: "My clients", icon: Users, coach: true },
+  { href: "/programs", label: "Programs", icon: ClipboardList, coach: true },
   { href: "/coaches", label: "Coaches", icon: ShieldCheck },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -29,15 +29,15 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         const adminOnly = !!data?.isAdmin && !data?.isCoach;
         if (adminOnly) return item.href === "/coaches" || item.href === "/settings";
         if (item.href === "/coaches") return !!data?.isAdmin;
-        return !!data?.isCoach || !["/my-training", "/clients"].includes(item.href);
-      }).map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? loc === "/" : loc.startsWith(href) || (href === "/my-programs" && !!data?.isCoach && loc.startsWith("/programs"));
+        return !!data?.isCoach || !item.coach;
+      }).map(({ href, label, icon: Icon, alias }) => {
+        const active = href === "/" ? loc === "/" : loc.startsWith(href) || !!alias?.some(a => loc.startsWith(a));
         return (
           <Link
             key={href}
             href={href}
             onClick={onNavigate}
-            data-testid={`link-nav-${label.toLowerCase()}`}
+            data-testid={`link-nav-${label.toLowerCase().replace(/ /g, "-")}`}
             className={cn(
               "group relative flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors",
               active ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",

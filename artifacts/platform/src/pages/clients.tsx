@@ -138,7 +138,7 @@ export default function Clients() {
 
   return (
     <div>
-      <PageHeader kicker="Coaching" title="Clients" />
+      <PageHeader kicker="Coaching" title="My clients" />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-5">

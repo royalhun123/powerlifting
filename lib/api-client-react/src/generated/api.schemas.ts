@@ -4,9 +4,128 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export type ProgramInputPhase = typeof ProgramInputPhase[keyof typeof ProgramInputPhase];
+
+
+export const ProgramInputPhase = {
+  volume: 'volume',
+  strength: 'strength',
+  deload: 'deload',
+  peak: 'peak',
+} as const;
+
+/**
+ * Program source weights and per-set targets are always pounds.
+ */
+export type ExerciseSourceUnit = typeof ExerciseSourceUnit[keyof typeof ExerciseSourceUnit];
+
+
+export const ExerciseSourceUnit = {
+  lb: 'lb',
+} as const;
+
+export type ExerciseLift = typeof ExerciseLift[keyof typeof ExerciseLift];
+
+
+export const ExerciseLift = {
+  squat: 'squat',
+  bench: 'bench',
+  deadlift: 'deadlift',
+  accessory: 'accessory',
+} as const;
+
+export interface Exercise {
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /** @maxLength 100 */
+  sets: string;
+  /** @maxLength 100 */
+  reps: string;
+  /** @maxLength 200 */
+  effort: string;
+  /** @maxLength 300 */
+  weight: string;
+  /** Program source weights and per-set targets are always pounds. */
+  sourceUnit?: ExerciseSourceUnit;
+  /**
+     * Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.
+     * @maxItems 100
+     * @items.minimum 0
+     * @items.maximum 2000
+     */
+  setWeights?: (number | null)[];
+  /** @maxLength 2000 */
+  notes: string;
+  review: boolean;
+  lift: ExerciseLift;
+}
+
+export interface Workout {
+  id: string;
+  /** @minLength 1 */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 52
+     */
+  week: number;
+  /**
+     * @minimum 1
+     * @maximum 7
+     */
+  day: number;
+  /** @maxItems 50 */
+  exercises: Exercise[];
+}
+
+export interface ProgramInput {
+  id?: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /** @maxLength 2000 */
+  description: string;
+  phase: ProgramInputPhase;
+  /**
+     * @minimum 1
+     * @maximum 52
+     */
+  weeks: number;
+  archived: boolean;
+  /** @maxItems 364 */
+  workouts: Workout[];
+}
+
+export type Program = ProgramInput & {
+  id: string;
+  source: string;
+  reviewCount: number;
+  /** Server-owned identity of the uploader or copy creator */
+  uploaderId?: string;
+  uploaderName?: string;
+};
+
+export interface Assignment {
+  archived?: boolean;
+  removed?: boolean;
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  program: Program;
+  startDate: string;
+  coachName: string;
+}
+
 export type CoachDirectoryEntryClientsItem = {
   id: string;
   name: string;
+  blocks: Assignment[];
 };
 
 export interface CoachDirectoryEntry {
@@ -15,6 +134,8 @@ export interface CoachDirectoryEntry {
   username: string;
   passwordEnabled: boolean;
   createdAt: string;
+  programs: Program[];
+  blocks: Assignment[];
   clients: CoachDirectoryEntryClientsItem[];
 }
 
@@ -263,113 +384,6 @@ export type Profile = ProfileInput & {
   coachName: string;
 };
 
-/**
- * Program source weights and per-set targets are always pounds.
- */
-export type ExerciseSourceUnit = typeof ExerciseSourceUnit[keyof typeof ExerciseSourceUnit];
-
-
-export const ExerciseSourceUnit = {
-  lb: 'lb',
-} as const;
-
-export type ExerciseLift = typeof ExerciseLift[keyof typeof ExerciseLift];
-
-
-export const ExerciseLift = {
-  squat: 'squat',
-  bench: 'bench',
-  deadlift: 'deadlift',
-  accessory: 'accessory',
-} as const;
-
-export interface Exercise {
-  id: string;
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  name: string;
-  /** @maxLength 100 */
-  sets: string;
-  /** @maxLength 100 */
-  reps: string;
-  /** @maxLength 200 */
-  effort: string;
-  /** @maxLength 300 */
-  weight: string;
-  /** Program source weights and per-set targets are always pounds. */
-  sourceUnit?: ExerciseSourceUnit;
-  /**
-     * Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.
-     * @maxItems 100
-     * @items.minimum 0
-     * @items.maximum 2000
-     */
-  setWeights?: (number | null)[];
-  /** @maxLength 2000 */
-  notes: string;
-  review: boolean;
-  lift: ExerciseLift;
-}
-
-export interface Workout {
-  id: string;
-  /** @minLength 1 */
-  name: string;
-  /**
-     * @minimum 1
-     * @maximum 52
-     */
-  week: number;
-  /**
-     * @minimum 1
-     * @maximum 7
-     */
-  day: number;
-  /** @maxItems 50 */
-  exercises: Exercise[];
-}
-
-export type ProgramInputPhase = typeof ProgramInputPhase[keyof typeof ProgramInputPhase];
-
-
-export const ProgramInputPhase = {
-  volume: 'volume',
-  strength: 'strength',
-  deload: 'deload',
-  peak: 'peak',
-} as const;
-
-export interface ProgramInput {
-  id?: string;
-  /**
-     * @minLength 1
-     * @maxLength 120
-     */
-  name: string;
-  /** @maxLength 2000 */
-  description: string;
-  phase: ProgramInputPhase;
-  /**
-     * @minimum 1
-     * @maximum 52
-     */
-  weeks: number;
-  archived: boolean;
-  /** @maxItems 364 */
-  workouts: Workout[];
-}
-
-export type Program = ProgramInput & {
-  id: string;
-  source: string;
-  reviewCount: number;
-  /** Server-owned identity of the uploader or copy creator */
-  uploaderId?: string;
-  uploaderName?: string;
-};
-
 export type AthleteUnit = typeof AthleteUnit[keyof typeof AthleteUnit];
 
 
@@ -426,17 +440,6 @@ export interface AssignmentInput {
 
 export interface AssignmentArchiveInput {
   archived: boolean;
-}
-
-export interface Assignment {
-  archived?: boolean;
-  removed?: boolean;
-  id: string;
-  athleteId: string;
-  athleteName: string;
-  program: Program;
-  startDate: string;
-  coachName: string;
 }
 
 export type LoggedSetLift = typeof LoggedSetLift[keyof typeof LoggedSetLift];

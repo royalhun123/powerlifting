@@ -4,7 +4,9 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+import type { Assignment } from './assignment';
 import type { CoachDirectoryEntryClientsItem } from './coachDirectoryEntryClientsItem';
+import type { Program } from './program';
 
 export interface CoachDirectoryEntry {
   userId: string;
@@ -12,5 +14,7 @@ export interface CoachDirectoryEntry {
   username: string;
   passwordEnabled: boolean;
   createdAt: string;
+  programs: Program[];
+  blocks: Assignment[];
   clients: CoachDirectoryEntryClientsItem[];
 }

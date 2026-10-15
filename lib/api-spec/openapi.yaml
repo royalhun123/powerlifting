@@ -497,21 +497,24 @@ components:
   schemas:
     CoachDirectoryEntry:
       type: object
-      required: [userId, name, username, passwordEnabled, createdAt, clients]
+      required: [userId, name, username, passwordEnabled, createdAt, clients, programs, blocks]
       properties:
         userId: { type: string }
         name: { type: string }
         username: { type: string }
         passwordEnabled: { type: boolean }
         createdAt: { type: string }
+        programs: { type: array, items: { $ref: "#/components/schemas/Program" } }
+        blocks: { type: array, items: { $ref: "#/components/schemas/Assignment" } }
         clients:
           type: array
           items:
             type: object
-            required: [id, name]
+            required: [id, name, blocks]
             properties:
               id: { type: string }
               name: { type: string }
+              blocks: { type: array, items: { $ref: "#/components/schemas/Assignment" } }
     PasswordAccount:
       type: object
       required: [userId, name, username, passwordEnabled, setupExpiresAt]

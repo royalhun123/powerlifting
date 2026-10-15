@@ -69,6 +69,11 @@ try {
   const assigned=await request("/assignments",{programId:p.id,athleteId:clientA.id,startDate:"2026-10-15"},a.cookie);
   assert.equal(assigned.status,200);
   const assignment=assigned.data;
+  const oversight=(await request("/coaches",null,adminCookie)).data.find(c=>c.userId===a.id);
+  assert.equal(oversight.programs.find(x=>x.id===p.id).workouts[0].exercises[0].reps,"1");
+  assert.equal(oversight.clients.find(c=>c.id===clientA.id).blocks[0].id,assignment.id);
+  assert.equal(oversight.clients.find(c=>c.id===clientA.id).blocks[0].program.name,p.name);
+  assert.equal(oversight.clients.some(c=>c.id===clientB.id),false);
   const session={assignmentId:assignment.id,workoutId:p.workouts[0].id,name:"Squat day",date:"2026-10-15",unit:"lb",status:"completed",notes:"preserve",sets:[{exerciseId:p.workouts[0].exercises[0].id,exerciseName:"Comp squat",lift:"squat",setNumber:1,weight:315,reps:1,rpe:9,completed:true,notes:"preserve"}]};
   const logged=await request("/sessions",session,clientA.cookie);assert.equal(logged.status,200);
   assert.equal((await request("/bodyweights",{date:"2026-10-15",weight:180,unit:"lb",timeOfDay:"morning"},clientA.cookie)).status,200);
@@ -91,6 +96,9 @@ try {
   assert.equal((await request("/programs",{...p,name:"Renamed original"},a.cookie)).status,200);
   assert.equal((await request("/assignments",{programId:p.id,athleteId:clientB.id,startDate:"2026-10-15"},b.cookie)).status,200);
   assert.equal((await request(`/programs/${p.id}`,null,a.cookie,"DELETE")).status,200);
+  const retained=(await request("/coaches",null,adminCookie)).data.find(c=>c.userId===a.id);
+  assert.equal(retained.programs.some(x=>x.id===p.id),false);
+  assert.equal(retained.clients.find(c=>c.id===clientA.id).blocks[0].program.name,p.name);
   assert.deepEqual(await historicalFingerprint(clientA.id),before);
   const clientWorkspace=(await request("/workspace",null,clientA.cookie)).data;
   assert.equal(clientWorkspace.programs.length,0);

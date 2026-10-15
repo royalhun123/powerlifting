@@ -4,8 +4,10 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+import type { Assignment } from './assignment';
 
 export type CoachDirectoryEntryClientsItem = {
   id: string;
   name: string;
+  blocks: Assignment[];
 };

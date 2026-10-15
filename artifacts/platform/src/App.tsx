@@ -23,13 +23,6 @@ import { EmptyState, LoadingPage } from '@/components/common';
 import MyPrograms from '@/pages/my-programs';
 import Coaches from '@/pages/coaches';
 
-/** Coaches see the shared library; clients keep their assigned snapshots. */
-function MyProgramsRoute() {
-  const {data,isLoading}=useWorkspace();
-  if(isLoading) return <LoadingPage />;
-  return data?.isCoach ? <Programs /> : <MyPrograms />;
-}
-
 function AdminOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
@@ -54,7 +47,7 @@ function HomeRoute() {
 function CoachOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  if(!data?.isCoach) return <EmptyState title="Coach-only page" body="Your assigned training is available under My programs." />;
+  if(!data?.isCoach) return <EmptyState title="Coach-only page" body="Your assigned training is available under My blocks." />;
   return <>{children}</>;
 }
 
@@ -83,8 +76,9 @@ function Router() {
           <Route path="/" component={HomeRoute} />
           <Route path="/sign-in" component={SignIn} />
           <Route path="/set-password" component={SetPassword} />
-          <Route path="/my-programs"><NotAdminOnly><MyProgramsRoute /></NotAdminOnly></Route>
-          <Route path="/my-training"><CoachOnly><MyPrograms /></CoachOnly></Route>
+          <Route path="/my-programs"><NotAdminOnly><MyPrograms /></NotAdminOnly></Route>
+          <Route path="/my-training"><NotAdminOnly><MyPrograms /></NotAdminOnly></Route>
+          <Route path="/my-blocks"><NotAdminOnly><MyPrograms /></NotAdminOnly></Route>
           <Route path="/coaches"><AdminOnly><Coaches /></AdminOnly></Route>
           <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
           <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>

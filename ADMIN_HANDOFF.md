@@ -22,11 +22,10 @@ For another environment, apply `lib/db/migrations/20261016_admin_handoff.sql`, t
 The helper refuses to overwrite existing admin accounts and verifies that all existing records in the affected account/training tables are unchanged.
 Never invoke the handoff automatically at startup or during deployment builds.
 
-## Program import review
+## Read-only program oversight
 
-Workbook detection is heuristic, not guaranteed and not an external AI service.
-Headers, week/day/session headings, combined set/rep prescriptions and supported aliases guide the first draft.
-Review and correct the draft before saving. Unknown layouts support manual column mapping.
-Imports never create completed sessions, 1RMs or bodyweights.
+The admin's Coaches directory includes each coach's uploaded programs, personal active blocks, and their clients' active blocks. Expand a program to inspect its prescribed workouts. No edit, copy, assign, archive or removal controls are available to the admin.
+
+Spreadsheet uploading has been removed. Previously saved programs and all training history remain intact.
 
 True 1RM backfill is under **Settings → Prior lifting history**. Enter the date the lift actually occurred.

@@ -304,7 +304,7 @@ export default function Workouts() {
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div>
           {!active ? (
-            <EmptyState title="No block assigned to you" body={data.isCoach ? "Open All programs and assign a block to yourself to start logging." : "Your coach will assign your training. You can see your assignments in My programs."} action={<Button variant="outline" onClick={() => setLocation(data.isCoach ? "/programs" : "/my-programs")} data-testid="button-go-programs">{data.isCoach ? "All programs" : "My programs"}</Button>} />
+            <EmptyState title="No block assigned to you" body={data.isCoach ? "Open Programs and assign a block to yourself to start logging." : "Your coach will assign your training. You can see your assignments in My blocks."} action={<Button variant="outline" onClick={() => setLocation(data.isCoach ? "/programs" : "/my-blocks")} data-testid="button-go-programs">{data.isCoach ? "Programs" : "My blocks"}</Button>} />
           ) : (
             <div className="space-y-5">
               {[...byWeek.entries()].sort((a, b) => a[0] - b[0]).map(([wk, ws]) => (

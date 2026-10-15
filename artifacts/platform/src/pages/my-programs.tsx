@@ -21,13 +21,13 @@ export default function MyPrograms() {
   const assignments=mine.filter(a=>Boolean(a.archived)===showArchived)
     .sort((a,b)=>b.startDate.localeCompare(a.startDate));
   return <div>
-    <PageHeader kicker="Your assigned training" title={data.isCoach ? "My training" : "My programs"} />
+    <PageHeader kicker="Your assigned training" title="My blocks" />
     <div className="mb-4 flex gap-2">
       <Button variant={!showArchived ? "default" : "outline"} onClick={()=>setShowArchived(false)}>Active ({mine.filter(a=>!a.archived).length})</Button>
       <Button variant={showArchived ? "default" : "outline"} onClick={()=>setShowArchived(true)}>Archived ({mine.filter(a=>a.archived).length})</Button>
     </div>
-    <p className="mb-5 text-sm text-muted-foreground">Only programs assigned to you appear here.{data.isCoach ? " Creating or copying a program in the library does not add it to your own training—assign it to yourself when ready." : " Your coach manages the program; log your own weights, reps, and notes in Workouts."}</p>
-    {!assignments.length ? <EmptyState title={showArchived ? "No archived programs" : "No active programs"} body={showArchived ? "Programs you archive will appear here. Your workout history is always kept." : data.isCoach ? "Choose a program in the library and assign it to yourself, or restore an archived program." : "Your coach assigns your training. You can also restore an archived program."} action={data.isCoach && !showArchived ? <Link href="/programs" className="text-primary underline">Open program library</Link> : undefined} /> :
+    <p className="mb-5 text-sm text-muted-foreground">Only programs assigned to you appear here.{data.isCoach ? " Creating or copying a program in Programs does not add it to your own training—assign it to yourself when ready." : " Your coach manages the program; log your own weights, reps, and notes in Workouts."}</p>
+    {!assignments.length ? <EmptyState title={showArchived ? "No archived programs" : "No active programs"} body={showArchived ? "Programs you archive will appear here. Your workout history is always kept." : data.isCoach ? "Choose a program in Programs and assign it to yourself, or restore an archived program." : "Your coach assigns your training. You can also restore an archived program."} action={data.isCoach && !showArchived ? <Link href="/programs" className="text-primary underline">Open Programs</Link> : undefined} /> :
       <div className="space-y-5">{assignments.map(assignment=>{
         const workouts=assignment.program.workouts.slice().sort((a,b)=>a.week-b.week||a.day-b.day);
         const completed=new Set(data.sessions.filter(s=>s.athleteId===data.profile.id && s.assignmentId===assignment.id && s.status==="completed").map(s=>s.workoutId));

@@ -196,7 +196,7 @@ export default function ProgramDetail() {
     return (
       <div className="pb-24">
         <Link href="/programs" className="mb-4 inline-flex items-center gap-1 font-num text-xs text-muted-foreground hover:text-foreground" data-testid="link-back">
-          <ArrowLeft className="h-3.5 w-3.5" /> Program library
+          <ArrowLeft className="h-3.5 w-3.5" /> Programs
         </Link>
         <div className="rise mb-6 grid gap-4 lg:grid-cols-[1fr_auto]">
           <div className="space-y-3">

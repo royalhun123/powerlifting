@@ -5,12 +5,13 @@ import { ChevronLeft } from "lucide-react";
 const TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/workouts": "Workouts",
-  "/programs": "Program library",
-  "/my-training": "My training",
+  "/programs": "Programs",
+  "/my-training": "My blocks",
+  "/my-blocks": "My blocks",
   "/coaches": "Coaches",
-  "/my-programs": "My programs",
+  "/my-programs": "My blocks",
   "/progress": "Progress",
-  "/clients": "Clients",
+  "/clients": "My clients",
   "/settings": "Settings",
   "/join": "Join Team",
   "/sign-in": "Sign in",
@@ -21,7 +22,7 @@ const TITLES: Record<string, string> = {
 export function backTarget(loc: string): { href: string; label: string } | null {
   if (loc === "/" || loc === "") return null;
   if (loc === "/set-password") return { href: "/sign-in", label: "Sign in" };
-  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "Program library" };
+  if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "Programs" };
   return { href: "/", label: "Dashboard" };
 }
 

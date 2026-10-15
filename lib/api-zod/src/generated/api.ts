@@ -7,15 +7,237 @@
 import * as zod from 'zod';
 
 
+export const listCoachesResponseProgramsItemOneNameMax = 120;
+
+export const listCoachesResponseProgramsItemOneDescriptionMax = 2000;
+
+export const listCoachesResponseProgramsItemOneWeeksMax = 52;
+
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemWeekMax = 52;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemDayMax = 7;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNameMax = 200;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetsMax = 100;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemRepsMax = 100;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemEffortMax = 200;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemWeightMax = 300;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesMax = 50;
+
+export const listCoachesResponseProgramsItemOneWorkoutsMax = 364;
+
+export const listCoachesResponseBlocksItemArchivedDefault = false;
+export const listCoachesResponseBlocksItemRemovedDefault = false;
+export const listCoachesResponseBlocksItemProgramOneNameMax = 120;
+
+export const listCoachesResponseBlocksItemProgramOneDescriptionMax = 2000;
+
+export const listCoachesResponseBlocksItemProgramOneWeeksMax = 52;
+
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemWeekMax = 52;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemDayMax = 7;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNameMax = 200;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetsMax = 100;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemRepsMax = 100;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemEffortMax = 200;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemWeightMax = 300;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesMax = 50;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsMax = 364;
+
+export const listCoachesResponseClientsItemBlocksItemArchivedDefault = false;
+export const listCoachesResponseClientsItemBlocksItemRemovedDefault = false;
+export const listCoachesResponseClientsItemBlocksItemProgramOneNameMax = 120;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneDescriptionMax = 2000;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWeeksMax = 52;
+
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemWeekMax = 52;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemDayMax = 7;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNameMax = 200;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetsMax = 100;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemRepsMax = 100;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemEffortMax = 200;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemWeightMax = 300;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault = `lb`;
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin = 0;
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesMax = 50;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsMax = 364;
+
+
+
 export const ListCoachesResponseItem = zod.object({
   "userId": zod.string(),
   "name": zod.string(),
   "username": zod.string(),
   "passwordEnabled": zod.boolean(),
   "createdAt": zod.string(),
+  "programs": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseProgramsItemOneNameMax),
+  "description": zod.string().max(listCoachesResponseProgramsItemOneDescriptionMax),
+  "phase": zod.enum(['volume', 'strength', 'deload', 'peak']),
+  "weeks": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWeeksMax),
+  "archived": zod.boolean(),
+  "workouts": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1),
+  "week": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemWeekMax),
+  "day": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemDayMax),
+  "exercises": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNameMax),
+  "sets": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetsMax),
+  "reps": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemRepsMax),
+  "effort": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemEffortMax),
+  "weight": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
+  "notes": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
+  "review": zod.boolean(),
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+})).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesMax)
+})).max(listCoachesResponseProgramsItemOneWorkoutsMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
+}))),
+  "blocks": zod.array(zod.object({
+  "archived": zod.boolean().default(listCoachesResponseBlocksItemArchivedDefault),
+  "removed": zod.boolean().default(listCoachesResponseBlocksItemRemovedDefault),
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "athleteName": zod.string(),
+  "program": zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseBlocksItemProgramOneNameMax),
+  "description": zod.string().max(listCoachesResponseBlocksItemProgramOneDescriptionMax),
+  "phase": zod.enum(['volume', 'strength', 'deload', 'peak']),
+  "weeks": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWeeksMax),
+  "archived": zod.boolean(),
+  "workouts": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1),
+  "week": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemWeekMax),
+  "day": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemDayMax),
+  "exercises": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNameMax),
+  "sets": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetsMax),
+  "reps": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemRepsMax),
+  "effort": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemEffortMax),
+  "weight": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
+  "notes": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
+  "review": zod.boolean(),
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+})).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesMax)
+})).max(listCoachesResponseBlocksItemProgramOneWorkoutsMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
+})),
+  "startDate": zod.string(),
+  "coachName": zod.string()
+})),
   "clients": zod.array(zod.object({
   "id": zod.string(),
-  "name": zod.string()
+  "name": zod.string(),
+  "blocks": zod.array(zod.object({
+  "archived": zod.boolean().default(listCoachesResponseClientsItemBlocksItemArchivedDefault),
+  "removed": zod.boolean().default(listCoachesResponseClientsItemBlocksItemRemovedDefault),
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "athleteName": zod.string(),
+  "program": zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneNameMax),
+  "description": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneDescriptionMax),
+  "phase": zod.enum(['volume', 'strength', 'deload', 'peak']),
+  "weeks": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWeeksMax),
+  "archived": zod.boolean(),
+  "workouts": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1),
+  "week": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemWeekMax),
+  "day": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemDayMax),
+  "exercises": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNameMax),
+  "sets": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetsMax),
+  "reps": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemRepsMax),
+  "effort": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemEffortMax),
+  "weight": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemWeightMax),
+  "sourceUnit": zod.enum(['lb']).default(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSourceUnitDefault).describe('Program source weights and per-set targets are always pounds.'),
+  "setWeights": zod.array(zod.number().min(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
+  "notes": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
+  "review": zod.boolean(),
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+})).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesMax)
+})).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "reviewCount": zod.number().int(),
+  "uploaderId": zod.string().optional().describe('Server-owned identity of the uploader or copy creator'),
+  "uploaderName": zod.string().optional()
+})),
+  "startDate": zod.string(),
+  "coachName": zod.string()
+}))
 }))
 })
 export const ListCoachesResponse = zod.array(ListCoachesResponseItem)

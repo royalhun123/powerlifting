@@ -45,11 +45,17 @@ The original coach is coach-only after team administration is handed to a separa
 
 **How to apply:** Keep authority server-controlled. Preserve the original coach ID and records during handoff; do not change the original coach environment ID to the team admin. Never infer roles from usernames, grant them through profile edits, or link new coaches as managed clients of the admin.
 
-For coaches, My programs is a global shared template library. Personal assignments stay separate in My training; clients' My programs remains only their own assignments. Only the uploader may edit/rename/delete a template; other coaches can make independently owned copies.
+Navigation order is Dashboard, Workouts, My blocks, Progress, My clients, Programs, Settings. My clients and Programs are coach-only. My blocks contains personal assignments for coaches and clients; Programs is the global coach library. Only the uploader may edit/rename/delete a template; other coaches can make independently owned copies.
 
 **Why:** Coaches should share programming without controlling each other's work or changing already logged client training.
 
-**How to apply:** Preserve original ownership and stable user IDs, show uploader attribution, and retain assignment snapshots. Spreadsheet imports create prescriptions only, never historical workouts or measurements.
+**How to apply:** Preserve original ownership and stable user IDs, show uploader attribution, and retain assignment snapshots. The user subsequently removed spreadsheet uploading; do not restore it without a new request.
+
+The team admin can inspect every coach's uploaded programs and the current blocks assigned to that coach and their clients, but cannot edit, copy, assign, archive or remove them.
+
+**Why:** The user requested program visibility for team oversight while retaining the no-edit/no-removal boundary.
+
+**How to apply:** Expose prescriptions through a separate read-only admin view, including assignment snapshots even if their library template was deleted. Do not broaden coach or client mutation permissions.
 
 Clients can archive and restore their assigned programs, but only the assigning coach can remove them. Keep workout history and progress after removal.
 
