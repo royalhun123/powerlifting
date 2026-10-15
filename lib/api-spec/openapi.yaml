@@ -5,6 +5,47 @@ info:
 servers:
   - url: /api
 paths:
+  /sessions/{id}/discussion:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: string } }
+    get:
+      operationId: getSessionDiscussion
+      responses:
+        "200":
+          description: Workout conversation for its athlete, linked coach, or read-only admin
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionDiscussion" }
+    post:
+      operationId: createDiscussionThread
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DiscussionThreadInput" }
+      responses:
+        "200":
+          description: Conversation with the new thread
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionDiscussion" }
+  /sessions/{id}/discussion/{threadId}/replies:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: string } }
+      - { in: path, name: threadId, required: true, schema: { type: string } }
+    post:
+      operationId: replyToDiscussion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DiscussionMessageInput" }
+      responses:
+        "200":
+          description: Conversation with the new reply
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionDiscussion" }
   /coaches/athletes/{athleteId}/sessions:
     get:
       operationId: listAdminSessions
@@ -509,6 +550,51 @@ paths:
               schema: { $ref: "#/components/schemas/Analytics" }
 components:
   schemas:
+    DiscussionMessageInput:
+      type: object
+      required: [text, clientMessageId]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 2000 }
+        clientMessageId: { type: string, format: uuid }
+    DiscussionThreadInput:
+      allOf:
+        - { $ref: "#/components/schemas/DiscussionMessageInput" }
+        - type: object
+          required: [scope]
+          properties:
+            scope: { type: string, enum: [workout, exercise, set] }
+            exerciseId: { type: string, minLength: 1 }
+            setNumber: { type: integer, minimum: 1, maximum: 100 }
+    DiscussionMessage:
+      allOf:
+        - { $ref: "#/components/schemas/DiscussionMessageInput" }
+        - type: object
+          required: [id, authorId, authorName, authorRole, createdAt]
+          properties:
+            id: { type: string }
+            authorId: { type: string }
+            authorName: { type: string }
+            authorRole: { type: string, enum: [athlete, coach] }
+            createdAt: { type: string }
+    DiscussionThread:
+      type: object
+      required: [id, scope, label, createdAt, messages]
+      properties:
+        id: { type: string }
+        scope: { type: string, enum: [workout, exercise, set] }
+        exerciseId: { type: string }
+        setNumber: { type: integer }
+        label: { type: string }
+        createdAt: { type: string }
+        messages: { type: array, items: { $ref: "#/components/schemas/DiscussionMessage" } }
+    SessionDiscussion:
+      type: object
+      required: [sessionId, canPost, legacyFeedback, threads]
+      properties:
+        sessionId: { type: string }
+        canPost: { type: boolean }
+        legacyFeedback: { type: string }
+        threads: { type: array, items: { $ref: "#/components/schemas/DiscussionThread" } }
     CoachDirectoryEntry:
       type: object
       required: [userId, name, username, passwordEnabled, createdAt, clients, programs, blocks]
@@ -844,6 +930,7 @@ components:
             athleteId: { type: string }
             athleteName: { type: string }
             coachFeedback: { type: string }
+            discussions: { type: array, items: { $ref: "#/components/schemas/DiscussionThread" } }
             volume: { type: number }
             updatedAt: { type: string }
     FeedbackInput:

@@ -4,6 +4,77 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export interface DiscussionMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  text: string;
+  clientMessageId: string;
+}
+
+export type DiscussionThreadInputScope = typeof DiscussionThreadInputScope[keyof typeof DiscussionThreadInputScope];
+
+
+export const DiscussionThreadInputScope = {
+  workout: 'workout',
+  exercise: 'exercise',
+  set: 'set',
+} as const;
+
+export type DiscussionThreadInput = DiscussionMessageInput & {
+  scope: DiscussionThreadInputScope;
+  /** @minLength 1 */
+  exerciseId?: string;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  setNumber?: number;
+};
+
+export type DiscussionMessageAuthorRole = typeof DiscussionMessageAuthorRole[keyof typeof DiscussionMessageAuthorRole];
+
+
+export const DiscussionMessageAuthorRole = {
+  athlete: 'athlete',
+  coach: 'coach',
+} as const;
+
+export type DiscussionMessage = DiscussionMessageInput & {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: DiscussionMessageAuthorRole;
+  createdAt: string;
+};
+
+export type DiscussionThreadScope = typeof DiscussionThreadScope[keyof typeof DiscussionThreadScope];
+
+
+export const DiscussionThreadScope = {
+  workout: 'workout',
+  exercise: 'exercise',
+  set: 'set',
+} as const;
+
+export interface DiscussionThread {
+  id: string;
+  scope: DiscussionThreadScope;
+  exerciseId?: string;
+  setNumber?: number;
+  label: string;
+  createdAt: string;
+  messages: DiscussionMessage[];
+}
+
+export interface SessionDiscussion {
+  sessionId: string;
+  canPost: boolean;
+  legacyFeedback: string;
+  threads: DiscussionThread[];
+}
+
 export type ProgramInputPhase = typeof ProgramInputPhase[keyof typeof ProgramInputPhase];
 
 
@@ -525,6 +596,7 @@ export type Session = SessionInput & {
   athleteId: string;
   athleteName: string;
   coachFeedback: string;
+  discussions?: DiscussionThread[];
   volume: number;
   updatedAt: string;
 };

@@ -7,6 +7,131 @@
 import * as zod from 'zod';
 
 
+export const GetSessionDiscussionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const getSessionDiscussionResponseThreadsItemMessagesItemOneTextMax = 2000;
+
+
+
+export const GetSessionDiscussionResponse = zod.object({
+  "sessionId": zod.string(),
+  "canPost": zod.boolean(),
+  "legacyFeedback": zod.string(),
+  "threads": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(getSessionDiscussionResponseThreadsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+}))
+})
+
+
+export const CreateDiscussionThreadParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const createDiscussionThreadBodyOneTextMax = 2000;
+
+
+export const createDiscussionThreadBodyTwoSetNumberMax = 100;
+
+
+
+export const CreateDiscussionThreadBody = zod.object({
+  "text": zod.string().min(1).max(createDiscussionThreadBodyOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().min(1).optional(),
+  "setNumber": zod.number().int().min(1).max(createDiscussionThreadBodyTwoSetNumberMax).optional()
+}))
+
+export const createDiscussionThreadResponseThreadsItemMessagesItemOneTextMax = 2000;
+
+
+
+export const CreateDiscussionThreadResponse = zod.object({
+  "sessionId": zod.string(),
+  "canPost": zod.boolean(),
+  "legacyFeedback": zod.string(),
+  "threads": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(createDiscussionThreadResponseThreadsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+}))
+})
+
+
+export const ReplyToDiscussionParams = zod.object({
+  "id": zod.coerce.string(),
+  "threadId": zod.coerce.string()
+})
+
+export const replyToDiscussionBodyTextMax = 2000;
+
+
+
+export const ReplyToDiscussionBody = zod.object({
+  "text": zod.string().min(1).max(replyToDiscussionBodyTextMax),
+  "clientMessageId": zod.string().uuid()
+})
+
+export const replyToDiscussionResponseThreadsItemMessagesItemOneTextMax = 2000;
+
+
+
+export const ReplyToDiscussionResponse = zod.object({
+  "sessionId": zod.string(),
+  "canPost": zod.boolean(),
+  "legacyFeedback": zod.string(),
+  "threads": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(replyToDiscussionResponseThreadsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+}))
+})
+
+
 
 
 
@@ -36,6 +161,8 @@ export const listAdminSessionsResponseOneSetsItemNotesMax = 2000;
 
 export const listAdminSessionsResponseOneSetsMax = 300;
 
+export const listAdminSessionsResponseTwoDiscussionsItemMessagesItemOneTextMax = 2000;
+
 
 
 export const ListAdminSessionsResponseItem = zod.object({
@@ -63,6 +190,24 @@ export const ListAdminSessionsResponseItem = zod.object({
   "athleteId": zod.string(),
   "athleteName": zod.string(),
   "coachFeedback": zod.string(),
+  "discussions": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(listAdminSessionsResponseTwoDiscussionsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+})).optional(),
   "volume": zod.number(),
   "updatedAt": zod.string()
 }))
@@ -751,6 +896,8 @@ export const getWorkspaceResponseSessionsItemOneSetsItemNotesMax = 2000;
 
 export const getWorkspaceResponseSessionsItemOneSetsMax = 300;
 
+export const getWorkspaceResponseSessionsItemTwoDiscussionsItemMessagesItemOneTextMax = 2000;
+
 
 
 export const GetWorkspaceResponse = zod.object({
@@ -877,6 +1024,24 @@ export const GetWorkspaceResponse = zod.object({
   "athleteId": zod.string(),
   "athleteName": zod.string(),
   "coachFeedback": zod.string(),
+  "discussions": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(getWorkspaceResponseSessionsItemTwoDiscussionsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+})).optional(),
   "volume": zod.number(),
   "updatedAt": zod.string()
 }))),
@@ -1375,6 +1540,8 @@ export const saveSessionResponseOneSetsItemNotesMax = 2000;
 
 export const saveSessionResponseOneSetsMax = 300;
 
+export const saveSessionResponseTwoDiscussionsItemMessagesItemOneTextMax = 2000;
+
 
 
 export const SaveSessionResponse = zod.object({
@@ -1402,6 +1569,24 @@ export const SaveSessionResponse = zod.object({
   "athleteId": zod.string(),
   "athleteName": zod.string(),
   "coachFeedback": zod.string(),
+  "discussions": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(saveSessionResponseTwoDiscussionsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+})).optional(),
   "volume": zod.number(),
   "updatedAt": zod.string()
 }))
@@ -1450,6 +1635,8 @@ export const updateFeedbackResponseOneSetsItemNotesMax = 2000;
 
 export const updateFeedbackResponseOneSetsMax = 300;
 
+export const updateFeedbackResponseTwoDiscussionsItemMessagesItemOneTextMax = 2000;
+
 
 
 export const UpdateFeedbackResponse = zod.object({
@@ -1477,6 +1664,24 @@ export const UpdateFeedbackResponse = zod.object({
   "athleteId": zod.string(),
   "athleteName": zod.string(),
   "coachFeedback": zod.string(),
+  "discussions": zod.array(zod.object({
+  "id": zod.string(),
+  "scope": zod.enum(['workout', 'exercise', 'set']),
+  "exerciseId": zod.string().optional(),
+  "setNumber": zod.number().int().optional(),
+  "label": zod.string(),
+  "createdAt": zod.string(),
+  "messages": zod.array(zod.object({
+  "text": zod.string().min(1).max(updateFeedbackResponseTwoDiscussionsItemMessagesItemOneTextMax),
+  "clientMessageId": zod.string().uuid()
+}).and(zod.object({
+  "id": zod.string(),
+  "authorId": zod.string(),
+  "authorName": zod.string(),
+  "authorRole": zod.enum(['athlete', 'coach']),
+  "createdAt": zod.string()
+})))
+})).optional(),
   "volume": zod.number(),
   "updatedAt": zod.string()
 }))

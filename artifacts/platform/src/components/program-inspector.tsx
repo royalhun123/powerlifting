@@ -1,18 +1,17 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { Assignment, CoachDirectoryEntry, Program } from "@workspace/api-client-react";
 import { ChevronRight } from "lucide-react";
+import { GroupedHistory } from "@/components/session-history";
 import { fmtDate, PHASE_LABEL } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 
-/** Read-only prescription view. No actions; admins inspect, coaches edit elsewhere. */
+/** Read-only prescription view. */
 function ProgramBody({ p }: { p: Program }) {
   const workouts = p.workouts.slice().sort((a, b) => a.week - b.week || a.day - b.day);
   return (
     <div className="mt-3 space-y-2">
       {p.description && <p className="whitespace-pre-wrap text-sm text-muted-foreground">{p.description}</p>}
-      {workouts.length === 0 ? (
-        <p className="border border-dashed p-3 text-xs text-muted-foreground">No workouts prescribed yet.</p>
-      ) : workouts.map((w) => (
+      {workouts.length === 0 ? <p className="border border-dashed p-3 text-xs text-muted-foreground">No workouts prescribed yet.</p> : workouts.map((w) => (
         <details key={w.id} className="group/w border bg-background" data-testid={`details-workout-${p.id}-${w.id}`}>
           <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm">
             <ChevronRight className="h-3.5 w-3.5 text-[#B4975A] transition-transform group-open/w:rotate-90" />
@@ -47,7 +46,7 @@ function ProgramBody({ p }: { p: Program }) {
 
 function ProgramCard({ p, meta, archived, testId }: { p: Program; meta: string; archived?: boolean; testId: string }) {
   return (
-    <details className={cn("group/p border border-card-border bg-card", archived && "opacity-70")} data-testid={testId}>
+    <details className={cn("group/p border border-card-border bg-card", archived && "opacity-80")} data-testid={testId}>
       <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-3 py-2.5">
         <ChevronRight className="h-4 w-4 text-primary transition-transform group-open/p:rotate-90" />
         <span className="font-display text-lg font-bold uppercase">{p.name}</span>
@@ -61,45 +60,64 @@ function ProgramCard({ p, meta, archived, testId }: { p: Program; meta: string; 
 }
 
 function blockMeta(a: Assignment) {
-  return `${a.program.weeks} wks · starts ${fmtDate(a.startDate)} · ${a.archived ? "archived" : "running"} · by ${a.program.uploaderName || a.coachName}`;
+  return `${a.program.weeks} wks · starts ${fmtDate(a.startDate)} · by ${a.program.uploaderName || a.coachName}`;
 }
+const blockCard = (prefix: string) => (a: Assignment) => <ProgramCard p={a.program} testId={`${prefix}-${a.id}`} meta={`Prescription · ${blockMeta(a)}`} />;
 
-function Group({ title, count, children }: { title: string; count: number; children: ReactNode }) {
+function Section({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
     <section>
-      <h4 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+      <h4 className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
         <span className="h-px w-4 bg-[#B4975A]" />{title}<span className="font-num text-muted-foreground">({count})</span>
       </h4>
-      {count === 0 ? <p className="text-xs text-muted-foreground">None.</p> : <div className="space-y-2">{children}</div>}
+      {children}
     </section>
   );
 }
 
-export function CoachProgramInspector({ c }: { c: CoachDirectoryEntry }) {
+/** One unified, read-only coach detail area: uploaded programs, coach's blocks, client's blocks. */
+export function CoachDetail({ c }: { c: CoachDirectoryEntry }) {
   const programs = (c.programs ?? []).slice().sort((a, b) => Number(!!a.archived) - Number(!!b.archived) || a.name.localeCompare(b.name));
   const blocks = c.blocks ?? [];
-  const clients = (c.clients ?? []).filter((cl) => cl.blocks?.length);
-  const clientBlockCount = clients.reduce((n, cl) => n + cl.blocks.length, 0);
+  const clients = (c.clients ?? []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
+  const client = clients.find((cl) => cl.id === clientId) ?? clients[0];
+
   return (
-    <div className="mt-3 space-y-5 border-l-2 border-[#B4975A]/60 pl-4" data-testid={`inspector-coach-${c.userId}`}>
+    <div className="rise mt-3 space-y-7 border-l-2 border-[#B4975A]/60 pl-4" data-testid={`inspector-coach-${c.userId}`}>
       <p className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">Read-only inspection</p>
-      <Group title="Uploaded programs" count={programs.length}>
-        {programs.map((p) => (
-          <ProgramCard key={p.id} p={p} archived={p.archived} testId={`program-${c.userId}-${p.id}`}
-            meta={`${p.weeks} wks · ${p.workouts.length} workouts · source ${p.source || "manual"} · by ${p.uploaderName || c.name}`} />
-        ))}
-      </Group>
-      <Group title="Coach's own blocks" count={blocks.length}>
-        {blocks.map((a) => <ProgramCard key={a.id} p={a.program} archived={a.archived} testId={`block-${c.userId}-${a.id}`} meta={blockMeta(a)} />)}
-      </Group>
-      <Group title="Client blocks" count={clientBlockCount}>
-        {clients.map((cl) => (
-          <div key={cl.id} className="space-y-2" data-testid={`client-blocks-${cl.id}`}>
-            <div className="text-sm font-semibold">{cl.name}</div>
-            {cl.blocks.map((a) => <ProgramCard key={a.id} p={a.program} archived={a.archived} testId={`client-block-${cl.id}-${a.id}`} meta={blockMeta(a)} />)}
+
+      <Section title="Uploaded programs" count={programs.length}>
+        {programs.length === 0 ? <p className="text-xs text-muted-foreground">None.</p> : (
+          <div className="space-y-2">
+            {programs.map((p) => <ProgramCard key={p.id} p={p} archived={p.archived} testId={`program-${c.userId}-${p.id}`} meta={`${p.weeks} wks · ${p.workouts.length} workouts · source ${p.source || "manual"} · by ${p.uploaderName || c.name}`} />)}
           </div>
-        ))}
-      </Group>
+        )}
+      </Section>
+
+      <Section title="Coach's blocks" count={blocks.length}>
+        <GroupedHistory personId={c.userId} blocks={blocks} renderBlock={blockCard(`block-${c.userId}`)} />
+      </Section>
+
+      <Section title="Client's blocks" count={clients.reduce((n, cl) => n + (cl.blocks?.length ?? 0), 0)}>
+        {clients.length === 0 ? <p className="text-xs text-muted-foreground">No clients.</p> : (
+          <div className="space-y-3">
+            <div role="tablist" aria-label="Clients" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+              {clients.map((cl) => (
+                <button key={cl.id} type="button" role="tab" aria-selected={client?.id === cl.id} onClick={() => setClientId(cl.id)} data-testid={`tab-client-${cl.id}`}
+                  className={cn("shrink-0 border px-2.5 py-1 text-xs transition-colors", client?.id === cl.id ? "border-primary bg-primary text-primary-foreground" : "bg-secondary hover:bg-primary/15")}>
+                  {cl.name} <span className="font-num opacity-70">({cl.blocks?.length ?? 0})</span>
+                </button>
+              ))}
+            </div>
+            {client && (
+              <div role="tabpanel" aria-label={client.name}>
+                <GroupedHistory key={client.id} personId={client.id} blocks={client.blocks ?? []} renderBlock={blockCard(`client-block-${client.id}`)} />
+              </div>
+            )}
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

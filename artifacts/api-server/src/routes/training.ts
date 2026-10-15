@@ -225,7 +225,7 @@ router.post("/sessions", async (req,res) => {
       previous=SaveSessionResponse.parse(row.data);
       if(previous.assignmentId!==input.assignmentId || previous.workoutId!==input.workoutId) fail(400,"Cannot move a log to another workout.");
     }
-    const session:Session={...input,sets:normalizedSets,id:input.id || randomUUID(),athleteId:req.user!.id,athleteName:profile.name,coachFeedback:previous?.coachFeedback || "",volume:sessionVolume({sets:normalizedSets}),updatedAt:new Date().toISOString()};
+    const session:Session={...input,sets:normalizedSets,id:input.id || randomUUID(),athleteId:req.user!.id,athleteName:profile.name,coachFeedback:previous?.coachFeedback || "",...(previous?.discussions ? {discussions:previous.discussions} : {}),volume:sessionVolume({sets:normalizedSets}),updatedAt:new Date().toISOString()};
     if(input.id) await tx.update(workoutsTable).set({data:session}).where(and(eq(workoutsTable.id,input.id),eq(workoutsTable.athleteId,req.user!.id)));
     else await tx.insert(workoutsTable).values({id:session.id,athleteId:req.user!.id,assignmentId:input.assignmentId,data:session});
     return session;

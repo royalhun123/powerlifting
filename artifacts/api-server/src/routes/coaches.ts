@@ -38,8 +38,8 @@ router.get("/coaches", async (req,res)=>{
   const credentials = await db.select().from(credentialsTable).where(inArray(credentialsTable.userId,ids));
   const programs = await db.select().from(programsTable).where(inArray(programsTable.ownerId,ids));
   const assignmentRows = await db.select().from(assignmentsTable).where(inArray(assignmentsTable.athleteId,[...ids,...links.map(l=>l.athleteId)]));
-  const assignments=assignmentRows.map(r=>({coachId:r.coachId,athleteId:r.athleteId,block:AssignProgramResponse.parse(r.data)})).filter(r=>!r.block.removed);
-  const blocksFor=(athleteId:string, coachId?:string)=>assignments.filter(r=>r.athleteId===athleteId && (!coachId || r.coachId===coachId) && !r.block.archived)
+  const assignments=assignmentRows.map(r=>({coachId:r.coachId,athleteId:r.athleteId,block:AssignProgramResponse.parse(r.data)}));
+  const blocksFor=(athleteId:string, coachId?:string)=>assignments.filter(r=>r.athleteId===athleteId && (!coachId || r.coachId===coachId))
     .map(r=>({...r.block,program:normalizeProgram(r.block.program)}));
   res.json(ListCoachesResponse.parse(coaches.map(c=>{
     const credential = credentials.find(x=>x.userId===c.userId);

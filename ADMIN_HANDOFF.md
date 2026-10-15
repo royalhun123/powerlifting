@@ -24,9 +24,15 @@ Never invoke the handoff automatically at startup or during deployment builds.
 
 ## Read-only program oversight
 
-The admin's Coaches directory includes each coach's uploaded programs, personal active blocks, and their clients' active blocks. Expand a program to inspect its prescribed workouts. No edit, copy, assign, archive or removal controls are available to the admin.
+The admin's Coaches directory has one View details control per coach, with Uploaded programs, Coach's blocks, and Client's blocks sections. Switch clients using the tabs at the top of Client's blocks. Prescriptions and actual workout logs appear together under each block, including archived and removed blocks. No edit, copy, assign, archive or removal controls are available to the admin.
 
-The team president can also inspect each coach's and client's workout history: completed sessions, drafts, actual logged sets and notes, and existing coach feedback. Historical logs remain visible after a block is archived or removed. This is read-only access; the admin cannot alter logs or submit feedback on another coach's clients.
+The team president can inspect completed sessions, drafts, actual logged sets and notes, existing feedback, and workout conversations. Historical logs remain visible after a block is archived or removed. This is read-only access; the admin cannot alter logs or reply.
+
+## Workout conversations
+
+Clients use Comments in Workouts or open a completed workout; coaches use the session in My clients → Athlete review. Comments can target a whole workout, an exercise, or a set, with replies within that thread. Existing coach feedback remains visible as earlier whole-workout feedback.
+
+Conversations use the existing workout JSON storage; no schema migration or video-storage setup is required. The session save and feedback endpoints preserve conversations under the same row lock used when appending messages. Repeated sends using the same message ID are idempotent.
 
 Spreadsheet uploading has been removed. Previously saved programs and all training history remain intact.
 

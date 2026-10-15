@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { SessionSummary } from "@/components/session-summary";
+import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { useLocation, useSearch } from "wouter";
 import { ArrowLeft, Check, CheckCircle2, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { useDeleteSession, useSaveSession, type Assignment, type LoggedSet, type Session, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
@@ -181,6 +182,7 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
         <Panel title="Session notes">
           <Textarea value={state.notes} onChange={(e) => setState({ ...state, notes: e.target.value })} placeholder="How did it move? Sleep, bar speed, anything your coach should know." data-testid="input-session-notes" />
         </Panel>
+        <WorkoutDiscussion session={state.id ? { id: state.id, sets: state.sets } : null} />
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 px-4 py-3 backdrop-blur md:left-60">
@@ -211,6 +213,7 @@ export default function Workouts() {
   const [pickedAssignment, setPickedAssignment] = useState<string>("");
   const [toDelete, setToDelete] = useState<Session | null>(null);
   const [consumedQuery, setConsumedQuery] = useState("");
+  const [commentsFor, setCommentsFor] = useState("");
 
   const mine = useMemo(() => {
     if (!data) return { assignments: [] as Assignment[], sessions: [] as Session[] };
@@ -359,11 +362,10 @@ export default function Workouts() {
                     </div>
                   </div>
                   {s.notes && <p className="mt-1 text-xs text-muted-foreground">{s.notes}</p>}
-                  {s.coachFeedback && (
-                    <div className="mt-2 flex gap-2 rounded-sm bg-accent p-2 text-xs text-accent-foreground">
-                      <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {s.coachFeedback}
-                    </div>
-                  )}
+                  <button type="button" aria-expanded={commentsFor === s.id} onClick={() => setCommentsFor(commentsFor === s.id ? "" : s.id)} className="mt-2 inline-flex items-center gap-1 font-num text-[11px] uppercase tracking-widest text-primary hover:underline" data-testid={`button-comments-${s.id}`}>
+                    <MessageSquare className="h-3.5 w-3.5" /> {commentsFor === s.id ? "Hide comments" : `Comments${s.discussions?.length ? ` (${s.discussions.length})` : s.coachFeedback ? " · feedback" : ""}`}
+                  </button>
+                  {commentsFor === s.id && <WorkoutDiscussion session={s} className="mt-2" />}
                 </li>
               ))}
             </ul>

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AssignmentOverview } from "@/components/assignment-overview";
 import { LegacyAccessDetails, PasswordAccountsPanel } from "@/components/password-accounts-panel";
-import { CalendarPlus, Copy, Link2, MessageSquare, Send, UserPlus, X } from "lucide-react";
-import { useAssignProgram, useCreateInvitation, useRevokeInvitation, useUpdateFeedback, type GetAnalyticsDays, type Invitation, type Session } from "@workspace/api-client-react";
+import { CalendarPlus, Copy, Link2, MessageSquare, UserPlus, X } from "lucide-react";
+import { useAssignProgram, useCreateInvitation, useRevokeInvitation, type GetAnalyticsDays, type Invitation } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,42 +19,6 @@ import { fmtCompact, fmtDate, fmtNum, initials, todayISO } from "@/lib/pl";
 import { cn } from "@/lib/utils";
 
 const inviteUrl = (inv: Invitation) => `${window.location.origin}${inv.path}`;
-
-function FeedbackBox({ session }: { session: Session }) {
-  const update = useUpdateFeedback();
-  const invalidate = useInvalidateAll();
-  const guard = useMutationGuard();
-  const { toast } = useToast();
-  const [text, setText] = useState(session.coachFeedback);
-  const dirty = text !== session.coachFeedback;
-  return (
-    <div className="mt-3 grid gap-2">
-      <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Feedback for this session: bar path, RPE calibration, adjustments for next week…" className="min-h-[70px] text-sm" data-testid={`input-feedback-${session.id}`} />
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          disabled={!dirty || update.isPending}
-          onClick={() => {
-            if (!guard()) return;
-            update.mutate(
-              { id: session.id, data: { feedback: text } },
-              {
-                onSuccess: async () => {
-                  await invalidate();
-                  toast({ title: "Feedback sent" });
-                },
-                onError: (e) => toast({ title: "Could not save feedback", description: errMessage(e), variant: "destructive" }),
-              },
-            );
-          }}
-          data-testid={`button-save-feedback-${session.id}`}
-        >
-          <Send className="mr-1.5 h-3.5 w-3.5" /> {update.isPending ? "Saving…" : session.coachFeedback ? "Update feedback" : "Send feedback"}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 export default function Clients() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
@@ -199,7 +163,7 @@ export default function Clients() {
                               <div className="font-medium">{s.name}</div>
                               <div className="font-num text-[11px] text-muted-foreground">{s.sets.filter((x) => x.completed).length}/{s.sets.length} sets · {fmtNum(s.volume)} {s.unit}</div>
                             </div>
-                            {s.coachFeedback ? <MessageSquare className="h-4 w-4 text-primary" /> : <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">needs review</span>}
+                            {s.coachFeedback || s.discussions?.length ? <MessageSquare className="h-4 w-4 text-primary" /> : <span className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">needs review</span>}
                           </button>
                           {open && (
                             <div className="mt-3 rounded-sm border bg-background/60 p-3">
@@ -221,7 +185,7 @@ export default function Clients() {
                                 </tbody>
                               </table>
                               {s.notes && <p className="mt-2 text-xs"><b>Athlete notes:</b> {s.notes}</p>}
-                              <FeedbackBox session={s} />
+                              <WorkoutDiscussion session={s} className="mt-3" />
                             </div>
                           )}
                         </li>

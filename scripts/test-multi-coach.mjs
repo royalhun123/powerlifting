@@ -90,6 +90,49 @@ try {
   const ownLog=await request("/sessions",{...session,assignmentId:ownAssignment.data.id,status:"draft"},a.cookie);
   assert.equal(ownLog.status,200);
   assert.deepEqual((await request(`/coaches/athletes/${a.id}/sessions`,null,adminCookie)).data,[ownLog.data]);
+  const discussionPath=`/sessions/${logged.data.id}/discussion`;
+  assert.equal((await request(discussionPath)).status,401);
+  assert.equal((await request(discussionPath,null,b.cookie)).status,403);
+  assert.equal((await request(discussionPath,null,clientB.cookie)).status,403);
+  const target={scope:"set",exerciseId:session.sets[0].exerciseId,setNumber:1,text:"Keep your upper back tight.",clientMessageId:randomUUID()};
+  const started=await request(discussionPath,{...target,authorId:admin,authorName:"forged"},a.cookie);
+  assert.equal(started.status,200);
+  const thread=started.data.threads[0];
+  assert.equal(thread.label,"Comp squat · Set 1");
+  assert.equal(thread.messages[0].authorId,a.id);
+  assert.equal(thread.messages[0].authorRole,"coach");
+  assert.equal((await request(discussionPath,target,a.cookie)).data.threads.length,1);
+  const repliesPath=`${discussionPath}/${thread.id}/replies`;
+  const replies=await Promise.all([
+    request(repliesPath,{text:"Should I brace before unracking?",clientMessageId:randomUUID()},clientA.cookie),
+    request(repliesPath,{text:"Yes, then reset your breath at the top.",clientMessageId:randomUUID()},a.cookie),
+  ]);
+  assert.ok(replies.every(r=>r.status===200));
+  const conversation=(await request(discussionPath,null,clientA.cookie)).data;
+  assert.equal(conversation.threads[0].messages.length,3);
+  assert.equal(conversation.threads[0].messages.filter(m=>m.authorRole==="athlete").length,1);
+  assert.equal((await request(discussionPath,null,adminCookie)).data.canPost,false);
+  assert.equal((await request(repliesPath,{text:"No admin replies",clientMessageId:randomUUID()},adminCookie)).status,403);
+  assert.equal((await request(discussionPath,target,adminCookie)).status,403);
+  assert.equal((await request(repliesPath,{text:"   ",clientMessageId:randomUUID()},clientA.cookie)).status,400);
+  assert.equal((await request(discussionPath,{...target,setNumber:99,clientMessageId:randomUUID()},a.cookie)).status,400);
+  assert.equal((await request(`${discussionPath}/not-a-thread/replies`,{text:"No",clientMessageId:randomUUID()},clientA.cookie)).status,404);
+  assert.equal((await request(discussionPath,{...target,text:"Changed retry"},a.cookie)).status,409);
+  for (const scope of ["workout","exercise"]) {
+    const posted=await request(discussionPath,{scope,...scope==="exercise"?{exerciseId:session.sets[0].exerciseId}:{},text:`About the ${scope}`,clientMessageId:randomUUID()},clientA.cookie);
+    assert.equal(posted.status,200);
+  }
+  // A stale session form must not replace newer comments.
+  const edited=await request("/sessions",{...session,id:logged.data.id,discussions:[]},clientA.cookie);
+  assert.equal(edited.status,200);
+  assert.deepEqual(edited.data.sets,logged.data.sets);
+  assert.equal(edited.data.discussions.length,3);
+  assert.equal(edited.data.discussions[0].messages.length,3);
+  const feedback=await request(`/sessions/${logged.data.id}/feedback`,{feedback:"Prior whole-workout feedback"},a.cookie,"PATCH");
+  assert.equal(feedback.status,200);
+  assert.equal(feedback.data.discussions.length,3);
+  assert.equal((await request(discussionPath,null,clientA.cookie)).data.legacyFeedback,"Prior whole-workout feedback");
+  logged.data=feedback.data;
   assert.equal((await request("/bodyweights",{date:"2026-10-15",weight:180,unit:"lb",timeOfDay:"morning"},clientA.cookie)).status,200);
   assert.equal((await request("/maxes",{date:"2026-10-15",lift:"squat",weight:325,unit:"lb"},clientA.cookie)).status,200);
   const before=await historicalFingerprint(clientA.id);
@@ -121,6 +164,9 @@ try {
   // Exercise archived/removed history using this test's assignment only.
   await pool.query(`UPDATE training_assignments SET data=data || '{"archived":true,"removed":true}'::jsonb WHERE id=$1`,[assignment.id]);
   assert.deepEqual((await request(historyPath,null,adminCookie)).data,[logged.data]);
+  assert.equal((await request(discussionPath,null,clientA.cookie)).data.threads.length,3);
+  const oldBlocks=(await request("/coaches",null,adminCookie)).data.find(c=>c.userId===a.id).clients.find(c=>c.id===clientA.id).blocks;
+  assert.equal(oldBlocks.find(x=>x.id===assignment.id).removed,true);
   console.log("PASS: admin onboarding; independent coaches/clients; global library; uploader-only changes; copy ownership; cross-coach mutation and credential denial; assignment/session/1RM/bodyweight fingerprints unchanged after template rename/delete.");
 } finally {
   for(const table of ["training_sessions","training_assignments","training_bodyweights","training_true_maxes"]) await pool.query(`DELETE FROM ${table} WHERE athlete_id=ANY($1::text[])`,[ids]);

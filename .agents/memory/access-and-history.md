@@ -57,6 +57,18 @@ The team admin can inspect every coach's uploaded programs, current blocks, and 
 
 **How to apply:** Expose prescriptions and actual logged sets/notes through separate read-only admin views, including historical sessions even if their block was archived or removed. Do not broaden coach or client mutation permissions.
 
+Admin coach details combine programs and history into three sections: Uploaded programs, Coach's blocks, and Client's blocks. Client's blocks uses client-switching tabs; each person's workout history belongs under the relevant block, including archived and removed blocks.
+
+**Why:** The user wants one coherent team-president view, rather than separate Programs and History entry points.
+
+**How to apply:** Keep old logs visible even when their block no longer exists, and never add admin edit or reply controls.
+
+Workout conversations support coach/client replies about the whole workout, an exercise, or an individual set. Admin can read but not participate. Video uploads were explicitly dropped.
+
+**Why:** Clients should be able to tell exactly which part of a workout a coach commented on without expanding the admin's permissions.
+
+**How to apply:** Preserve existing feedback and discussion history when training logs are edited; keep the original comment target understandable if a logged exercise changes later.
+
 Clients can archive and restore their assigned programs, but only the assigning coach can remove them. Keep workout history and progress after removal.
 
 **Why:** The user requested coach control over client programs, client-only archiving, and preservation of their saved edits.

@@ -4,6 +4,7 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+import type { DiscussionThread } from './discussionThread';
 import type { SessionInput } from './sessionInput';
 
 export type Session = SessionInput & {
@@ -11,6 +12,7 @@ export type Session = SessionInput & {
   athleteId: string;
   athleteName: string;
   coachFeedback: string;
+  discussions?: DiscussionThread[];
   volume: number;
   updatedAt: string;
 };

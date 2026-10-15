@@ -5,6 +5,7 @@ import trainingRouter from "./training";
 import privateAccessRouter from "./private-access";
 import passwordAccessRouter from "./password-access";
 import coachesRouter from "./coaches";
+import workoutDiscussionRouter from "./workout-discussion";
 import { privateLoginEnabled } from "../lib/private-access";
 
 const router: IRouter = Router();
@@ -12,6 +13,7 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use(passwordAccessRouter);
 router.use(coachesRouter);
+router.use(workoutDiscussionRouter);
 router.use(privateAccessRouter);
 router.use((req,res,next)=>{
   if(!privateLoginEnabled()) {next();return;}

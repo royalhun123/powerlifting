@@ -30,6 +30,8 @@ import type {
   Bodyweight,
   CoachDirectoryEntry,
   CreatedAccessLink,
+  DiscussionMessageInput,
+  DiscussionThreadInput,
   FeedbackInput,
   GetAnalyticsParams,
   HealthStatus,
@@ -52,6 +54,7 @@ import type {
   ProgramInput,
   RemoveAssignment200,
   Session,
+  SessionDiscussion,
   SessionInput,
   Success,
   TrueMax,
@@ -85,6 +88,245 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetSessionDiscussionUrl = (id: string,) => {
+
+
+
+
+  return `/api/sessions/${id}/discussion`
+}
+
+export const getSessionDiscussion = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SessionDiscussion> => {
+
+  return customFetch<SessionDiscussion>(getGetSessionDiscussionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSessionDiscussionQueryKey = (id: string,) => {
+    return [
+    `/api/sessions/${id}/discussion`
+    ] as const;
+    }
+
+
+export const getGetSessionDiscussionQueryOptions = <TData = Awaited<ReturnType<typeof getSessionDiscussion>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSessionDiscussion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSessionDiscussionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSessionDiscussion>>> = ({ signal }) => getSessionDiscussion(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSessionDiscussion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSessionDiscussionQueryResult = NonNullable<Awaited<ReturnType<typeof getSessionDiscussion>>>
+export type GetSessionDiscussionQueryError = ErrorType<unknown>
+
+
+
+export function useGetSessionDiscussion<TData = Awaited<ReturnType<typeof getSessionDiscussion>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSessionDiscussion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSessionDiscussionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateDiscussionThreadUrl = (id: string,) => {
+
+
+
+
+  return `/api/sessions/${id}/discussion`
+}
+
+export const createDiscussionThread = async (id: string,
+    discussionThreadInput: DiscussionThreadInput, options?: Parameters<typeof customFetch>[1]): Promise<SessionDiscussion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SessionDiscussion>(getCreateDiscussionThreadUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(discussionThreadInput)
+  }
+);}
+
+
+
+
+
+export const getCreateDiscussionThreadMutationKey = () => ['createDiscussionThread'] as const;
+
+export const getCreateDiscussionThreadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDiscussionThread>>, TError,CreateDiscussionThreadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDiscussionThread>>, TError,CreateDiscussionThreadMutationVariables, TContext> => {
+
+const mutationKey = getCreateDiscussionThreadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDiscussionThread>>, CreateDiscussionThreadMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createDiscussionThread(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDiscussionThreadMutationResult = NonNullable<Awaited<ReturnType<typeof createDiscussionThread>>>
+    export type CreateDiscussionThreadMutationBody = BodyType<DiscussionThreadInput>
+    export type CreateDiscussionThreadMutationError = ErrorType<unknown>
+    export type CreateDiscussionThreadMutationVariables = {id: string;data: BodyType<DiscussionThreadInput>}
+
+    export const useCreateDiscussionThread = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDiscussionThread>>, TError,CreateDiscussionThreadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDiscussionThread>>,
+        TError,
+        CreateDiscussionThreadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateDiscussionThreadMutationOptions(options));
+    }
+
+export const getReplyToDiscussionUrl = (id: string,
+    threadId: string,) => {
+
+
+
+
+  return `/api/sessions/${id}/discussion/${threadId}/replies`
+}
+
+export const replyToDiscussion = async (id: string,
+    threadId: string,
+    discussionMessageInput: DiscussionMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<SessionDiscussion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SessionDiscussion>(getReplyToDiscussionUrl(id,threadId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(discussionMessageInput)
+  }
+);}
+
+
+
+
+
+export const getReplyToDiscussionMutationKey = () => ['replyToDiscussion'] as const;
+
+export const getReplyToDiscussionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToDiscussion>>, TError,ReplyToDiscussionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof replyToDiscussion>>, TError,ReplyToDiscussionMutationVariables, TContext> => {
+
+const mutationKey = getReplyToDiscussionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replyToDiscussion>>, ReplyToDiscussionMutationVariables> = (props) => {
+          const {id,threadId,data} = props ?? {};
+
+          return  replyToDiscussion(id,threadId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplyToDiscussionMutationResult = NonNullable<Awaited<ReturnType<typeof replyToDiscussion>>>
+    export type ReplyToDiscussionMutationBody = BodyType<DiscussionMessageInput>
+    export type ReplyToDiscussionMutationError = ErrorType<unknown>
+    export type ReplyToDiscussionMutationVariables = {id: string;threadId: string;data: BodyType<DiscussionMessageInput>}
+
+    export const useReplyToDiscussion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToDiscussion>>, TError,ReplyToDiscussionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof replyToDiscussion>>,
+        TError,
+        ReplyToDiscussionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplyToDiscussionMutationOptions(options));
+    }
 
 export const getListAdminSessionsUrl = (athleteId: string,) => {
 
