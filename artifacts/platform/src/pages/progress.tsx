@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/common";
 import { AnalyticsView } from "@/components/analytics-view";
 import { DaysToggle } from "@/components/days-toggle";
 import { BodyweightProgress } from "@/components/bodyweight-tracking";
-import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
+import { TrueMaxHistory } from "@/components/true-max-tracking";
 
 export default function Progress() {
   const [days, setDays] = useState<GetAnalyticsDays>(0);
@@ -12,7 +12,6 @@ export default function Progress() {
     <div>
       <PageHeader kicker="Analytics" title="Progress">
         <DaysToggle value={days} onChange={setDays} />
-        <TrueMaxButton />
       </PageHeader>
       <AnalyticsView days={days} />
       <TrueMaxHistory days={days} />

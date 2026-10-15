@@ -1,5 +1,7 @@
 # Independent coaches and shared programs
 
+For the separate team-admin account and the original coach's continued access, follow `ADMIN_HANDOFF.md`. It supersedes the initial combined owner/admin role described below.
+
 ## Safe rollout
 
 1. Keep a Neon backup branch containing current data.

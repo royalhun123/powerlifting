@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AssignmentOverview } from "@/components/assignment-overview";
-import { LegacyAccessDetails, PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
+import { LegacyAccessDetails, PasswordAccountsPanel } from "@/components/password-accounts-panel";
 import { CalendarPlus, Copy, Link2, MessageSquare, Send, UserPlus, X } from "lucide-react";
 import { useAssignProgram, useCreateInvitation, useRevokeInvitation, useUpdateFeedback, type GetAnalyticsDays, type Invitation, type Session } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -139,54 +139,12 @@ export default function Clients() {
   return (
     <div>
       <PageHeader kicker="Coaching" title="Clients" />
-      <AssignmentOverview />
-      <PasswordAccountsPanel />
-      <LegacyAccessDetails />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-5">
-          {!data.privateLogin && <Panel title="Legacy Replit invitations">
-            <div className="flex gap-2">
-              <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Athlete name" maxLength={100} onKeyDown={(e) => e.key === "Enter" && sendInvite()} data-testid="input-invite-name" />
-              <Button onClick={sendInvite} disabled={create.isPending || !inviteName.trim()} data-testid="button-create-invite"><UserPlus className="h-4 w-4" /></Button>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">Creates a single-use link. Share it yourself; when accepted, the athlete grants you access to their training history.</p>
-            {fresh && (
-              <div className="pop mt-3 rounded-sm border border-primary/40 bg-primary/5 p-3" data-testid="panel-fresh-invite">
-                <div className="font-num text-[10px] uppercase tracking-widest text-primary">Link for {fresh.name}</div>
-                <div className="mt-1 break-all font-num text-xs">{inviteUrl(fresh)}</div>
-                <div className="mt-2 flex gap-2">
-                  <Button size="sm" onClick={() => copy(fresh)} data-testid="button-copy-fresh"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copy link</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setFresh(null)}>Done</Button>
-                </div>
-              </div>
-            )}
-            {data.invitations.length > 0 && (
-              <ul className="mt-4 divide-y border-t">
-                {data.invitations.map((inv) => (
-                  <li key={inv.id} className="flex items-center justify-between gap-2 py-2" data-testid={`row-invite-${inv.id}`}>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm">{inv.name}</div>
-                      <div className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">
-                        <span className={cn(inv.status === "pending" && "text-primary", inv.status === "accepted" && "text-[hsl(var(--accessory))]")}>{inv.status}</span>
-                        {inv.status === "pending" && ` · expires ${fmtDate(inv.expiresAt)}`}
-                      </div>
-                    </div>
-                    {inv.status === "pending" && (
-                      <div className="flex">
-                        <Button variant="ghost" size="icon" onClick={() => copy(inv)} aria-label="Copy link" data-testid={`button-copy-invite-${inv.id}`}><Link2 className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => (guard() ? setToRevoke(inv) : undefined)} aria-label="Revoke" data-testid={`button-revoke-invite-${inv.id}`}><X className="h-4 w-4" /></Button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>}
-
           <Panel title={`Athletes (${data.athletes.length})`}>
             {data.athletes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No linked clients yet. Invite someone above.</p>
+              <p className="text-sm text-muted-foreground">No linked clients yet. Set up client accounts below.</p>
             ) : (
               <ul className="-mx-2 space-y-1">
                 {data.athletes.map((a) => (
@@ -275,6 +233,52 @@ export default function Clients() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-10 border-t pt-6" data-testid="section-account-management">
+        <div className="mb-4 font-num text-[11px] uppercase tracking-[0.22em] text-primary">Accounts and invitations</div>
+        <AssignmentOverview />
+        <PasswordAccountsPanel />
+        <LegacyAccessDetails />
+          {!data.privateLogin && <Panel title="Legacy Replit invitations">
+          <div className="flex gap-2">
+            <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Athlete name" maxLength={100} onKeyDown={(e) => e.key === "Enter" && sendInvite()} data-testid="input-invite-name" />
+            <Button onClick={sendInvite} disabled={create.isPending || !inviteName.trim()} data-testid="button-create-invite"><UserPlus className="h-4 w-4" /></Button>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Creates a single-use link. Share it yourself; when accepted, the athlete grants you access to their training history.</p>
+          {fresh && (
+            <div className="pop mt-3 rounded-sm border border-primary/40 bg-primary/5 p-3" data-testid="panel-fresh-invite">
+              <div className="font-num text-[10px] uppercase tracking-widest text-primary">Link for {fresh.name}</div>
+              <div className="mt-1 break-all font-num text-xs">{inviteUrl(fresh)}</div>
+              <div className="mt-2 flex gap-2">
+                <Button size="sm" onClick={() => copy(fresh)} data-testid="button-copy-fresh"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copy link</Button>
+                <Button size="sm" variant="ghost" onClick={() => setFresh(null)}>Done</Button>
+              </div>
+            </div>
+          )}
+          {data.invitations.length > 0 && (
+            <ul className="mt-4 divide-y border-t">
+              {data.invitations.map((inv) => (
+                <li key={inv.id} className="flex items-center justify-between gap-2 py-2" data-testid={`row-invite-${inv.id}`}>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm">{inv.name}</div>
+                    <div className="font-num text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <span className={cn(inv.status === "pending" && "text-primary", inv.status === "accepted" && "text-[hsl(var(--accessory))]")}>{inv.status}</span>
+                      {inv.status === "pending" && ` · expires ${fmtDate(inv.expiresAt)}`}
+                    </div>
+                  </div>
+                  {inv.status === "pending" && (
+                    <div className="flex">
+                      <Button variant="ghost" size="icon" onClick={() => copy(inv)} aria-label="Copy link" data-testid={`button-copy-invite-${inv.id}`}><Link2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => (guard() ? setToRevoke(inv) : undefined)} aria-label="Revoke" data-testid={`button-revoke-invite-${inv.id}`}><X className="h-4 w-4" /></Button>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>}
+
       </div>
 
       <AlertDialog open={!!toRevoke} onOpenChange={(o) => !o && setToRevoke(null)}>

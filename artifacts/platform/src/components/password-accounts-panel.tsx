@@ -53,7 +53,8 @@ export function OwnPasswordAccount() {
       </div>
       {own.data.setupExpiresAt && <p className="text-xs text-muted-foreground">A password setup link is pending until {fmtWhen(own.data.setupExpiresAt)}.</p>}
       <p className="text-sm text-muted-foreground" data-testid="text-own-reset-help">
-        {data?.isCoach ? "To set or reset your own password, create a setup link for “My coach account” in Password accounts below."
+        {data?.isAdmin && !data?.isCoach ? "To set or reset your own password, create a setup link for “My admin account” in Password accounts below. Your current password keeps working until the new link is used."
+          : data?.isCoach ? "To set or reset your own password, create a setup link for “My coach account” in Password accounts below."
           : own.data.passwordEnabled ? "Forgot or want to change your password? Ask your coach for a reset link. Your current password keeps working until the new link is used."
           : "Your coach can send you a one-time link to choose a password. Until then, keep using your private link."}
       </p>
@@ -63,7 +64,9 @@ export function OwnPasswordAccount() {
 
 export function PasswordAccountsPanel() {
   const { signedIn, data } = useSignedIn();
-  const isCoach = signedIn && !!data?.isCoach;
+  const adminOnly = signedIn && !!data?.isAdmin && !data?.isCoach;
+  const isCoach = signedIn && (!!data?.isCoach || adminOnly);
+  const selfLabel = adminOnly ? "My admin account" : "My coach account";
   const qc = useQueryClient(), invalidate = useInvalidateAll(), guard = useMutationGuard();
   const { toast } = useToast();
   const list = useListPasswordAccounts({ query: { queryKey: getListPasswordAccountsQueryKey(), enabled: isCoach, staleTime: 15_000, refetchInterval: 30_000 } });
@@ -72,7 +75,7 @@ export function PasswordAccountsPanel() {
   const [fresh, setFresh] = useState<{ url: string; username: string; expiresAt: string } | null>(null);
   if (!isCoach || !data) return null;
 
-  const accounts = list.data ?? [];
+  const accounts = adminOnly ? (list.data ?? []).filter(a => a.userId === data.profile.id) : (list.data ?? []);
   const targetId = target === "self" ? data.profile.id : target;
   const existing = target === "new" ? undefined : accounts.find(a => a.userId === targetId);
   const lockedName = existing?.username ?? null;
@@ -80,7 +83,7 @@ export function PasswordAccountsPanel() {
   const validUser = USERNAME_RE.test(effUser);
   const canCreate = !create.isPending && validUser && (target !== "new" || !!name.trim()) && (target === "new" || !!existing || !list.isLoading);
   const pendingTarget = existing?.setupExpiresAt && Date.parse(existing.setupExpiresAt) > Date.now();
-  const selectable = [{ userId: data.profile.id, label: "My coach account" }, ...accounts.filter(a => a.userId !== data.profile.id).map(a => ({ userId: a.userId, label: a.name }))];
+  const selectable = [{ userId: data.profile.id, label: selfLabel }, ...accounts.filter(a => a.userId !== data.profile.id).map(a => ({ userId: a.userId, label: a.name }))];
 
   async function refresh() {
     await Promise.all([invalidate(), qc.invalidateQueries({ queryKey: getListPasswordAccountsQueryKey() }), qc.invalidateQueries({ queryKey: getGetOwnPasswordAccountQueryKey() })]);
@@ -102,12 +105,12 @@ export function PasswordAccountsPanel() {
   }
 
   return <div className="mb-5"><Panel title={<span className="inline-flex items-center gap-2"><KeyRound className="h-4 w-4 text-[#B4975A]" /> Password accounts</span>}>
-    <p className="mb-4 text-sm text-muted-foreground">Give each lifter a username and a one-time setup link (valid 24 hours) so they can choose their own password. A reset link keeps the current password working until it is used. Completing setup signs that account out everywhere and retires its old private links.</p>
+    <p className="mb-4 text-sm text-muted-foreground">{adminOnly ? "Set or reset the password for your own admin account with a one-time setup link (valid 24 hours). Your current password keeps working until the link is used. Coach accounts are created from the Coaches page." : <>Give each lifter a username and a one-time setup link (valid 24 hours) so they can choose their own password. A reset link keeps the current password working until it is used. Completing setup signs that account out everywhere and retires its old private links.</>}</p>
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
       <label className="grid gap-1 text-sm">Account
         <select className="border bg-background p-2" value={target} onChange={e => { setTarget(e.target.value); setFresh(null); create.reset(); }} data-testid="select-password-account">
-          <option value="self">My coach account</option>
-          <option value="new">New client</option>
+          <option value="self">{selfLabel}</option>
+          {!adminOnly && <option value="new">New client</option>}
           {selectable.slice(1).map(a => <option key={a.userId} value={a.userId}>{a.label} (existing client)</option>)}
         </select>
       </label>
@@ -139,12 +142,12 @@ export function PasswordAccountsPanel() {
     <div className="mt-5">
       {list.isLoading ? <div className="space-y-2" data-testid="password-accounts-loading">{[0, 1, 2].map(i => <div key={i} className="h-11 animate-pulse bg-muted" />)}</div>
        : list.isError ? <ErrorState message={errMessage(list.error)} onRetry={() => list.refetch()} />
-       : accounts.length === 0 ? <p className="border border-dashed p-4 text-sm text-muted-foreground" data-testid="password-accounts-empty">No accounts yet. Start with your own coach account, then add each client.</p>
+       : accounts.length === 0 ? <p className="border border-dashed p-4 text-sm text-muted-foreground" data-testid="password-accounts-empty">{adminOnly ? "No sign-in account found yet. Create a setup link for your admin account above." : "No accounts yet. Start with your own coach account, then add each client."}</p>
        : <ul className="divide-y border-y">{accounts.map(a => {
           const pending = a.setupExpiresAt && Date.parse(a.setupExpiresAt) > Date.now();
           return <li key={a.userId} className="flex flex-wrap items-center justify-between gap-2 py-2.5" data-testid={`row-password-account-${a.userId}`}>
             <div className="min-w-0">
-              <b className="text-sm">{a.name}</b>{a.userId === data.profile.id && <span className="ml-2 text-xs text-muted-foreground">Coach</span>}
+              <b className="text-sm">{a.name}</b>{a.userId === data.profile.id && <span className="ml-2 text-xs text-muted-foreground">{adminOnly ? "Admin" : "Coach"}</span>}
               <p className="font-num text-xs text-muted-foreground">{a.username ?? "no username"}{pending && a.setupExpiresAt ? ` · link expires ${fmtWhen(a.setupExpiresAt)}` : ""}</p>
             </div>
             <div className="flex items-center gap-2">

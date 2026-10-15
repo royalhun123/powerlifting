@@ -33,8 +33,22 @@ function MyProgramsRoute() {
 function AdminOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
   if(isLoading) return <LoadingPage />;
-  if(!data?.isCoach || !data.isAdmin) return <EmptyState title="Admin-only page" body="Only the team administrator can onboard coaches." />;
+  if(!data?.isAdmin) return <EmptyState title="Admin-only page" body="Only the team administrator can onboard coaches." />;
   return <>{children}</>;
+}
+
+/** Admin accounts without coach rights manage coaches and their own settings only. */
+function NotAdminOnly({children}:{children:ReactNode}) {
+  const {data,isLoading}=useWorkspace();
+  if(isLoading) return <LoadingPage />;
+  if(data?.isAdmin && !data.isCoach) return <EmptyState title="Not available for admin accounts" body="Admin accounts manage coaches and settings. Training, clients and the program library belong to coach and athlete accounts." />;
+  return <>{children}</>;
+}
+
+function HomeRoute() {
+  const {data,isLoading}=useWorkspace();
+  if(isLoading) return <LoadingPage />;
+  return data?.isAdmin && !data.isCoach ? <Coaches /> : <Dashboard />;
 }
 
 function CoachOnly({children}:{children:ReactNode}) {
@@ -66,16 +80,16 @@ function Router() {
       <InviteResume />
       <RoutedErrorBoundary>
         <Switch>
-          <Route path="/" component={Dashboard} />
+          <Route path="/" component={HomeRoute} />
           <Route path="/sign-in" component={SignIn} />
           <Route path="/set-password" component={SetPassword} />
-          <Route path="/my-programs" component={MyProgramsRoute} />
+          <Route path="/my-programs"><NotAdminOnly><MyProgramsRoute /></NotAdminOnly></Route>
           <Route path="/my-training"><CoachOnly><MyPrograms /></CoachOnly></Route>
           <Route path="/coaches"><AdminOnly><Coaches /></AdminOnly></Route>
           <Route path="/programs"><CoachOnly><Programs /></CoachOnly></Route>
           <Route path="/programs/:id"><CoachOnly><ProgramDetail /></CoachOnly></Route>
-          <Route path="/workouts" component={Workouts} />
-          <Route path="/progress" component={Progress} />
+          <Route path="/workouts"><NotAdminOnly><Workouts /></NotAdminOnly></Route>
+          <Route path="/progress"><NotAdminOnly><Progress /></NotAdminOnly></Route>
           <Route path="/clients"><CoachOnly><Clients /></CoachOnly></Route>
           <Route path="/settings" component={Settings} />
           <Route path="/join" component={Join} />

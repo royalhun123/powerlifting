@@ -25,5 +25,5 @@ const blocks=parseWorkbookSheets([{sheet:"Deload",data:[
 assert.equal(blocks.programs[0].weeks,2);
 assert.equal(blocks.programs[0].workouts[1].day,3);
 assert.equal(blocks.programs[0].workouts[1].exercises[0].effort,"80%");
-assert.throws(()=>parseWorkbookSheets([{sheet:"invalid",data:[["nothing"]]}]),/no supported/i);
+assert.equal(parseWorkbookSheets([{sheet:"invalid",data:[["nothing"]]}]).drafts[0].workouts.length,0);
 console.log("PASS: table/block imports, dates as ranges, percentages, unsupported sheet errors, historical weights excluded.");

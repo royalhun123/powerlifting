@@ -15,7 +15,7 @@ import { ensureProfile, linked, loadWorkspace } from "../lib/training-store";
 import { demoWorkspace } from "../lib/demo";
 import { analytics } from "../lib/analytics";
 import { normalizeProgram } from "../lib/program-defaults";
-import { isCoach } from "../lib/coach-access";
+import { isCoach, isAdmin } from "../lib/coach-access";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
@@ -150,7 +150,7 @@ router.post("/join", async (req,res) => {
     const [invite]=await tx.select().from(invitationsTable).where(eq(invitationsTable.token,token)).for("update");
     if(!invite || invite.expiresAt.getTime()<Date.now()) fail(400,"This invitation has expired or was revoked.");
     if(!await isCoach(invite.coachId)) fail(400,"This invitation is no longer valid. Ask your coach for a new link.");
-    if(await isCoach(req.user!.id)) fail(403,"Coach accounts cannot become managed clients.");
+    if(await isCoach(req.user!.id) || await isAdmin(req.user!.id)) fail(403,"Coach and admin accounts cannot become managed clients.");
     const existingLinks=await tx.select().from(coachingTable).where(eq(coachingTable.athleteId,req.user!.id));
     if(existingLinks.some(l=>l.coachId!==invite.coachId)) fail(409,"This athlete already belongs to another coach.");
     if(invite.coachId===req.user!.id) fail(400,"You cannot accept your own invitation.");

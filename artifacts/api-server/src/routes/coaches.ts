@@ -8,13 +8,13 @@ import { fail } from "../lib/training-types";
 import { hashSetupToken, normalizeUsername } from "../lib/password-crypto";
 
 const router = Router();
-router.use("/coaches", (req,res,next)=>{
+router.use("/coaches", async (req,res,next)=>{
   res.setHeader("Cache-Control","no-store");
-  if(!req.user || !isAdmin(req.user.id)) fail(403,"Administrator access required.");
+  if(!req.user || !await isAdmin(req.user.id)) fail(403,"Administrator access required.");
   next();
 });
 router.get("/coaches", async (req,res)=>{
-  const coaches = await db.select().from(coachesTable).where(eq(coachesTable.createdBy,req.user!.id));
+  const coaches = await db.select().from(coachesTable);
   if (!coaches.length) {res.json([]);return;}
   const ids = coaches.map(c=>c.userId);
   const links = await db.select().from(coachingTable).where(inArray(coachingTable.coachId,ids));
@@ -37,7 +37,7 @@ router.post("/coaches", async(req,res)=>{
       if(input.userId) {
         // Admin may renew onboarding only, never reset a working coach account.
         const [coach]=await tx.select().from(coachesTable).where(eq(coachesTable.userId,userId));
-        if(!coach || coach.createdBy!==req.user!.id) fail(403,"Not an invited coach.");
+        if(!coach) fail(403,"Not an invited coach.");
         await tx.select().from(usersTable).where(eq(usersTable.id,userId)).for("update");
         const [credential]=await tx.select().from(credentialsTable).where(eq(credentialsTable.userId,userId));
         if(!credential || credential.passwordHash || credential.username!==username) fail(403,"This coach manages their own account.");

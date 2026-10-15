@@ -1,5 +1,4 @@
 import { BodyweightForm } from "@/components/bodyweight-tracking";
-import { TrueMaxButton } from "@/components/true-max-tracking";
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, CalendarClock, Flag } from "lucide-react";
@@ -55,7 +54,6 @@ export default function Dashboard() {
           Log a session <ArrowRight className="ml-2 h-4 w-4" />
         </Link>
         <BodyweightForm />
-        <TrueMaxButton />
         </div>
       </PageHeader>
 

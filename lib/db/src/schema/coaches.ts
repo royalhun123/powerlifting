@@ -7,3 +7,8 @@ export const coachesTable = pgTable("app_coaches", {
   createdBy: text("created_by").notNull().references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const administrationTable = pgTable("app_administration", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => usersTable.id),
+});

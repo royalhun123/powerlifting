@@ -15,7 +15,7 @@ export async function ensureProfile(id: string, name: string): Promise<Profile> 
   const profile:Profile = {id,name:name || "Athlete",unit:"lb",meetDate:"",squatMax:0,benchMax:0,deadliftMax:0,coachName:""};
   await db.transaction(async tx => {
     const inserted = await tx.insert(profilesTable).values({userId:id,data:profile}).onConflictDoNothing().returning();
-    if (!inserted.length || !isAdmin(id)) return;
+    if (!inserted.length || !await isCoach(id)) return;
     // Each account owns its own editable copies. Source cells are prescriptions,
     // never seeded as completed sessions or counted in progress.
     const templates = imported.map(raw => {
@@ -62,7 +62,7 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
   const ownerIds = [...new Set([...programRows.map(r=>r.ownerId), ...assignmentRows.map(r=>r.coachId)])];
   const owners = ownerIds.length ? await db.select().from(profilesTable).where(inArray(profilesTable.userId,ownerIds)) : [];
   const ownerNames = new Map(owners.map(r=>[r.userId,UpdateProfileResponse.parse(r.data).name]));
-  return {demo:false,isCoach:coach,isAdmin:isAdmin(id),privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>({...normalizeProgram(SaveProgramResponse.parse(r.data)),uploaderId:r.ownerId,uploaderName:ownerNames.get(r.ownerId) || "Coach"})),athletes,
+  return {demo:false,isCoach:coach,isAdmin:await isAdmin(id),privateLogin:privateLoginEnabled(),profile,programs:programRows.map(r=>({...normalizeProgram(SaveProgramResponse.parse(r.data)),uploaderId:r.ownerId,uploaderName:ownerNames.get(r.ownerId) || "Coach"})),athletes,
     assignments:assignmentRows.map(r=>{
       const assignment=AssignProgramResponse.parse(r.data);
       // Legacy assignments predate sharing and were owned by the assigning coach.

@@ -39,11 +39,11 @@ Handle credential fragments on same-route hash navigation as well as initial mou
 
 **How to apply:** Listen for hash changes, strip each incoming fragment, and revalidate each visit without rendering the token.
 
-The existing owner (Bhatta) is the sole admin and also a coach. The admin creates independent coaches, who manage their own clients. The admin may see the coaches they added and their client names, but cannot edit those clients or manage established coaches' passwords.
+The original coach is coach-only after team administration is handed to a separate team-owned admin account. The admin can add coaches, but must not remove coaches. Coaches manage their own clients; the admin may see the directory but cannot edit those clients or manage established coaches' passwords.
 
-**Why:** The user explicitly requested independent coaching rosters with read-only administrative oversight, not an admin override for every client.
+**Why:** Team administration must pass to successors while the original coach can keep using the app after leaving the team. The user explicitly requested independent rosters, read-only administrative oversight, and no coach removal.
 
-**How to apply:** Keep coach authority server-controlled. Never infer admin rights from a username, allow a profile edit to grant roles, or link newly created coaches as managed clients of the admin.
+**How to apply:** Keep authority server-controlled. Preserve the original coach ID and records during handoff; do not change the original coach environment ID to the team admin. Never infer roles from usernames, grant them through profile edits, or link new coaches as managed clients of the admin.
 
 For coaches, My programs is a global shared template library. Personal assignments stay separate in My training; clients' My programs remains only their own assignments. Only the uploader may edit/rename/delete a template; other coaches can make independently owned copies.
 

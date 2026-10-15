@@ -9,7 +9,7 @@ import {
   CreatePasswordSetupBody, PasswordLoginBody, CompletePasswordSetupBody,
   GetPasswordSetupInfoBody,
 } from "@workspace/api-zod";
-import { isCoach } from "../lib/coach-access";
+import { isCoach, isAdmin } from "../lib/coach-access";
 import { linked } from "../lib/training-store";
 import { fail } from "../lib/training-types";
 import { clearSession, getSessionId } from "../lib/auth";
@@ -38,7 +38,7 @@ async function accounts(ids: string[]) {
 }
 
 router.get("/password-accounts", async (req, res) => {
-  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
   const linkedClients = await db.select().from(coachingTable).where(eq(coachingTable.coachId, req.user.id));
   res.json(await accounts([req.user.id, ...linkedClients.map(c => c.athleteId)]));
 });
@@ -50,9 +50,10 @@ router.get("/auth/password-account", async (req, res) => {
 });
 
 router.post("/password-accounts", async (req, res) => {
-  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
   const input = CreatePasswordSetupBody.parse(req.body);
   const coach = req.user.id;
+  if(!await isCoach(coach) && input.userId!==coach) fail(403,"The admin may manage only their own password.");
   if (!input.userId && !input.name?.trim()) fail(400, "Enter a client name.");
   if (input.userId && !await linked(coach, input.userId)) fail(403, "Choose your account or an existing linked client.");
   const userId = input.userId ?? randomUUID();
@@ -88,7 +89,7 @@ router.post("/password-accounts", async (req, res) => {
 });
 
 router.delete("/password-accounts/:userId/setup", async (req, res) => {
-  if (!req.user || !await isCoach(req.user.id)) fail(403, "Coach access required.");
+  if (!req.user || !(await isCoach(req.user.id) || await isAdmin(req.user.id))) fail(403, "Account management access required.");
   const userId = req.params.userId as string;
   if (!await linked(req.user.id, userId)) fail(403, "Choose your account or a linked client.");
   await db.delete(passwordSetupsTable).where(eq(passwordSetupsTable.userId, userId));

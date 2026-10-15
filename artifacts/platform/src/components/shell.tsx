@@ -25,7 +25,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { data } = useWorkspace();
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.filter(item => (data?.isCoach || !["/my-training","/clients"].includes(item.href)) && (item.href !== "/coaches" || (!!data?.isCoach && !!data?.isAdmin))).map(({ href, label, icon: Icon }) => {
+      {NAV.filter(item => {
+        const adminOnly = !!data?.isAdmin && !data?.isCoach;
+        if (adminOnly) return item.href === "/coaches" || item.href === "/settings";
+        if (item.href === "/coaches") return !!data?.isAdmin;
+        return !!data?.isCoach || !["/my-training", "/clients"].includes(item.href);
+      }).map(({ href, label, icon: Icon }) => {
         const active = href === "/" ? loc === "/" : loc.startsWith(href) || (href === "/my-programs" && !!data?.isCoach && loc.startsWith("/programs"));
         return (
           <Link

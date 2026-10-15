@@ -9,6 +9,8 @@ import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { convertLoad, daysUntil, fmtNum, LIFT_VAR } from "@/lib/pl";
 import { cn } from "@/lib/utils";
+import { History } from "lucide-react";
+import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
 import { LatestBodyweight } from "@/components/bodyweight-tracking";
 import { LegacyAccessDetails, PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
 
@@ -32,6 +34,7 @@ export default function Settings() {
   if (isLoading || (data && !form)) return <LoadingPage />;
   if (isError || !data || !form) return <ErrorState message={errMessage(error)} onRetry={() => refetch()} />;
 
+  const adminOnly = !!data.isAdmin && !data.isCoach;
   const set = (p: Partial<ProfileInput>) => setForm({ ...form, ...p });
   const num = (v: string) => Math.max(0, Math.min(2000, Number(v) || 0));
   const valid = form.name.trim().length > 0;
@@ -106,6 +109,19 @@ export default function Settings() {
           </div>
           <div className="mt-3 text-right font-num text-sm">Total <b>{fmtNum(form.squatMax + form.benchMax + form.deadliftMax, 1)}</b> {form.unit}</div>
         </Panel>
+        {!data.demo && !adminOnly && (
+          <section className="rounded-md border border-dashed border-primary/40 bg-card p-5" data-testid="section-prior-lifting-history">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 font-num text-[10px] uppercase tracking-[0.22em] text-primary"><History className="h-3.5 w-3.5" /> Backfill</div>
+                <h2 className="font-display text-2xl font-bold uppercase leading-tight">Prior lifting history</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Add tested true 1RMs from before you joined the team, with the date each was hit. They fill in your 1RM trend so progress starts from where you really were, not from day one here. Only enter maxes you actually completed; estimates belong nowhere near this list. Entries do not change workout volume or the reference maxes above.</p>
+              </div>
+              <TrueMaxButton />
+            </div>
+            <TrueMaxHistory days={0} />
+          </section>
+        )}
       </div>
     </div>
   );
