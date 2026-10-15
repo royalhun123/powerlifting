@@ -3,11 +3,13 @@ import healthRouter from "./health";
 import authRouter from "./auth";
 import trainingRouter from "./training";
 import privateAccessRouter from "./private-access";
+import passwordAccessRouter from "./password-access";
 import { privateLoginEnabled } from "../lib/private-access";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(passwordAccessRouter);
 router.use(privateAccessRouter);
 router.use((req,res,next)=>{
   if(!privateLoginEnabled()) {next();return;}

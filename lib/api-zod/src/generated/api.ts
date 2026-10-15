@@ -7,6 +7,103 @@
 import * as zod from 'zod';
 
 
+export const ListPasswordAccountsResponseItem = zod.object({
+  "userId": zod.string(),
+  "name": zod.string(),
+  "username": zod.string().nullable(),
+  "passwordEnabled": zod.boolean(),
+  "setupExpiresAt": zod.coerce.date().nullable()
+})
+export const ListPasswordAccountsResponse = zod.array(ListPasswordAccountsResponseItem)
+
+
+
+export const createPasswordSetupBodyNameMax = 100;
+
+export const createPasswordSetupBodyUsernameMin = 3;
+export const createPasswordSetupBodyUsernameMax = 32;
+
+
+export const createPasswordSetupBodyUsernameRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$');
+
+
+export const CreatePasswordSetupBody = zod.object({
+  "userId": zod.string().min(1).optional(),
+  "name": zod.string().min(1).max(createPasswordSetupBodyNameMax).optional(),
+  "username": zod.string().min(createPasswordSetupBodyUsernameMin).max(createPasswordSetupBodyUsernameMax).regex(createPasswordSetupBodyUsernameRegExp)
+})
+
+export const CreatePasswordSetupResponse = zod.object({
+  "userId": zod.string(),
+  "username": zod.string(),
+  "path": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+export const RevokePasswordSetupParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const RevokePasswordSetupResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+export const GetOwnPasswordAccountResponse = zod.object({
+  "userId": zod.string(),
+  "name": zod.string(),
+  "username": zod.string().nullable(),
+  "passwordEnabled": zod.boolean(),
+  "setupExpiresAt": zod.coerce.date().nullable()
+})
+
+
+export const passwordLoginBodyUsernameMax = 100;
+
+export const passwordLoginBodyPasswordMax = 128;
+
+
+
+export const PasswordLoginBody = zod.object({
+  "username": zod.string().min(1).max(passwordLoginBodyUsernameMax),
+  "password": zod.string().min(1).max(passwordLoginBodyPasswordMax)
+})
+
+export const PasswordLoginResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+export const getPasswordSetupInfoBodyTokenRegExp = new RegExp('^[A-Za-z0-9_-]{43}$');
+
+
+export const GetPasswordSetupInfoBody = zod.object({
+  "token": zod.string().regex(getPasswordSetupInfoBodyTokenRegExp)
+})
+
+export const GetPasswordSetupInfoResponse = zod.object({
+  "username": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+export const completePasswordSetupBodyTokenRegExp = new RegExp('^[A-Za-z0-9_-]{43}$');
+export const completePasswordSetupBodyPasswordMin = 12;
+export const completePasswordSetupBodyPasswordMax = 128;
+
+
+
+export const CompletePasswordSetupBody = zod.object({
+  "token": zod.string().regex(completePasswordSetupBodyTokenRegExp),
+  "password": zod.string().min(completePasswordSetupBodyPasswordMin).max(completePasswordSetupBodyPasswordMax)
+})
+
+export const CompletePasswordSetupResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
 export const ListAccessLinksResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),

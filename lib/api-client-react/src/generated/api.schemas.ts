@@ -4,6 +4,67 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export interface PasswordAccount {
+  userId: string;
+  name: string;
+  /** @nullable */
+  username: string | null;
+  passwordEnabled: boolean;
+  /** @nullable */
+  setupExpiresAt: string | null;
+}
+
+export interface PasswordSetupInput {
+  /** @minLength 1 */
+  userId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * @minLength 3
+     * @maxLength 32
+     * @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{2,31}$
+     */
+  username: string;
+}
+
+export interface PasswordSetupLink {
+  userId: string;
+  username: string;
+  path: string;
+  expiresAt: string;
+}
+
+export interface PasswordSetupInfo {
+  username: string;
+  expiresAt: string;
+}
+
+export interface PasswordLoginInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  username: string;
+  /**
+     * @minLength 1
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export interface PasswordCompletionInput {
+  /** @pattern ^[A-Za-z0-9_-]{43}$ */
+  token: string;
+  /**
+     * @minLength 12
+     * @maxLength 128
+     */
+  password: string;
+}
+
 export interface AccessLinkInput {
   /**
      * @minLength 1

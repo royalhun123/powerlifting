@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AssignmentOverview } from "@/components/assignment-overview";
-import { PrivateAccessPanel } from "@/components/private-access-panel";
+import { LegacyAccessDetails, PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
 import { CalendarPlus, Copy, Link2, MessageSquare, Send, UserPlus, X } from "lucide-react";
 import { useAssignProgram, useCreateInvitation, useRevokeInvitation, useUpdateFeedback, type GetAnalyticsDays, type Invitation, type Session } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -140,7 +140,8 @@ export default function Clients() {
     <div>
       <PageHeader kicker="Coaching" title="Clients" />
       <AssignmentOverview />
-      <PrivateAccessPanel />
+      <PasswordAccountsPanel />
+      <LegacyAccessDetails />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-5">

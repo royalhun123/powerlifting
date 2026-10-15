@@ -1,2 +1,2 @@
-- [Access and history](access-and-history.md) — invite-only email access goal; preserve unknown measurement times; composite-key migration ordering.
+- [Access and history](access-and-history.md) — coach-managed password login, Vercel/Neon independence, safe history preservation, and credential-fragment handling.
 - [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.

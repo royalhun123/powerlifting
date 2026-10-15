@@ -5,6 +5,7 @@ import { db, invitationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { privateLoginEnabled, PRIVATE_PREFIX } from "../lib/private-access";
 import { isCoach } from "../lib/coach-access";
+import { passwordCredential } from "../lib/password-access";
 
 import {
   clearSession,
@@ -75,6 +76,18 @@ export async function authMiddleware(
     await clearSession(res, sid);
     next();
     return;
+  }
+  const credential = await passwordCredential(session.user.id);
+  if(session.provider === "password") {
+    if (!credential?.passwordHash || credential.version !== session.credentialVersion) {
+      await clearSession(res, sid); next(); return;
+    }
+    req.user = session.user; next(); return;
+  }
+  // Completing password setup retires ALL older authentication methods for
+  // this identity, including old Replit sessions and reusable private links.
+  if (credential?.passwordHash) {
+    await clearSession(res, sid); next(); return;
   }
   if(session.provider==="private-link") {
     const [link]=session.privateLinkId ? await db.select().from(invitationsTable).where(eq(invitationsTable.id,session.privateLinkId)) : [];

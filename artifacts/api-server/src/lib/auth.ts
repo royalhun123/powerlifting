@@ -11,7 +11,8 @@ export const SESSION_COOKIE = 'sid';
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
 export interface SessionData {
-  provider?: "private-link";
+  provider?: "private-link" | "password";
+  credentialVersion?: number;
   privateLinkId?: string;
   user: AuthUser;
   access_token: string;
@@ -36,7 +37,7 @@ export async function createSession(data: SessionData): Promise<string> {
   await db.insert(sessionsTable).values({
     sid,
     sess: data as unknown as Record<string, unknown>,
-    expire: new Date(Date.now() + (data.provider==="private-link" ? PRIVATE_SESSION_TTL : SESSION_TTL)),
+    expire: new Date(Date.now() + (data.provider ? PRIVATE_SESSION_TTL : SESSION_TTL)),
   });
   return sid;
 }

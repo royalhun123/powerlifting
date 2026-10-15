@@ -1,5 +1,10 @@
 # Navy Powerlifting: Vercel migration
 
+For the username/password upgrade, follow **PASSWORD_LOGIN_SETUP.md** first.
+Its additive Neon migration must run before deploying the new authentication
+code. The private-link instructions below describe the initial migration and
+remain valid only for accounts that have not completed password setup.
+
 ## What is ready
 
 The root `vercel.json` builds the frontend and one bundled Express function.

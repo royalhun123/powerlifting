@@ -19,8 +19,8 @@ export function PrivateAccessPanel() {
   async function refresh() {
     await Promise.all([invalidate(),qc.invalidateQueries({queryKey:getListAccessLinksQueryKey()})]);
   }
-  return <div className="mb-5"><Panel title="Private sign-in links">
-    <p className="mb-3 text-sm text-muted-foreground">No passwords or outside accounts. Links expire in 6 months; browsers stay signed in for up to 30 days. Anyone holding a link can access that account. Share privately. Revoking a link also ends its remembered sessions.</p>
+  return <div className="mb-5"><Panel title="Legacy private sign-in links">
+    <p className="mb-3 text-sm text-muted-foreground">Legacy migration only. Use these only for accounts that have not been converted to username and password; the server rejects new reusable links for password-enabled accounts. Links expire in 6 months; browsers stay signed in for up to 30 days. Anyone holding a link can access that account. Share privately. Revoking a link also ends its remembered sessions.</p>
     <details className="mb-4 text-xs text-muted-foreground"><summary className="cursor-pointer">Vercel coach account setting</summary><p className="mt-2">Set COACH_USER_ID to <code className="select-all">{data.profile.id}</code> on the new host. This account ID is not a sign-in key.</p></details>
     <div className="flex flex-wrap items-end gap-3">
       <label className="grid gap-1 text-sm">Account

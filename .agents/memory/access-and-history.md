@@ -3,11 +3,11 @@ name: Access and history expectations
 description: Client access goal and rules for historical measurements.
 ---
 
-The user chose private sign-in links instead of external-provider or username-only login for the Vercel migration. Clients should not need a Replit account or a password.
+The user now wants coach-assigned usernames, single-use links to choose passwords, and subsequent username/password login for both coach and clients.
 
-**Why:** Auth0 was not allowed for them; they accepted private links after being informed that username-only access permits impersonation.
+**Why:** Auth0 was not allowed; after using private links for the initial Vercel migration, they explicitly approved replacing normal sign-in with username/password.
 
-**How to apply:** Treat links as bearer credentials; hash stored tokens, allow revocation of links and sessions, and keep existing user IDs when migrating history. Do not replace or move the live database without confirming the backup and transfer.
+**How to apply:** Preserve existing user IDs and training history. Keep legacy access until password setup succeeds, then retire its reusable links and prior sessions. Back up before any external production schema migration.
 
 The Vercel migration must also move data hosting off Replit.
 
@@ -32,6 +32,12 @@ Do not populate a form field with a private key taken from a sign-in URL fragmen
 **Why:** Browser automation can expose the value of even a masked password input in its accessibility output. This was observed with a subsequently revoked test-only link.
 
 **How to apply:** Strip the fragment immediately, retain it only in transient component state, and show a confirmation button rather than a populated input. Never screenshot or log a real newly issued link.
+
+Handle credential fragments on same-route hash navigation as well as initial mount.
+
+**Why:** Browser testing found that opening another setup link while already on the setup route did not remount the component, leaving the fragment visible and stale validation state.
+
+**How to apply:** Listen for hash changes, strip each incoming fragment, and revalidate each visit without rendering the token.
 
 Only the app owner is the coach and may see All programs and Clients. Everyone, including the owner, gets My programs containing only their personal assignments.
 

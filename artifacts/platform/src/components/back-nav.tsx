@@ -11,12 +11,14 @@ const TITLES: Record<string, string> = {
   "/clients": "Clients",
   "/settings": "Settings",
   "/join": "Join Team",
-  "/sign-in": "Private sign-in",
+  "/sign-in": "Sign in",
+  "/set-password": "Set your password",
 };
 
 /** Resolve an in-app parent route. Never uses history.back. */
 export function backTarget(loc: string): { href: string; label: string } | null {
   if (loc === "/" || loc === "") return null;
+  if (loc === "/set-password") return { href: "/sign-in", label: "Sign in" };
   if (/^\/programs\/[^/]+/.test(loc)) return { href: "/programs", label: "All programs" };
   return { href: "/", label: "Dashboard" };
 }
