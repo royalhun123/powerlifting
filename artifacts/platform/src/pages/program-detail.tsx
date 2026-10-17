@@ -15,6 +15,7 @@ import { errMessage, useInvalidateAll, useMutationGuard, useWorkspace } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { LIFT_LABEL, newId, PHASE_LABEL, targetLoad, todayISO } from "@/lib/pl";
 import { DownloadXlsxButton, isProgramOwner, PhaseBadge, UploaderTag } from "@/pages/programs";
+import { copyPreviousWeek } from "@/lib/copy-program-week";
 
 function toInput(p: Program): ProgramInput {
   const { source: _s, reviewCount: _r, uploaderId: _u, uploaderName: _n, ...rest } = p;
@@ -84,6 +85,7 @@ export default function ProgramDetail() {
     update({ workouts: draft.workouts.map((w) => (w.id === wid ? { ...w, exercises: w.exercises.map((e) => (e.id === eid ? { ...e, ...patch } : e)) } : w)) });
 
   const weekWorkouts = draft.workouts.filter((w) => w.week === week).sort((a, b) => a.day - b.day);
+  const previousWeekCount = draft.workouts.filter((w) => w.week === week - 1).length;
   const reviewCount = draft.workouts.reduce((n, w) => n + w.exercises.filter((e) => e.review).length, 0);
 
   const addWorkout = () => {
@@ -354,6 +356,31 @@ export default function ProgramDetail() {
       </div>
 
       <div className="space-y-4">
+        {week > 1 && weekWorkouts.length === 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-card-border bg-card p-4">
+            <div>
+              <p className="font-medium">Start with week {week - 1}</p>
+              <p className="text-sm text-muted-foreground">
+                {previousWeekCount
+                  ? "Copy all days, exercises, sets, reps, weights, and notes, then edit this week independently."
+                  : `Add workouts to week ${week - 1} first, or build this week from scratch.`}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              disabled={!previousWeekCount}
+              onClick={() => {
+                const workouts = copyPreviousWeek(draft.workouts, week);
+                if (workouts === draft.workouts) return;
+                update({ workouts });
+                toast({ title: `Week ${week - 1} copied to week ${week}`, description: "Adjust this week's workouts, then save your program." });
+              }}
+              data-testid="button-copy-previous-week"
+            >
+              <Copy className="mr-2 h-4 w-4" /> Copy week {week - 1}
+            </Button>
+          </div>
+        )}
         {weekWorkouts.length === 0 && <EmptyState title={`Week ${week} is empty`} body="Add a training day to this week." />}
         {weekWorkouts.map((w) => (
           <div key={w.id} className="rise rounded-md border border-card-border bg-card" data-testid={`card-workout-${w.id}`}>
