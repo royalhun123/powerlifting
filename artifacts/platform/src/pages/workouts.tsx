@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { queueSession, readDevice } from "@workspace/replit-auth-web";
+import { queueSession, readDevice, recoverWorkoutTyping, discardWorkoutRecovery, draftSyncIssue, subscribeOffline, offlineRevision, type RecoveryEntry } from "@workspace/replit-auth-web";
 import { SessionSummary } from "@/components/session-summary";
 import { ExerciseContext } from "@/components/exercise-context";
 import { WorkoutDiscussion } from "@/components/workout-discussion";
@@ -29,6 +29,9 @@ type LogState = {
   unit: SessionInputUnit;
   notes: string;
   sets: LoggedSet[];
+  enteredSetIndexes?: number[];
+  editorId?: string;
+  originalStatus?: "draft" | "completed";
 };
 
 function numOr0(v: string): number {
@@ -40,6 +43,7 @@ function resumeSession(session: Session, assignment: Assignment, workout: Workou
   return {
     id: session.id,
     expected: session.updatedAt,
+    originalStatus: session.status,
     assignment,
     workout,
     date: session.date,
@@ -59,17 +63,31 @@ function openWorkout(assignment: Assignment, workout: Workout, sessions: Session
     : { id: crypto.randomUUID(), expected: "new", assignment, workout, date: todayISO(), unit: profile.unit, notes: "", sets: buildSets(workout.exercises, profile) };
 }
 
-function Logger({ state, setState, profile, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; onDone: () => void }) {
+function Logger({ state, setState: commitState, profile, workspaceId, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; workspaceId: string; onDone: () => void }) {
+  const [recoveryStatus, setRecoveryStatus] = useState("");
+  const recoveryWrite = useRef(0);
+  const editorId = useRef(crypto.randomUUID());
   const save = useMutation({
     networkMode: "always",
-    mutationFn: ({ data }: { data: SessionInput }) => queueSession(data, state.expected ?? "new"),
+    mutationFn: ({ data }: { data: SessionInput }) => queueSession(data, state.expected ?? "new", editorId.current),
   });
   const invalidate = useInvalidateAll();
   const guard = useMutationGuard(true);
   const { toast } = useToast();
   const { workout } = state;
   // Track numeric edits even when the user enters a value equal to a prescription.
-  const enteredSets = useRef(new WeakSet<LoggedSet>());
+  const enteredSets = useRef(new WeakSet<LoggedSet>((state.enteredSetIndexes ?? []).map(i => state.sets[i]).filter(Boolean)));
+  const setState = (next: LogState) => {
+    if (save.isPending) return;
+    next = { ...next, editorId: editorId.current, enteredSetIndexes: next.sets.flatMap((s, i) => enteredSets.current.has(s) ? [i] : []) };
+    commitState(next);
+    const write = ++recoveryWrite.current;
+    setRecoveryStatus("Protecting draft on this device…");
+    // Start on every edit, rather than waiting for unload (unreliable on phones).
+    void recoverWorkoutTyping(profile.id, workspaceId, { ...next, id: next.id! })
+      .then(() => { if (write === recoveryWrite.current) setRecoveryStatus(`Draft saved on this device. ${draftSyncIssue({ ...next, id: next.id! }) || "Syncs automatically when connected; see sync status above."}`); })
+      .catch(e => { if (write === recoveryWrite.current) setRecoveryStatus(`Automatic save failed: ${errMessage(e)} Keep this workout open and try editing again.`); });
+  };
 
   const setAt = (idx: number, patch: Partial<LoggedSet>) => setState({ ...state, sets: state.sets.map((s, i) => {
     if (i !== idx) return s;
@@ -107,10 +125,12 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
       },
       {
         onSuccess: async (saved) => {
-          await invalidate();
+          recoveryWrite.current++;
+          setRecoveryStatus("");
           toast({ title: status === "completed" ? "Session saved on this device" : "Draft saved on this device", description: `${saved.name} · Queued for sync. See sync status above.` });
           if (status === "completed") onDone();
-          else setState({ ...state, id: saved.id, expected: saved.updatedAt });
+          else commitState({ ...state, id: saved.id, expected: saved.updatedAt });
+          await invalidate();
         },
         onError: (e) => toast({ title: "Save failed", description: errMessage(e), variant: "destructive" }),
       },
@@ -122,6 +142,8 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
       <button onClick={onDone} className="mb-4 inline-flex items-center gap-1 font-num text-xs text-muted-foreground hover:text-foreground" data-testid="button-back-to-list">
         <ArrowLeft className="h-3.5 w-3.5" /> All workouts
       </button>
+      <p role="status" className="mb-4 text-sm text-muted-foreground" data-testid="text-recovery-status">{recoveryStatus || "Drafts save automatically on this device and sync when connected. Use Complete session when finished."}</p>
+      <fieldset disabled={save.isPending}>
       <div className="rise mb-5">
         <div className="font-num text-[11px] uppercase tracking-[0.22em] text-primary">
           {state.assignment.program.name} · Week {workout.week} · Day {workout.day}
@@ -256,11 +278,11 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
         {state.id && state.expected !== "new" && navigator.onLine && <WorkoutDiscussion session={{ id: state.id, sets: state.sets }} />}
       </div>
 
+      </fieldset>
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 px-4 py-3 backdrop-blur md:left-60">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
           <span className="hidden font-num text-xs text-muted-foreground sm:block">{done === 0 ? "No sets marked complete yet" : `${done} sets complete`}</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="outline" onClick={() => submit("draft")} disabled={save.isPending} data-testid="button-save-draft">Save draft</Button>
             <Button onClick={() => submit("completed")} disabled={save.isPending} data-testid="button-complete-session">
               <CheckCircle2 className="mr-2 h-4 w-4" /> {save.isPending ? "Saving…" : "Complete session"}
             </Button>
@@ -285,18 +307,50 @@ export default function Workouts() {
   const [toDelete, setToDelete] = useState<Session | null>(null);
   const [consumedQuery, setConsumedQuery] = useState("");
   const [commentsFor, setCommentsFor] = useState("");
+  const [recoveries, setRecoveries] = useState<RecoveryEntry[]>([]);
+  const [recoveryScope, setRecoveryScope] = useState("");
+  const scope = data ? JSON.stringify([data.profile.id, data.workspaceId ?? "team"]) : "";
+  useEffect(() => {
+    setLog(null);
+    setViewedSession(null);
+    setToDelete(null);
+    setConsumedQuery("");
+  }, [scope]);
+  const revision = useSyncExternalStore(subscribeOffline, offlineRevision);
+  useEffect(() => {
+    let cancelled = false;
+    if (!data) return;
+    void readDevice().then(device => {
+      if (!cancelled) {
+        setRecoveries(device.user?.id === data.profile.id
+          ? (device.recoveries ?? []).filter(entry => entry.workspaceId === (data.workspaceId ?? "team"))
+          : []);
+        setRecoveryScope(scope);
+      }
+    }).catch(() => { if (!cancelled) { setRecoveries([]); setRecoveryScope(scope); } });
+    return () => { cancelled = true; };
+  }, [revision, data?.profile.id, data?.workspaceId]);
 
   const mine = useMemo(() => {
     if (!data) return { assignments: [] as Assignment[], sessions: [] as Session[] };
     const me = data.profile.id;
+    const sessions = new Map(data.sessions.filter(s => s.athleteId === me).map(s => [s.id, s]));
+    for (const { state, updatedAt } of recoveries) {
+      sessions.set(state.id, {
+        ...state, assignmentId: state.assignment.id, workoutId: state.workout.id,
+        name: state.workout.name, athleteId: me, athleteName: data.profile.name,
+        status: state.originalStatus ?? "draft", updatedAt: new Date(updatedAt).toISOString(),
+        coachFeedback: "", volume: state.sets.filter(s => s.completed).reduce((n, s) => n + s.weight * s.reps, 0),
+      });
+    }
     return {
       assignments: data.assignments.filter((a) => a.athleteId === me && !a.archived).sort((a, b) => b.startDate.localeCompare(a.startDate)),
-      sessions: data.sessions.filter((s) => s.athleteId === me).sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt)),
+      sessions: [...sessions.values()].sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt)),
     };
-  }, [data]);
+  }, [data, recoveries]);
 
   // Deep link: /workouts?assignment=..&workout=..
-  if (data && search && search !== consumedQuery && !log) {
+  if (data && recoveryScope === scope && search && search !== consumedQuery && !log) {
     const q = new URLSearchParams(search);
     const a = mine.assignments.find((x) => x.id === q.get("assignment"));
     const w = a?.program.workouts.find((x) => x.id === q.get("workout"));
@@ -305,19 +359,21 @@ export default function Workouts() {
     if (a && w) {
       const opened = openWorkout(a, w, mine.sessions, data.profile);
       if ("status" in opened) setViewedSession(opened);
-      else setLog(opened);
+      else setLog(recoveries.find(r => r.state.assignment.id === a.id && r.state.workout.id === w.id)?.state ?? opened);
     }
   }
 
-  if (isLoading) return <LoadingPage />;
+  if (isLoading || (data && recoveryScope !== scope)) return <LoadingPage />;
   if (isError || !data) return <ErrorState message={errMessage(error)} onRetry={() => refetch()} />;
 
   if (log) {
     return (
       <Logger
+        key={`${scope}:${log.id}`}
         state={log}
         setState={setLog}
         profile={data.profile}
+        workspaceId={data.workspaceId ?? "team"}
         onDone={() => {
           setLog(null);
           setLocation("/workouts");
@@ -330,19 +386,29 @@ export default function Workouts() {
   const start = (a: Assignment, w: Workout) => {
     const opened = openWorkout(a, w, mine.sessions, data.profile);
     if ("status" in opened) setViewedSession(opened);
-    else setLog(opened);
+    else setLog(recoveries.find(r => r.state.assignment.id === a.id && r.state.workout.id === w.id)?.state ?? opened);
   };
   const edit = (s: Session) => {
+    const recovery = recoveries.find(r => r.state.id === s.id);
+    if (recovery) { setLog(recovery.state); return; }
     const a = data.assignments.find((x) => x.id === s.assignmentId);
     const w = a?.program.workouts.find((x) => x.id === s.workoutId);
     if (!a || !w) {
       toast({ title: "Cannot edit", description: "The assignment for this session no longer exists.", variant: "destructive" });
       return;
     }
-    setLog(resumeSession(s, a, w));
+    setLog(recoveries.find(r => r.state.id === s.id)?.state ?? resumeSession(s, a, w));
   };
   const confirmDelete = async () => {
     if (!toDelete || !guard()) return;
+    if (recoveries.some(r => r.state.id === toDelete.id)) {
+      try {
+        await discardWorkoutRecovery(data.profile.id, data.workspaceId ?? "team", toDelete.id);
+        setToDelete(null);
+        toast({ title: "Device-only draft discarded", description: "Queued saves and server workouts were not changed." });
+      } catch (e) { toast({ title: "Could not discard draft", description: errMessage(e), variant: "destructive" }); }
+      return;
+    }
     if (!navigator.onLine) {
       toast({ title: "Connect to delete", description: "Offline session saves are supported; deletion requires an online connection.", variant: "destructive" });
       return;
@@ -408,7 +474,7 @@ export default function Workouts() {
                           <div className="min-w-0">
                             <div className="truncate font-medium group-hover:text-primary">{w.name}</div>
                             <div className="truncate font-num text-[11px] text-muted-foreground">{w.exercises.map((e) => e.name).slice(0, 3).join(" · ")}</div>
-                            {draftIds.has(w.id) && <span className="font-num text-[10px] uppercase tracking-widest text-primary">draft saved</span>}
+                            {draftIds.has(w.id) && <span className="font-num text-[10px] uppercase tracking-widest text-primary">{recoveries.some(r => r.state.assignment.id === active.id && r.state.workout.id === w.id) ? "draft · awaiting automatic sync" : "draft saved"}</span>}
                           </div>
                         </button>
                       );
@@ -433,7 +499,7 @@ export default function Workouts() {
                       <button className="text-left font-medium hover:underline" onClick={()=>setViewedSession(s)}>{s.name}</button>
                       <div className="font-num text-[11px] text-muted-foreground">
                         {s.sets.filter((x) => x.completed).length}/{s.sets.length} sets · {fmtNum(s.volume)} {s.unit} ·{" "}
-                        <span className={s.status === "completed" ? "text-foreground" : "text-primary"}>{s.status}</span>
+                        <span className={s.status === "completed" ? "text-foreground" : "text-primary"}>{recoveries.some(r => r.state.id === s.id) ? "draft · awaiting automatic sync" : s.status}</span>
                       </div>
                     </div>
                     <div className="flex">
@@ -457,7 +523,7 @@ export default function Workouts() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this session?</AlertDialogTitle>
-            <AlertDialogDescription>{toDelete?.name} on {toDelete ? fmtDate(toDelete.date) : ""}. Sets and group leader feedback are removed permanently and analytics will update.</AlertDialogDescription>
+            <AlertDialogDescription>{toDelete?.name} on {toDelete ? fmtDate(toDelete.date) : ""}. {recoveries.some(r => r.state.id === toDelete?.id) ? "Only the latest device-only draft typing will be discarded. Queued saves and server history will not change." : "Sets and group leader feedback are removed permanently and analytics will update."}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

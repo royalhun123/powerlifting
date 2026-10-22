@@ -76,9 +76,10 @@ export function useAuth(): AuthState {
   const logout = useCallback(async () => {
     const device = await readDevice().catch(() => null);
     const pending = device?.entries.filter(entry => entry.status !== "synced").length ?? 0;
-    if (!window.confirm(pending
-      ? `${pending} unsynced workout save(s) for this account will be permanently removed. All accounts' private device data will be erased. Cancel and sync first to keep unsynced work. Continue?`
-      : "Sign out and erase all accounts' private training data and any unsynced saves on this device?")) return;
+    const recoveries = device?.recoveries?.length ?? 0;
+    if (!window.confirm(pending || recoveries
+      ? `${pending} queued workout save(s) and ${recoveries} device-only draft(s) for this account will be permanently removed. All accounts' private device data will be erased. Cancel and let automatic sync finish first to keep your work. Continue?`
+      : "Sign out and erase all accounts' private training data, unsaved typing and any unsynced saves on this device?")) return;
     localStorage.setItem("navy-pending-logout", "1");
     try { await forgetDevice(); }
     catch (error) { localStorage.removeItem("navy-pending-logout"); window.alert(error instanceof Error ? error.message : "Unable to clear device storage."); return; }

@@ -1,4 +1,27 @@
-import type { AuthUser, Session, SessionInput, Workspace } from "@workspace/api-client-react";
+import type { Assignment, AuthUser, LoggedSet, Session, SessionInput, SessionInputUnit, Workout, Workspace } from "@workspace/api-client-react";
+import { recoverySessionInput } from "./workout-draft";
+
+export type WorkoutRecovery = {
+  id: string;
+  expected?: string;
+  assignment: Assignment;
+  workout: Workout;
+  date: string;
+  unit: SessionInputUnit;
+  notes: string;
+  sets: LoggedSet[];
+  enteredSetIndexes?: number[];
+  editorId?: string;
+  originalStatus?: "draft" | "completed";
+};
+export type RecoveryEntry = { workspaceId: string; state: WorkoutRecovery; updatedAt: number };
+export function draftSyncIssue(state: WorkoutRecovery): string {
+  const date = new Date(`${state.date}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(state.date) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== state.date) return "Enter a valid date to sync this draft.";
+  if (state.sets.some(set => set.reps > 0 && set.lift !== "accessory" && set.weight <= 0)) return "Enter a weight for competition-lift sets with reps to sync this draft.";
+  if (state.originalStatus === "completed" && !state.sets.some(set => set.reps > 0 && (set.weight > 0 || set.lift === "accessory"))) return "Keep at least one performed set to sync edits to a completed workout.";
+  return "";
+}
 
 export type OutboxEntry = {
   mutationId: string;
@@ -11,7 +34,9 @@ export type OutboxEntry = {
   error?: string;
   saved: Session;
 };
-type DeviceData = { user?: AuthUser; workspace?: Workspace; entries: OutboxEntry[] };
+type DeviceData = { user?: AuthUser; workspace?: Workspace; entries: OutboxEntry[]; recoveries?: RecoveryEntry[]; draftHeads?: Record<string, string> };
+const draftHeadKey = (workspaceId: string, sessionId: string, editorId: string) => JSON.stringify([workspaceId, sessionId, editorId]);
+let draftTimer: ReturnType<typeof setTimeout> | undefined;
 const ACTIVE_KEY = "navy-offline-user-v1";
 let activeId: string | null = null;
 let revision = 0;
@@ -94,6 +119,25 @@ export async function forgetDevice() {
 export async function readDevice() {
   return activeId ? update(activeId, data => data, false) : { entries: [] } as DeviceData;
 }
+/** Persist every edit immediately; queue a draft after a short typing pause. */
+export async function recoverWorkoutTyping(userId: string, workspaceId: string, state: WorkoutRecovery) {
+  await update(userId, data => {
+    if (!data.workspace || (data.workspace.workspaceId ?? "team") !== workspaceId ||
+      state.assignment.athleteId !== userId) throw new Error("Workspace changed. Reload before saving recovery data.");
+    const head = state.editorId ? data.draftHeads?.[draftHeadKey(workspaceId, state.id, state.editorId)] : undefined;
+    data.recoveries = [
+      ...(data.recoveries ?? []).filter(entry => entry.workspaceId !== workspaceId || entry.state.id !== state.id),
+      { workspaceId, state: { ...state, expected: head ?? state.expected }, updatedAt: Date.now() },
+    ];
+  });
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => { void syncSessions(); }, 800);
+}
+export async function discardWorkoutRecovery(userId: string, workspaceId: string, sessionId: string) {
+  return update(userId, data => {
+    data.recoveries = (data.recoveries ?? []).filter(entry => entry.workspaceId !== workspaceId || entry.state.id !== sessionId);
+  });
+}
 export function mergeWorkspace(data: DeviceData): Workspace | undefined {
   if (!data.workspace) return undefined;
   const sessions = new Map(data.workspace.sessions.map(session => [session.id, session]));
@@ -121,13 +165,12 @@ export async function cacheWorkspace(workspace: Workspace, requestedAt = Date.no
   });
 }
 export async function cachedWorkspace() { return mergeWorkspace(await readDevice()); }
-export async function queueSession(input: SessionInput, expected: string): Promise<Session> {
-  const id = activeId;
-  if (!id) throw new Error("Sign in online before saving a workout on this device.");
+function enqueueSession(data: DeviceData, id: string, input: SessionInput, expected: string, editorId?: string): Session {
   const sessionId = input.id ?? crypto.randomUUID();
   const sessionInput = { ...input, id: sessionId };
-  const saved = await update(id, data => {
     if (!data.workspace) throw new Error("Load your workspace online once before using offline workouts.");
+    const headKey = editorId ? draftHeadKey(data.workspace.workspaceId ?? "team", sessionId, editorId) : undefined;
+    if (headKey) expected = data.draftHeads?.[headKey] ?? expected;
     const prior = data.entries.filter(entry => entry.input.id === sessionId && entry.status !== "synced");
     if (prior.some(entry => entry.status === "error")) throw new Error("Resolve this session's sync error before saving another revision. Your current inputs remain open.");
     const previous = [...prior].reverse()[0]?.saved ?? data.workspace.sessions.find(session => session.id === sessionId);
@@ -137,12 +180,21 @@ export async function queueSession(input: SessionInput, expected: string): Promi
       volume: input.sets.filter(set => set.completed).reduce((total, set) => total + set.weight * set.reps, 0),
       updatedAt: new Date(Math.max(Date.now(), previous ? Date.parse(previous.updatedAt) + 1 : 0)).toISOString(),
     };
-    // Every explicit save is an immutable durable command. A later command waits
+    // Every queued save is an immutable durable command. A later command waits
     // for the preceding receipt and then uses its exact server revision.
     const receipt = data.entries.find(entry => entry.input.id === sessionId && entry.localRevision === expected && entry.status === "synced");
     data.entries.push({ mutationId: crypto.randomUUID(), localRevision: saved.updatedAt, input: sessionInput, expected: receipt?.serverRevision ?? receipt?.saved.updatedAt ?? expected, status: "pending", saved });
+    // Atomic with the durable explicit save: a failed save keeps recovery intact.
+    data.recoveries = (data.recoveries ?? []).filter(entry =>
+      entry.workspaceId !== (data.workspace!.workspaceId ?? "team") || entry.state.id !== sessionId ||
+      (editorId !== undefined && entry.state.editorId !== editorId));
+    if (headKey) (data.draftHeads ??= {})[headKey] = saved.updatedAt;
     return saved;
-  });
+}
+export async function queueSession(input: SessionInput, expected: string, editorId?: string): Promise<Session> {
+  const id = activeId;
+  if (!id) throw new Error("Sign in online before saving a workout on this device.");
+  const saved = await update(id, data => enqueueSession(data, id, input, expected, editorId));
   void navigator.storage?.persist?.().catch(() => false);
   void syncSessions();
   return saved;
@@ -152,8 +204,25 @@ let syncing: Promise<void> | undefined;
 export function syncSessions(): Promise<void> {
   if (syncing) return syncing;
   const run = async () => {
-    if (!activeId || !navigator.onLine) return;
+    if (!activeId) return;
     const id = activeId;
+    // Also runs after reopening: a close during the debounce never strands typing.
+    const snapshot = await readDevice();
+    if (snapshot.recoveries?.some(entry => entry.workspaceId === (snapshot.workspace?.workspaceId ?? "team") &&
+      !snapshot.entries.some(command => command.input.id === entry.state.id && command.status === "error"))) {
+      await update(id, data => {
+        for (const entry of [...(data.recoveries ?? [])]) {
+          if (!data.workspace || entry.workspaceId !== (data.workspace.workspaceId ?? "team") ||
+            data.entries.some(command => command.input.id === entry.state.id && command.status === "error")) continue;
+          const s = entry.state;
+          // Partial typing is safe locally but must not create a permanently
+          // rejected immutable outbox command while the user fills other fields.
+          if (draftSyncIssue(s)) continue;
+          enqueueSession(data, id, recoverySessionInput(s), s.expected ?? "new", s.editorId);
+        }
+      });
+    }
+    if (!navigator.onLine) return;
     let auth: Response;
     try { auth = await fetch("/api/auth/user", { credentials: "include", cache: "no-store" }); }
     catch { return; }
@@ -237,5 +306,9 @@ export async function discardLocalSession(sessionId: string) {
     if (workspace.demo || workspace.profile.id !== id || workspace.workspaceId !== data.workspace?.workspaceId) throw new Error("Sign in to the original account and workspace before discarding.");
     data.workspace = workspace;
     data.entries = data.entries.filter(entry => entry.input.id !== sessionId);
+    data.recoveries = (data.recoveries ?? []).filter(entry => entry.state.id !== sessionId);
+    for (const key of Object.keys(data.draftHeads ?? {})) {
+      if (JSON.parse(key)[1] === sessionId) delete data.draftHeads![key];
+    }
   });
 }

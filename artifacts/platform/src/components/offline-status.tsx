@@ -9,6 +9,7 @@ export function OfflineStatus() {
   const { user } = useAuth();
   const revision = useSyncExternalStore(subscribeOffline, offlineRevision);
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
+  const [localDrafts, setLocalDrafts] = useState(0);
   const [prepared, setPrepared] = useState(false);
   const [shellReady, setShellReady] = useState(false);
   const [shellError, setShellError] = useState("");
@@ -23,6 +24,7 @@ export function OfflineStatus() {
     void readDevice().then(data => {
       if (cancelled) return;
       setEntries(data.entries);
+      setLocalDrafts(data.recoveries?.length ?? 0);
       setPrepared(!!data.workspace);
     }).catch(error => { if (!cancelled) setActionError(String(error)); });
     return () => { cancelled = true; };
@@ -80,6 +82,7 @@ export function OfflineStatus() {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1" role="status">
         <strong>{online ? "Online" : "Offline"}</strong>
         {user && <span>{failed.length ? `${failed.length} sync error(s) · local copies retained` : pending.length ? `${pending.length} save(s) pending sync` : entries.length ? "Workout saves synced" : "No pending workout saves"}</span>}
+        {user && localDrafts > 0 && <span>{localDrafts} draft(s) on this device awaiting automatic sync — incomplete fields or conflicts may need attention</span>}
         {user && <span className="text-muted-foreground">{prepared && shellReady ? "Ready to reopen offline on this device" : import.meta.env.DEV ? "Offline shell available in production builds only" : "Preparing offline access…"}</span>}
         {user && online && <button className="underline" disabled={working} onClick={() => void action(retrySync)} data-testid="button-retry-sync">Retry sync</button>}
         {install && <button className="font-semibold underline" onClick={() => void action(async () => { await install.prompt(); await install.userChoice; setInstall(null); })}>Install app</button>}
@@ -87,13 +90,13 @@ export function OfflineStatus() {
           <summary className="cursor-pointer underline">Install & offline help</summary>
           <div className="absolute left-0 top-6 z-50 w-72 rounded border bg-card p-4 shadow-lg">
             <p>Install from your browser menu: Chrome/Edge → Install app; iPhone/iPad Safari → Share → Add to Home Screen → Open as Web App.</p>
-            <p className="mt-2">Sign in online and open your workspace first. Wait for “Ready to reopen offline”. Use Save draft or Complete session to persist your inputs before closing. Reconnect and keep the app open to sync.</p>
+            <p className="mt-2">Sign in online and open your workspace first. Wait for “Ready to reopen offline”. Drafts save automatically as you type; check the draft status before closing. Use Complete session when finished. Reconnect and keep the app open to sync automatically.</p>
             <p className="mt-2">Only workout logging is writable offline. Programs, chat, account changes, and deletion need a connection. Analytics update after server sync. Private snapshots remain on this device until sign-out; use a trusted device. Clearing browser data or uninstalling may erase unsynced work.</p>
           </div>
         </details>
       </div>
       {status.authRequired && <p role="alert" className="mt-1 text-amber-700 dark:text-amber-400">Sign-in expired or account changed. Local workouts are retained. <Link href="/sign-in" className="font-semibold underline">Sign in again to the same account</Link> to sync.</p>}
-      {updateReady && <p className="mt-1">An app update is ready. Save your workout, then close all app tabs/windows and reopen online to apply it.</p>}
+      {updateReady && <p className="mt-1">An app update is ready. Wait for your draft to be saved on this device, then close all app tabs/windows and reopen online to apply it.</p>}
       {(actionError || status.storageError || shellError) && <p role="alert" className="mt-1 text-destructive">{actionError || status.storageError || shellError}</p>}
       {user && entries.length > 0 && <details className="mt-1">
         <summary className="cursor-pointer underline">Workout sync details</summary>

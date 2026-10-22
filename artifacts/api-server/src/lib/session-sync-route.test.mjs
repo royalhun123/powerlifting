@@ -5,6 +5,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
+import { recoverySessionInput } from "../../../../lib/replit-auth-web/src/workout-draft.ts";
 
 // Exercise the REAL Express router and generated validators with a disposable,
 // transaction-serialized, memory-only DB adapter. No server is started, no
@@ -110,6 +111,32 @@ try {
     assert.equal((await request(data, headers(randomUUID()), null)).status, 401);
     assert.equal((await request(data, headers(randomUUID()), "other-user")).status, 403);
     assert.equal((await request(data, { ...headers(randomUUID()), "x-workspace-id": "wrong-workspace" })).status, 409);
+  });
+  await test("automatic edits preserve completed history and analytics volume", async () => {
+    const data = { ...input(), status: "completed" };
+    const first = await request(data, headers(randomUUID()));
+    assert.equal(first.status, 200);
+    const automaticEdit = recoverySessionInput({
+      ...first.body,
+      assignment: { id: data.assignmentId },
+      workout: { id: data.workoutId, name: data.name },
+      originalStatus: first.body.status,
+      expected: first.body.updatedAt,
+      notes: "automatic correction after completion",
+      sets: first.body.sets.map(set => ({ ...set, reps: 6 })),
+    });
+    assert.equal(automaticEdit.status, "completed");
+    const saved = await request(automaticEdit, headers(randomUUID(), first.body.updatedAt));
+    assert.equal(saved.status, 200);
+    const history = fixture.rows.get(data.id).data;
+    assert.equal(history.status, "completed");
+    assert.equal(history.notes, "automatic correction after completion");
+    assert.equal(history.volume, 600);
+    assert.ok([...fixture.rows.values()].some(row => row.id === data.id && row.data.status === "completed"));
+    assert.equal(recoverySessionInput({
+      ...first.body, assignment: { id: data.assignmentId },
+      workout: { id: data.workoutId, name: data.name }, originalStatus: "draft",
+    }).status, "draft");
   });
   await test("lost acknowledgement can be recovered after an assignment is archived", async () => {
     const data = input(), mutation = randomUUID();
