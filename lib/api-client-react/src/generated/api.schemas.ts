@@ -85,6 +85,26 @@ export const ProgramInputPhase = {
   peak: 'peak',
 } as const;
 
+export interface Circuit {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  rounds: number;
+  /**
+     * @minimum 0
+     * @maximum 3600
+     */
+  restSeconds: number;
+}
+
 /**
  * Program source weights and per-set targets are always pounds.
  */
@@ -103,6 +123,25 @@ export const ExerciseLift = {
   bench: 'bench',
   deadlift: 'deadlift',
   accessory: 'accessory',
+} as const;
+
+export type ExerciseMuscleGroup = typeof ExerciseMuscleGroup[keyof typeof ExerciseMuscleGroup];
+
+
+export const ExerciseMuscleGroup = {
+  chest: 'chest',
+  lats: 'lats',
+  upper_back: 'upper back',
+  shoulders: 'shoulders',
+  rear_delts: 'rear delts',
+  biceps: 'biceps',
+  triceps: 'triceps',
+  quads: 'quads',
+  abductors: 'abductors',
+  adductors: 'adductors',
+  hamstrings: 'hamstrings',
+  calves: 'calves',
+  custom: 'custom',
 } as const;
 
 export interface Exercise {
@@ -133,6 +172,10 @@ export interface Exercise {
   notes: string;
   review: boolean;
   lift: ExerciseLift;
+  muscleGroup?: ExerciseMuscleGroup;
+  /** @maxLength 100 */
+  customMuscleGroup?: string;
+  circuitId?: string;
 }
 
 export interface Workout {
@@ -149,6 +192,8 @@ export interface Workout {
      * @maximum 7
      */
   day: number;
+  /** @maxItems 50 */
+  circuits?: Circuit[];
   /** @maxItems 50 */
   exercises: Exercise[];
 }
@@ -567,6 +612,11 @@ export interface LoggedSet {
      * @maxLength 200
      */
   exerciseName: string;
+  /**
+     * Server-derived circuit and muscle-group prescription for historical review.
+     * @maxLength 500
+     */
+  context?: string;
   lift: LoggedSetLift;
   /**
      * @minimum 1

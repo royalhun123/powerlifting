@@ -17,7 +17,8 @@ export function normalizeProgram(program: Program): Program {
     ...workout,
     exercises: workout.exercises.map(ex => {
       const reps=normalizeRange(ex.reps);
-      const sets=normalizeRange(ex.sets);
+      const circuit = workout.circuits?.find(c => c.id === ex.circuitId);
+      const sets=circuit ? String(circuit.rounds) : normalizeRange(ex.sets);
       const notes=ex.notes
         .replace(/Import review: (?:sets|reps) source Excel date serial [^\n]*?(?:Confirm against original\.)/g,"")
         .replace(`Source weight (lbs): ${ex.weight}.`, "")

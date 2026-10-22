@@ -19,20 +19,24 @@ export async function exportProgramXlsx(program: Program): Promise<void> {
     ["Week", 8], ["Day", 8], ["Workout", 28], ["Exercise", 30], ["Sets", 12],
     ["Reps / range", 16], ["Effort", 22], ["Weight prescription (lb)", 26],
     ["Per-set weights (lb)", 36], ["Lift", 14], ["Programming notes", 60],
+    ["Muscle group", 22], ["Circuit", 24], ["Rounds", 10], ["Rest between rounds (seconds)", 26],
   ].map(([header, width]) => ({ header: String(header), width: Number(width) }));
   for (const workout of [...program.workouts].sort((a,b)=>a.week-b.week || a.day-b.day)) {
     if (!workout.exercises.length) sheet.addRow([workout.week, workout.day, workout.name]);
     for (const exercise of workout.exercises) {
+      const circuit = workout.circuits?.find(c => c.id === exercise.circuitId);
       sheet.addRow([workout.week, workout.day, workout.name, exercise.name, exercise.sets,
         exercise.reps, exercise.effort, exercise.weight,
         exercise.setWeights?.map((weight,i)=>`Set ${i+1}: ${weight == null ? "No override" : weight}`).join("; ") || "",
-        exercise.lift, exercise.notes]);
+        exercise.lift, exercise.notes,
+        exercise.lift === "accessory" ? (exercise.muscleGroup === "custom" ? exercise.customMuscleGroup || "Custom" : exercise.muscleGroup || "") : "",
+        circuit?.name || "", circuit?.rounds ?? "", circuit?.restSeconds ?? ""]);
     }
   }
   // Explicit strings prevent dates/ranges and leading '=' text becoming formulas.
   sheet.getColumn(5).numFmt = "@";
   sheet.getColumn(6).numFmt = "@";
-  sheet.autoFilter = { from: "A1", to: "K1" };
+  sheet.autoFilter = { from: "A1", to: "O1" };
   for (const ws of [summary, sheet]) {
     ws.eachRow(row=>row.eachCell(cell=>{cell.alignment={vertical:"top",wrapText:true};}));
     ws.getRow(1).eachCell(cell=>{

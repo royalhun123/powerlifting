@@ -68,7 +68,7 @@ export function SessionCard({ s }: { s: Session }) {
                 <tbody className="divide-y">
                   {groups.map((g) => g.sets.map((st, i) => (
                     <tr key={`${g.name}-${st.setNumber}-${i}`} className={cn("align-top", !st.completed && "text-muted-foreground")}>
-                      <td className="px-3 py-1.5">{i === 0 && <div className="space-y-0.5"><div className="font-medium text-foreground">{g.name}</div><LiftTag lift={g.lift} /></div>}</td>
+                      <td className="px-3 py-1.5">{i === 0 && <div className="space-y-0.5"><div className="font-medium text-foreground">{g.name}</div><LiftTag lift={g.lift} />{st.context && <p className="text-xs text-primary">{st.context}</p>}</div>}</td>
                       <td className="px-2 py-1.5 font-num">{st.setNumber}</td>
                       <td className="px-2 py-1.5 font-num">{fmtNum(st.weight, 1)}</td>
                       <td className="px-2 py-1.5 font-num">{st.reps}</td>

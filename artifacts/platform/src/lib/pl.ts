@@ -79,7 +79,7 @@ export function targetLoad(ex: Exercise, profile: Profile | undefined): number |
 export function buildSets(exercises: Exercise[], profile: Profile | undefined): LoggedSet[] {
   const out: LoggedSet[] = [];
   for (const ex of exercises) {
-    const n = Math.min(firstInt(ex.sets, 1), 20);
+    const n = Math.min(firstInt(ex.sets, 1), ex.circuitId ? 100 : 20);
     // A prescription is not an actual result, especially when it is a range.
     const reps = 0;
     for (let i = 1; i <= n; i++) {

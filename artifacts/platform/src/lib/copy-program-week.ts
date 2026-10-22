@@ -10,11 +10,16 @@ export function copyPreviousWeek(workouts: Workout[], week: number): Workout[] {
     const copy = structuredClone(workout);
     copy.id = newId("wo");
     copy.week = week;
+    const circuitIds = new Map((copy.circuits || []).map(c => [c.id, newId("circuit")]));
+    copy.circuits = copy.circuits?.map(c => ({ ...c, id: circuitIds.get(c.id)! }));
     // Rename default titles, but retain the lifter's custom workout names.
     if (copy.name === `Week ${week - 1} Day ${copy.day}`) {
       copy.name = `Week ${week} Day ${copy.day}`;
     }
-    copy.exercises = copy.exercises.map((exercise) => ({ ...exercise, id: newId("ex") }));
+    copy.exercises = copy.exercises.map((exercise) => ({
+      ...exercise, id: newId("ex"),
+      ...(exercise.circuitId ? { circuitId: circuitIds.get(exercise.circuitId) } : {}),
+    }));
     return copy;
   });
   return [...workouts, ...copies];

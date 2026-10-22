@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { SessionSummary } from "@/components/session-summary";
+import { ExerciseContext } from "@/components/exercise-context";
 import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { useLocation, useSearch } from "wouter";
-import { ArrowLeft, Check, CheckCircle2, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Copy, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { useDeleteSession, useSaveSession, type Assignment, type LoggedSet, type Session, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,17 +33,43 @@ function numOr0(v: string): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+function resumeSession(session: Session, assignment: Assignment, workout: Workout): LogState {
+  return {
+    id: session.id,
+    assignment,
+    workout,
+    date: session.date,
+    unit: session.unit,
+    notes: session.notes,
+    sets: session.sets.map((set) => ({ ...set })),
+  };
+}
+
+function openWorkout(assignment: Assignment, workout: Workout, sessions: Session[], profile: Profile): LogState | Session {
+  const matching = sessions.filter((session) => session.assignmentId === assignment.id && session.workoutId === workout.id);
+  const completed = matching.find((session) => session.status === "completed");
+  if (completed) return completed;
+  const draft = matching.filter((session) => session.status === "draft").sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  return draft
+    ? resumeSession(draft, assignment, workout)
+    : { assignment, workout, date: todayISO(), unit: profile.unit, notes: "", sets: buildSets(workout.exercises, profile) };
+}
+
 function Logger({ state, setState, profile, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; onDone: () => void }) {
   const save = useSaveSession();
   const invalidate = useInvalidateAll();
   const guard = useMutationGuard();
   const { toast } = useToast();
   const { workout } = state;
+  // Track numeric edits even when the user enters a value equal to a prescription.
+  const enteredSets = useRef(new WeakSet<LoggedSet>());
 
   const setAt = (idx: number, patch: Partial<LoggedSet>) => setState({ ...state, sets: state.sets.map((s, i) => {
     if (i !== idx) return s;
     const updated = { ...s, ...patch };
-    return { ...updated, completed: isSetPerformed(updated) };
+    updated.completed = isSetPerformed(updated);
+    if (enteredSets.current.has(s) || "weight" in patch || "reps" in patch || "rpe" in patch) enteredSets.current.add(updated);
+    return updated;
   }) });
   const done = state.sets.filter((s) => s.completed).length;
   const volume = state.sets.filter((s) => s.completed).reduce((t, s) => t + s.weight * s.reps, 0);
@@ -102,7 +129,10 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
               sets: state.sets.map(s => ({
                 ...s,
                 weight: Math.round(s.weight * (state.unit === v ? 1 : v === "kg" ? 1 / 2.2046226218 : 2.2046226218) * 100) / 100,
-              })),
+              })).map((s, i) => {
+                if (enteredSets.current.has(state.sets[i])) enteredSets.current.add(s);
+                return s;
+              }),
             })}>
               <SelectTrigger data-testid="select-session-unit"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -120,15 +150,32 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
       </div>
 
       <div className="space-y-4">
+        {!!workout.circuits?.length && <Panel title="Circuits">
+          <p className="mb-2 text-sm text-muted-foreground">Do one set of every exercise in the circuit, then rest before the next round. Each logged set below represents one round.</p>
+          {workout.circuits.map(c => <div key={c.id} className="mb-2 rounded border p-3 text-sm">
+            <strong>{c.name}: {c.rounds} rounds · {c.restSeconds}s rest between rounds</strong>
+            <p>{workout.exercises.filter(ex => ex.circuitId === c.id).map(ex => ex.name).join(" → ") || "No exercises"}</p>
+          </div>)}
+        </Panel>}
         {workout.exercises.map((ex) => {
           const range = repRange(ex.reps);
           const rows = state.sets.map((s, i) => ({ s, i })).filter(({ s }) => s.exerciseId === ex.id);
+          // A prescribed weight alone is not a logged result. Preserve all actual
+          // numeric entries, including partial sets, and never copy set notes.
+          const nextCopyIndex = rows.findIndex(({ s }, index) => {
+            if (index === 0 || enteredSets.current.has(s) || s.completed || s.reps !== 0 || s.rpe !== 0) return false;
+            const prescribedWeight = setTargetLoad(ex, index, profile, state.unit) ?? 0;
+            if (s.weight !== 0 && s.weight !== prescribedWeight) return false;
+            return rows.slice(0, index).some(({ s: prior }) => isSetPerformed(prior));
+          });
+          const copySource = nextCopyIndex < 0 ? undefined : rows.slice(0, nextCopyIndex).reverse().find(({ s }) => isSetPerformed(s));
           return (
             <section key={ex.id} className="rise overflow-hidden rounded-md border border-card-border bg-card" data-testid={`log-exercise-${ex.id}`}>
               <header className="flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3">
                 <div>
                   <div className="font-display text-xl font-bold uppercase">{ex.name}</div>
                   <LiftTag lift={ex.lift} />
+                  <ExerciseContext exercise={ex} workout={workout} />
                 </div>
                 <div className="text-right font-num text-xs">
                   <div className="text-sm">Sets: <strong>{ex.sets}</strong> · Target reps: <strong>{ex.reps}</strong></div>
@@ -161,7 +208,20 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
                   </div>
                 );})}
               </div>
-              <div className="px-4 pb-3">
+              <div className="flex flex-wrap items-center gap-4 px-4 pb-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center font-num text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled={!copySource}
+                  onClick={() => {
+                    if (!copySource || nextCopyIndex < 0) return;
+                    const { weight, reps, rpe } = copySource.s;
+                    setAt(rows[nextCopyIndex].i, { weight, reps, rpe });
+                  }}
+                  data-testid={`button-copy-next-set-${ex.id}`}
+                >
+                  <Copy className="mr-1 h-3.5 w-3.5" /> Copy next set
+                </button>
                 <button
                   className="inline-flex items-center font-num text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
                   onClick={() => {
@@ -232,9 +292,9 @@ export default function Workouts() {
     setConsumedQuery(search);
     if (a) setPickedAssignment(a.id);
     if (a && w) {
-      const completed=mine.sessions.find(s=>s.assignmentId===a.id && s.workoutId===w.id && s.status==="completed");
-      if(completed) setViewedSession(completed);
-      else setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+      const opened = openWorkout(a, w, mine.sessions, data.profile);
+      if ("status" in opened) setViewedSession(opened);
+      else setLog(opened);
     }
   }
 
@@ -257,9 +317,9 @@ export default function Workouts() {
 
   const active = mine.assignments.find((a) => a.id === pickedAssignment) ?? mine.assignments[0];
   const start = (a: Assignment, w: Workout) => {
-    const completed=mine.sessions.find(s=>s.assignmentId===a.id && s.workoutId===w.id && s.status==="completed");
-    if(completed) {setViewedSession(completed);return;}
-    setLog({ assignment: a, workout: w, date: todayISO(), unit: data.profile.unit, notes: "", sets: buildSets(w.exercises, data.profile) });
+    const opened = openWorkout(a, w, mine.sessions, data.profile);
+    if ("status" in opened) setViewedSession(opened);
+    else setLog(opened);
   };
   const edit = (s: Session) => {
     const a = data.assignments.find((x) => x.id === s.assignmentId);
@@ -268,7 +328,7 @@ export default function Workouts() {
       toast({ title: "Cannot edit", description: "The assignment for this session no longer exists.", variant: "destructive" });
       return;
     }
-    setLog({ id: s.id, assignment: a, workout: w, date: s.date, unit: s.unit, notes: s.notes, sets: s.sets.map((x) => ({ ...x })) });
+    setLog(resumeSession(s, a, w));
   };
   const confirmDelete = () => {
     if (!toDelete || !guard()) return;

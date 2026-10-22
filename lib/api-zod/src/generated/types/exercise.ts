@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ExerciseLift } from './exerciseLift';
+import type { ExerciseMuscleGroup } from './exerciseMuscleGroup';
 import type { ExerciseSourceUnit } from './exerciseSourceUnit';
 
 export interface Exercise {
@@ -35,4 +36,8 @@ export interface Exercise {
   notes: string;
   review: boolean;
   lift: ExerciseLift;
+  muscleGroup?: ExerciseMuscleGroup;
+  /** @maxLength 100 */
+  customMuscleGroup?: string;
+  circuitId?: string;
 }

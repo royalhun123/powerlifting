@@ -300,6 +300,8 @@ export const listAdminSessionsResponseOneNotesMax = 5000;
 
 export const listAdminSessionsResponseOneSetsItemExerciseNameMax = 200;
 
+export const listAdminSessionsResponseOneSetsItemContextMax = 500;
+
 export const listAdminSessionsResponseOneSetsItemSetNumberMax = 100;
 
 export const listAdminSessionsResponseOneSetsItemWeightMin = 0;
@@ -331,6 +333,7 @@ export const ListAdminSessionsResponseItem = zod.object({
   "sets": zod.array(zod.object({
   "exerciseId": zod.string(),
   "exerciseName": zod.string().min(1).max(listAdminSessionsResponseOneSetsItemExerciseNameMax),
+  "context": zod.string().max(listAdminSessionsResponseOneSetsItemContextMax).optional().describe('Server-derived circuit and muscle-group prescription for historical review.'),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
   "setNumber": zod.number().int().min(1).max(listAdminSessionsResponseOneSetsItemSetNumberMax),
   "weight": zod.number().min(listAdminSessionsResponseOneSetsItemWeightMin).max(listAdminSessionsResponseOneSetsItemWeightMax),
@@ -379,6 +382,16 @@ export const listCoachesResponseProgramsItemOneWorkoutsItemWeekMax = 52;
 
 export const listCoachesResponseProgramsItemOneWorkoutsItemDayMax = 7;
 
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const listCoachesResponseProgramsItemOneWorkoutsItemCircuitsMax = 50;
+
 export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNameMax = 200;
 
 export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetsMax = 100;
@@ -397,6 +410,8 @@ export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeigh
 
 export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax = 2000;
 
+export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
+
 export const listCoachesResponseProgramsItemOneWorkoutsItemExercisesMax = 50;
 
 export const listCoachesResponseProgramsItemOneWorkoutsMax = 364;
@@ -413,6 +428,16 @@ export const listCoachesResponseBlocksItemProgramOneWeeksMax = 52;
 export const listCoachesResponseBlocksItemProgramOneWorkoutsItemWeekMax = 52;
 
 export const listCoachesResponseBlocksItemProgramOneWorkoutsItemDayMax = 7;
+
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsMax = 50;
 
 export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNameMax = 200;
 
@@ -432,6 +457,8 @@ export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSet
 
 export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
 
+export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
+
 export const listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesMax = 50;
 
 export const listCoachesResponseBlocksItemProgramOneWorkoutsMax = 364;
@@ -448,6 +475,16 @@ export const listCoachesResponseClientsItemBlocksItemProgramOneWeeksMax = 52;
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemWeekMax = 52;
 
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemDayMax = 7;
+
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsMax = 50;
 
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNameMax = 200;
 
@@ -466,6 +503,8 @@ export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExerc
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
 
 export const listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesMax = 50;
 
@@ -494,6 +533,12 @@ export const ListCoachesResponseItem = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMin).max(listCoachesResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(listCoachesResponseProgramsItemOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNameMax),
@@ -505,7 +550,10 @@ export const ListCoachesResponseItem = zod.object({
   "setWeights": zod.array(zod.number().min(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesMax)
 })).max(listCoachesResponseProgramsItemOneWorkoutsMax)
 }).and(zod.object({
@@ -533,6 +581,12 @@ export const ListCoachesResponseItem = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNameMax),
@@ -544,7 +598,10 @@ export const ListCoachesResponseItem = zod.object({
   "setWeights": zod.array(zod.number().min(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesMax)
 })).max(listCoachesResponseBlocksItemProgramOneWorkoutsMax)
 }).and(zod.object({
@@ -578,6 +635,12 @@ export const ListCoachesResponseItem = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNameMax),
@@ -589,7 +652,10 @@ export const ListCoachesResponseItem = zod.object({
   "setWeights": zod.array(zod.number().min(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesMax)
 })).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsMax)
 }).and(zod.object({
@@ -985,6 +1051,16 @@ export const getWorkspaceResponseProgramsItemOneWorkoutsItemWeekMax = 52;
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemDayMax = 7;
 
+
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsMax = 50;
+
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNameMax = 200;
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetsMax = 100;
@@ -1003,6 +1079,8 @@ export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeig
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax = 2000;
 
+export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
+
 export const getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesMax = 50;
 
 export const getWorkspaceResponseProgramsItemOneWorkoutsMax = 364;
@@ -1019,6 +1097,16 @@ export const getWorkspaceResponseAssignmentsItemProgramOneWeeksMax = 52;
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemWeekMax = 52;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemDayMax = 7;
+
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsMax = 50;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNameMax = 200;
 
@@ -1038,6 +1126,8 @@ export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesI
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
 
+export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
+
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesMax = 50;
 
 export const getWorkspaceResponseAssignmentsItemProgramOneWorkoutsMax = 364;
@@ -1048,6 +1138,8 @@ export const getWorkspaceResponseSessionsItemOneDateRegExp = new RegExp('^\\d{4}
 export const getWorkspaceResponseSessionsItemOneNotesMax = 5000;
 
 export const getWorkspaceResponseSessionsItemOneSetsItemExerciseNameMax = 200;
+
+export const getWorkspaceResponseSessionsItemOneSetsItemContextMax = 500;
 
 export const getWorkspaceResponseSessionsItemOneSetsItemSetNumberMax = 100;
 
@@ -1110,6 +1202,12 @@ export const GetWorkspaceResponse = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(getWorkspaceResponseProgramsItemOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(getWorkspaceResponseProgramsItemOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMin).max(getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(getWorkspaceResponseProgramsItemOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNameMax),
@@ -1121,7 +1219,10 @@ export const GetWorkspaceResponse = zod.object({
   "setWeights": zod.array(zod.number().min(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMin).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesMax)
 })).max(getWorkspaceResponseProgramsItemOneWorkoutsMax)
 }).and(zod.object({
@@ -1157,6 +1258,12 @@ export const GetWorkspaceResponse = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRestSecondsMin).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNameMax),
@@ -1168,7 +1275,10 @@ export const GetWorkspaceResponse = zod.object({
   "setWeights": zod.array(zod.number().min(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesMax)
 })).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsMax)
 }).and(zod.object({
@@ -1193,6 +1303,7 @@ export const GetWorkspaceResponse = zod.object({
   "sets": zod.array(zod.object({
   "exerciseId": zod.string(),
   "exerciseName": zod.string().min(1).max(getWorkspaceResponseSessionsItemOneSetsItemExerciseNameMax),
+  "context": zod.string().max(getWorkspaceResponseSessionsItemOneSetsItemContextMax).optional().describe('Server-derived circuit and muscle-group prescription for historical review.'),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
   "setNumber": zod.number().int().min(1).max(getWorkspaceResponseSessionsItemOneSetsItemSetNumberMax),
   "weight": zod.number().min(getWorkspaceResponseSessionsItemOneSetsItemWeightMin).max(getWorkspaceResponseSessionsItemOneSetsItemWeightMax),
@@ -1296,6 +1407,16 @@ export const saveProgramBodyWorkoutsItemWeekMax = 52;
 
 export const saveProgramBodyWorkoutsItemDayMax = 7;
 
+
+export const saveProgramBodyWorkoutsItemCircuitsItemNameMax = 200;
+
+export const saveProgramBodyWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const saveProgramBodyWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const saveProgramBodyWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const saveProgramBodyWorkoutsItemCircuitsMax = 50;
+
 export const saveProgramBodyWorkoutsItemExercisesItemNameMax = 200;
 
 export const saveProgramBodyWorkoutsItemExercisesItemSetsMax = 100;
@@ -1313,6 +1434,8 @@ export const saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMax = 2000;
 export const saveProgramBodyWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const saveProgramBodyWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const saveProgramBodyWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
 
 export const saveProgramBodyWorkoutsItemExercisesMax = 50;
 
@@ -1332,6 +1455,12 @@ export const SaveProgramBody = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(saveProgramBodyWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(saveProgramBodyWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(saveProgramBodyWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(saveProgramBodyWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(saveProgramBodyWorkoutsItemCircuitsItemRestSecondsMin).max(saveProgramBodyWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(saveProgramBodyWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(saveProgramBodyWorkoutsItemExercisesItemNameMax),
@@ -1343,7 +1472,10 @@ export const SaveProgramBody = zod.object({
   "setWeights": zod.array(zod.number().min(saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMin).max(saveProgramBodyWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(saveProgramBodyWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(saveProgramBodyWorkoutsItemExercisesMax)
 })).max(saveProgramBodyWorkoutsMax)
 })
@@ -1358,6 +1490,16 @@ export const saveProgramResponseOneWeeksMax = 52;
 export const saveProgramResponseOneWorkoutsItemWeekMax = 52;
 
 export const saveProgramResponseOneWorkoutsItemDayMax = 7;
+
+
+export const saveProgramResponseOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const saveProgramResponseOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const saveProgramResponseOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const saveProgramResponseOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const saveProgramResponseOneWorkoutsItemCircuitsMax = 50;
 
 export const saveProgramResponseOneWorkoutsItemExercisesItemNameMax = 200;
 
@@ -1377,6 +1519,8 @@ export const saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const saveProgramResponseOneWorkoutsItemExercisesItemNotesMax = 2000;
 
+export const saveProgramResponseOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
+
 export const saveProgramResponseOneWorkoutsItemExercisesMax = 50;
 
 export const saveProgramResponseOneWorkoutsMax = 364;
@@ -1395,6 +1539,12 @@ export const SaveProgramResponse = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(saveProgramResponseOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(saveProgramResponseOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(saveProgramResponseOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(saveProgramResponseOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(saveProgramResponseOneWorkoutsItemCircuitsItemRestSecondsMin).max(saveProgramResponseOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(saveProgramResponseOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(saveProgramResponseOneWorkoutsItemExercisesItemNameMax),
@@ -1406,7 +1556,10 @@ export const SaveProgramResponse = zod.object({
   "setWeights": zod.array(zod.number().min(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMin).max(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(saveProgramResponseOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(saveProgramResponseOneWorkoutsItemExercisesMax)
 })).max(saveProgramResponseOneWorkoutsMax)
 }).and(zod.object({
@@ -1488,6 +1641,16 @@ export const assignProgramResponseProgramOneWorkoutsItemWeekMax = 52;
 
 export const assignProgramResponseProgramOneWorkoutsItemDayMax = 7;
 
+
+export const assignProgramResponseProgramOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const assignProgramResponseProgramOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const assignProgramResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const assignProgramResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const assignProgramResponseProgramOneWorkoutsItemCircuitsMax = 50;
+
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemNameMax = 200;
 
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetsMax = 100;
@@ -1505,6 +1668,8 @@ export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsI
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const assignProgramResponseProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const assignProgramResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
 
 export const assignProgramResponseProgramOneWorkoutsItemExercisesMax = 50;
 
@@ -1530,6 +1695,12 @@ export const AssignProgramResponse = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(assignProgramResponseProgramOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(assignProgramResponseProgramOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(assignProgramResponseProgramOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(assignProgramResponseProgramOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(assignProgramResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMin).max(assignProgramResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(assignProgramResponseProgramOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(assignProgramResponseProgramOneWorkoutsItemExercisesItemNameMax),
@@ -1541,7 +1712,10 @@ export const AssignProgramResponse = zod.object({
   "setWeights": zod.array(zod.number().min(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(assignProgramResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(assignProgramResponseProgramOneWorkoutsItemExercisesMax)
 })).max(assignProgramResponseProgramOneWorkoutsMax)
 }).and(zod.object({
@@ -1577,6 +1751,16 @@ export const archiveAssignmentResponseProgramOneWorkoutsItemWeekMax = 52;
 
 export const archiveAssignmentResponseProgramOneWorkoutsItemDayMax = 7;
 
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemNameMax = 200;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRoundsMax = 100;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMin = 0;
+export const archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMax = 3600;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemCircuitsMax = 50;
+
 export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNameMax = 200;
 
 export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetsMax = 100;
@@ -1594,6 +1778,8 @@ export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeig
 export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax = 100;
 
 export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNotesMax = 2000;
+
+export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax = 100;
 
 export const archiveAssignmentResponseProgramOneWorkoutsItemExercisesMax = 50;
 
@@ -1619,6 +1805,12 @@ export const ArchiveAssignmentResponse = zod.object({
   "name": zod.string().min(1),
   "week": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemWeekMax),
   "day": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemDayMax),
+  "circuits": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemNameMax),
+  "rounds": zod.number().int().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRoundsMax),
+  "restSeconds": zod.number().int().min(archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMin).max(archiveAssignmentResponseProgramOneWorkoutsItemCircuitsItemRestSecondsMax)
+})).max(archiveAssignmentResponseProgramOneWorkoutsItemCircuitsMax).optional(),
   "exercises": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string().min(1).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNameMax),
@@ -1630,7 +1822,10 @@ export const ArchiveAssignmentResponse = zod.object({
   "setWeights": zod.array(zod.number().min(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMin).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsItemMax).nullable()).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemSetWeightsMax).optional().describe('Optional per-set target loads in pounds; null means no override. Actual workout loads remain independently editable.'),
   "notes": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
-  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory'])
+  "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "customMuscleGroup": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
+  "circuitId": zod.string().optional()
 })).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesMax)
 })).max(archiveAssignmentResponseProgramOneWorkoutsMax)
 }).and(zod.object({
@@ -1661,6 +1856,8 @@ export const saveSessionBodyNotesMax = 5000;
 
 export const saveSessionBodySetsItemExerciseNameMax = 200;
 
+export const saveSessionBodySetsItemContextMax = 500;
+
 export const saveSessionBodySetsItemSetNumberMax = 100;
 
 export const saveSessionBodySetsItemWeightMin = 0;
@@ -1690,6 +1887,7 @@ export const SaveSessionBody = zod.object({
   "sets": zod.array(zod.object({
   "exerciseId": zod.string(),
   "exerciseName": zod.string().min(1).max(saveSessionBodySetsItemExerciseNameMax),
+  "context": zod.string().max(saveSessionBodySetsItemContextMax).optional().describe('Server-derived circuit and muscle-group prescription for historical review.'),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
   "setNumber": zod.number().int().min(1).max(saveSessionBodySetsItemSetNumberMax),
   "weight": zod.number().min(saveSessionBodySetsItemWeightMin).max(saveSessionBodySetsItemWeightMax),
@@ -1706,6 +1904,8 @@ export const saveSessionResponseOneDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2
 export const saveSessionResponseOneNotesMax = 5000;
 
 export const saveSessionResponseOneSetsItemExerciseNameMax = 200;
+
+export const saveSessionResponseOneSetsItemContextMax = 500;
 
 export const saveSessionResponseOneSetsItemSetNumberMax = 100;
 
@@ -1738,6 +1938,7 @@ export const SaveSessionResponse = zod.object({
   "sets": zod.array(zod.object({
   "exerciseId": zod.string(),
   "exerciseName": zod.string().min(1).max(saveSessionResponseOneSetsItemExerciseNameMax),
+  "context": zod.string().max(saveSessionResponseOneSetsItemContextMax).optional().describe('Server-derived circuit and muscle-group prescription for historical review.'),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
   "setNumber": zod.number().int().min(1).max(saveSessionResponseOneSetsItemSetNumberMax),
   "weight": zod.number().min(saveSessionResponseOneSetsItemWeightMin).max(saveSessionResponseOneSetsItemWeightMax),
@@ -1802,6 +2003,8 @@ export const updateFeedbackResponseOneNotesMax = 5000;
 
 export const updateFeedbackResponseOneSetsItemExerciseNameMax = 200;
 
+export const updateFeedbackResponseOneSetsItemContextMax = 500;
+
 export const updateFeedbackResponseOneSetsItemSetNumberMax = 100;
 
 export const updateFeedbackResponseOneSetsItemWeightMin = 0;
@@ -1833,6 +2036,7 @@ export const UpdateFeedbackResponse = zod.object({
   "sets": zod.array(zod.object({
   "exerciseId": zod.string(),
   "exerciseName": zod.string().min(1).max(updateFeedbackResponseOneSetsItemExerciseNameMax),
+  "context": zod.string().max(updateFeedbackResponseOneSetsItemContextMax).optional().describe('Server-derived circuit and muscle-group prescription for historical review.'),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
   "setNumber": zod.number().int().min(1).max(updateFeedbackResponseOneSetsItemSetNumberMax),
   "weight": zod.number().min(updateFeedbackResponseOneSetsItemWeightMin).max(updateFeedbackResponseOneSetsItemWeightMax),

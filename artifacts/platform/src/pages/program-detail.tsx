@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { LIFT_LABEL, newId, PHASE_LABEL, targetLoad, todayISO } from "@/lib/pl";
 import { DownloadXlsxButton, isProgramOwner, PhaseBadge, UploaderTag } from "@/pages/programs";
 import { copyPreviousWeek } from "@/lib/copy-program-week";
+import { CircuitEditor, newCircuit } from "@/components/circuit-editor";
+import { ExerciseContext, MUSCLE_GROUPS } from "@/components/exercise-context";
 
 function toInput(p: Program): ProgramInput {
   const { source: _s, reviewCount: _r, uploaderId: _u, uploaderName: _n, ...rest } = p;
@@ -257,7 +259,7 @@ export default function ProgramDetail() {
                       const t = targetLoad(ex, data.profile);
                       return (
                         <tr key={ex.id} className={ex.review ? "bg-[hsl(var(--deadlift)/0.08)]" : ""} data-testid={`row-exercise-${ex.id}`}>
-                          <td className="px-4 py-2.5"><div className="flex items-center gap-2"><LiftTag lift={ex.lift} /><span className="font-medium">{ex.name}</span></div></td>
+                          <td className="px-4 py-2.5"><div className="flex items-center gap-2"><LiftTag lift={ex.lift} /><span className="font-medium">{ex.name}</span></div><ExerciseContext exercise={ex} workout={w} /></td>
                           <td className="px-2 font-num">{ex.sets || "—"}</td>
                           <td className="px-2 font-num">{ex.reps || "—"}</td>
                           <td className="px-2 font-num">{ex.effort || "—"}</td>
@@ -392,11 +394,13 @@ export default function ProgramDetail() {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
+            <CircuitEditor workout={w} onChange={patch => updateWorkout(w.id, patch)} blankExercise={blankExercise} />
             <div className="divide-y">
               {w.exercises.map((ex) => {
                 const t = targetLoad(ex, data.profile);
                 return (
                   <div key={ex.id} className={`px-4 py-3 ${ex.review ? "bg-[hsl(var(--deadlift)/0.08)]" : ""}`} data-testid={`row-exercise-${ex.id}`}>
+                    <ExerciseContext exercise={ex} workout={w} />
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-[1.6fr_.8fr_.5fr_.6fr_.8fr_auto] md:items-center">
                       <label className="col-span-2 grid gap-1 text-xs font-medium md:col-span-1">Exercise
                         <Input value={ex.name} onChange={(e) => updateExercise(w.id, ex.id, { name: e.target.value })} data-testid={`input-ex-name-${ex.id}`} />
@@ -410,7 +414,7 @@ export default function ProgramDetail() {
                       </Select>
                       </div>
                       <label className="grid gap-1 text-xs font-medium">Sets
-                        <Input value={ex.sets} onChange={(e) => updateExercise(w.id, ex.id, { sets: e.target.value })} className="font-num" placeholder="3" data-testid={`input-sets-${ex.id}`} />
+                        <Input value={ex.sets} disabled={!!ex.circuitId} title={ex.circuitId ? "Controlled by circuit rounds" : undefined} onChange={(e) => updateExercise(w.id, ex.id, { sets: e.target.value })} className="font-num" placeholder="3" data-testid={`input-sets-${ex.id}`} />
                       </label>
                       <label className="grid gap-1 text-xs font-medium">Reps / range
                         <Input value={ex.reps} onChange={(e) => updateExercise(w.id, ex.id, { reps: e.target.value })} className="font-num" placeholder="8-12" data-testid={`input-reps-${ex.id}`} />
@@ -422,6 +426,20 @@ export default function ProgramDetail() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                    {ex.lift === "accessory" && <div className="mt-2 flex flex-wrap items-end gap-2">
+                      <label className="grid gap-1 text-xs font-medium">Muscle group
+                        <Select value={ex.muscleGroup || "uncategorized"} onValueChange={v => updateExercise(w.id, ex.id, { muscleGroup: v === "uncategorized" ? undefined : v as Exercise["muscleGroup"] })}>
+                          <SelectTrigger className="w-44" data-testid={`select-muscle-${ex.id}`}><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                            {MUSCLE_GROUPS.map(group => <SelectItem key={group} value={group}>{group[0].toUpperCase() + group.slice(1)}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </label>
+                      {ex.muscleGroup === "custom" && <label className="grid gap-1 text-xs font-medium">Custom muscle group
+                        <Input maxLength={100} value={ex.customMuscleGroup || ""} onChange={e => updateExercise(w.id, ex.id, { customMuscleGroup: e.target.value })} data-testid={`input-custom-muscle-${ex.id}`} />
+                      </label>}
+                    </div>}
                     <p className="mt-2 text-xs text-muted-foreground"><strong>Sets: {ex.sets || "—"}</strong> · <strong>Target reps: {ex.reps || "—"}</strong> · Effort: {ex.effort || "—"}. Enter a fixed rep count or a range such as 8-12; actual reps are logged separately for every set.</p>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <LiftTag lift={ex.lift} />
@@ -444,6 +462,9 @@ export default function ProgramDetail() {
             <div className="px-4 py-2">
               <Button variant="ghost" size="sm" onClick={() => updateWorkout(w.id, { exercises: [...w.exercises, blankExercise()] })} data-testid={`button-add-exercise-${w.id}`}>
                 <Plus className="mr-1.5 h-4 w-4" /> Exercise
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => updateWorkout(w.id, newCircuit(w, blankExercise))} data-testid={`button-add-circuit-${w.id}`}>
+                <Plus className="mr-1.5 h-4 w-4" /> Circuit
               </Button>
             </div>
           </div>

@@ -15,7 +15,7 @@ export function SessionSummary({session,onClose}:{session:Session|null;onClose:(
         <div className="overflow-x-auto"><table className="w-full text-left text-sm">
           <thead><tr className="border-b"><th className="p-2">Exercise</th><th className="p-2">Set</th><th className="p-2">Weight ({session.unit})</th><th className="p-2">Reps</th><th className="p-2">RPE</th><th className="p-2">Notes</th></tr></thead>
           <tbody>{session.sets.map((set,i)=><tr key={`${set.exerciseId}-${set.setNumber}-${i}`} className="border-b">
-            <td className="p-2">{set.exerciseName}{!set.completed && <span className="block text-xs text-muted-foreground">Not completed</span>}</td>
+            <td className="p-2">{set.exerciseName}{set.context && <span className="block text-xs text-primary">{set.context}</span>}{!set.completed && <span className="block text-xs text-muted-foreground">Not completed</span>}</td>
             <td className="p-2">{set.setNumber}</td><td className="p-2">{fmtNum(set.weight)}</td><td className="p-2">{set.reps}</td><td className="p-2">{set.rpe || "—"}</td><td className="p-2 whitespace-pre-wrap">{set.notes || "—"}</td>
           </tr>)}</tbody>
         </table></div>

@@ -13,6 +13,11 @@ export interface LoggedSet {
      * @maxLength 200
      */
   exerciseName: string;
+  /**
+     * Server-derived circuit and muscle-group prescription for historical review.
+     * @maxLength 500
+     */
+  context?: string;
   lift: LoggedSetLift;
   /**
      * @minimum 1

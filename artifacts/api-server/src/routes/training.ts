@@ -123,7 +123,15 @@ router.post("/programs", async (req,res) => {
   for(const w of input.workouts) {
     if(w.week>input.weeks) fail(400,"Workout week exceeds program length.");
     if(new Set(w.exercises.map(e=>e.id)).size !== w.exercises.length) fail(400,"Exercise identifiers must be unique within a workout.");
+    const circuits = w.circuits || [];
+    if(new Set(circuits.map(c=>c.id)).size !== circuits.length) fail(400,"Circuit identifiers must be unique within a workout.");
+    if(circuits.some(c=>!c.name.trim())) fail(400,"Give each circuit a name.");
+    if(circuits.length && w.exercises.reduce((total,ex)=>{
+      const circuit=circuits.find(c=>c.id===ex.circuitId);
+      return total+(circuit?.rounds ?? Math.min(Math.max(1,parseInt(ex.sets,10)||1),20));
+    },0)>300) fail(400,"A workout can contain at most 300 total sets. Reduce circuit rounds or split it into separate days.");
     for (const ex of w.exercises) {
+      if(ex.circuitId && !circuits.some(c=>c.id===ex.circuitId)) fail(400,"Exercise references a missing circuit.");
       const range = /^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/.exec(ex.reps);
       if (range && (Number(range[1]) < 1 || Number(range[2]) < Number(range[1]) || Number(range[2]) > 1000)) {
         fail(400,`${ex.name}: enter a rep range with a positive minimum no greater than the maximum, for example 8-12.`);
@@ -238,8 +246,11 @@ router.post("/sessions", async (req,res) => {
   const normalizedSets=input.sets.map(s=>{
     const ex=workout.exercises.find(e=>e.id===s.exerciseId);
     if(!ex) fail(400,"Exercise not found in assigned workout.");
+    const circuit = workout.circuits?.find(c=>c.id===ex.circuitId);
+    const muscle = ex.lift==="accessory" ? (ex.muscleGroup==="custom" ? ex.customMuscleGroup || "Custom" : ex.muscleGroup) : undefined;
+    const context = [circuit ? `${circuit.name} · ${circuit.rounds} rounds · ${circuit.restSeconds}s rest between rounds` : "", muscle].filter(Boolean).join(" · ");
     // Competition classification comes from the assigned program, not the client.
-    return {...s,exerciseName:ex.name,lift:ex.lift,completed:s.reps>0 && (s.weight>0 || ex.lift==="accessory")};
+    return {...s,context,exerciseName:ex.name,lift:ex.lift,completed:s.reps>0 && (s.weight>0 || ex.lift==="accessory")};
   });
   if(normalizedSets.some(s=>s.reps>0 && s.lift!=="accessory" && s.weight<=0)) fail(400,"Enter a weight for competition-lift sets with completed reps. Record failed attempts with zero reps and a note.");
   if(input.status==="completed" && !normalizedSets.some(s=>s.completed && s.reps>0)) fail(400,"Complete at least one set with reps before finishing.");

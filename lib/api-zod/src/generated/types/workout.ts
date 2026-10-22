@@ -4,6 +4,7 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+import type { Circuit } from './circuit';
 import type { Exercise } from './exercise';
 
 export interface Workout {
@@ -20,6 +21,8 @@ export interface Workout {
      * @maximum 7
      */
   day: number;
+  /** @maxItems 50 */
+  circuits?: Circuit[];
   /** @maxItems 50 */
   exercises: Exercise[];
 }
