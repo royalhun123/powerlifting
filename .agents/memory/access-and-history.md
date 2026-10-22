@@ -3,6 +3,17 @@ name: Access and history expectations
 description: Client access goal and rules for historical measurements.
 ---
 
+The owner approved keeping the existing production database for Vercel and a
+backup-only restore to a separate destination. They explicitly approved preserving
+existing Neon Auth tables while adding the training backup alongside them.
+
+**Why:** The owner selected reuse of production and approved the Neon Auth
+exception after the destination's existing tables were identified.
+
+**How to apply:** Do not treat a configured backup secret as proof of isolation
+or emptiness. The backup destination is now populated; the approval does not
+authorize overwriting it or moving the live app to it.
+
 Signed-out visitors should land on login, not a demo dashboard.
 
 **Why:** The user considers the app operational and explicitly removed public demo browsing.

@@ -5,3 +5,4 @@
 - [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.
 - [Circuit history](circuit-history.md) — extend circuits and muscle categories without rewriting history or changing competition-lift analytics.
 - [Offline training](offline-training.md) — account-scoped local saves, duplicate-safe sync, explicit conflicts, and browser-accessible production testing.
+- [PostgreSQL client environment](postgres-client-environment.md) — isolate external database clients from inherited workspace connection defaults.

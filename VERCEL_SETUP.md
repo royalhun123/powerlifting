@@ -5,6 +5,66 @@ Its additive Neon migration must run before deploying the new authentication
 code. The private-link instructions below describe the initial migration and
 remain valid only for accounts that have not completed password setup.
 
+
+## Backup verification — 2026-10-22 UTC
+
+The supplied `SOURCE_PRODUCTION_DATABASE_URL` was reachable using PostgreSQL
+client settings `sslmode=verify-full` and the system CA bundle. Public-table
+counts matched the managed production read-only query, not a development copy.
+This verifies workspace connectivity, not yet Vercel runtime connectivity.
+
+A full custom-format archive was created in the private, Git/deployment-excluded
+`private-backups/20261022T005400Z/` directory. It was successfully restored to an
+isolated temporary local PostgreSQL instance. A refreshed archive at
+`private-backups/20261022T014350Z/` was then restored to the separately approved
+backup database, with every table count matching:
+
+| Table | Source before/after and restored count |
+| --- | ---: |
+| users | 2 |
+| training_profiles | 2 |
+| training_programs | 4 |
+| training_assignments | 4 |
+| training_sessions | 3 |
+| training_bodyweights | 0 |
+| training_true_maxes | 6 |
+| coaching_links | 1 |
+| coaching_invitations | 1 |
+| sessions | 2 |
+
+Each private directory contains the archive and its SHA-256 verification manifest.
+The local recovery test database was removed afterward. The remote backup restore
+completed in one transaction. All public-table row contents matched production
+(compared privately using deterministic fingerprints), not only their counts.
+This includes original user IDs, coach relationships, invitation records, sessions,
+and training history. Source records were unchanged during verification.
+
+**Approved plan:** keep the existing production database for Vercel. The owner
+approved restoring a backup to `BACKUP_DATABASE_URL`, then explicitly approved
+preserving its existing Neon Auth tables and adding the training backup alongside
+them. Neon Auth table contents were verified unchanged before and after restore.
+
+**Completed:** the refreshed production snapshot is retained in the separate
+database identified by `BACKUP_DATABASE_URL`; its connection and recovery were
+verified with certificate verification enabled. Keep that database and its secret.
+It is a point-in-time backup, not a continuously synchronized replica, and must
+not be used as Vercel's live database. It is now populated: do not overwrite it.
+Private local archives are deliberately excluded from merges and publishing;
+the retained remote database is the backup handoff.
+
+For Vercel's production `DATABASE_URL`, use the existing production connection
+supplied in `SOURCE_PRODUCTION_DATABASE_URL`, securely copied through provider
+settings, never chat or Git. Workspace connectivity is verified; configuring
+Vercel, verifying its runtime connection, and coach/client sign-in remain separate.
+No production connection settings were changed and the current site was not retired.
+Do not perform another restore merely because destination secrets exist. Obtain
+explicit approval and refuse to overwrite existing data without authorization.
+
+To create another private archive, use `python3 scripts/production-backup.py`.
+It reads only the dedicated production source secret and does not perform a
+remote restore. A new archive still needs a recovery test and durable retention.
+Refresh the backup after production private-link records are created.
+
 ## What is ready
 
 The root `vercel.json` builds the frontend and one bundled Express function.
