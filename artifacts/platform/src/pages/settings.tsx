@@ -14,6 +14,8 @@ import { WorkspaceBadge, useWorkspaceScope } from "@/components/workspace-badge"
 import { TrueMaxButton, TrueMaxHistory } from "@/components/true-max-tracking";
 import { LatestBodyweight } from "@/components/bodyweight-tracking";
 import { PasswordAccountsPanel, OwnPasswordAccount } from "@/components/password-accounts-panel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OfflineHelp } from "@/components/offline-help";
 
 export default function Settings() {
   const { data, isLoading, isError, error, refetch } = useWorkspace();
@@ -63,6 +65,13 @@ export default function Settings() {
           <Save className="mr-2 h-4 w-4" /> {update.isPending ? "Saving…" : "Save"}
         </Button>
       </PageHeader>
+      <Tabs defaultValue="profile">
+        <TabsList className="mb-4">
+          <TabsTrigger value="profile">Profile & account</TabsTrigger>
+          <TabsTrigger value="offline">Install & offline help</TabsTrigger>
+        </TabsList>
+        <TabsContent value="offline"><OfflineHelp /></TabsContent>
+        <TabsContent value="profile">
       {data.demo && <div className="mb-5"><SignInCallout text="Demo profile shown. Sign in to set your own maxes and meet date." /></div>}
       {!data.demo && form.squatMax + form.benchMax + form.deadliftMax === 0 && <div className="mb-5 rounded-md border border-primary/30 bg-primary/5 p-4 text-sm">Enter your reference maxes so percentage work (e.g. 85%) turns into real target loads.</div>}
       <div className="space-y-5">
@@ -128,6 +137,8 @@ export default function Settings() {
           </section>
         )}
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
