@@ -1,6 +1,6 @@
 import type { Exercise, Workout } from "@workspace/api-client-react";
 
-export const MUSCLE_GROUPS = ["chest", "lats", "upper back", "shoulders", "rear delts", "biceps", "triceps", "quads", "abductors", "adductors", "hamstrings", "calves", "custom"] as const;
+export const MUSCLE_GROUPS = ["chest", "lats", "upper back", "shoulders", "rear delts", "biceps", "triceps", "quads", "abductors", "adductors", "hamstrings", "calves", "abs", "custom"] as const;
 
 export function ExerciseContext({ exercise, workout }: { exercise: Exercise; workout: Workout }) {
   const circuit = workout.circuits?.find(c => c.id === exercise.circuitId);

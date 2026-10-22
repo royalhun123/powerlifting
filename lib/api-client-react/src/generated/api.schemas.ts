@@ -141,6 +141,7 @@ export const ExerciseMuscleGroup = {
   adductors: 'adductors',
   hamstrings: 'hamstrings',
   calves: 'calves',
+  abs: 'abs',
   custom: 'custom',
 } as const;
 
@@ -814,6 +815,10 @@ export type GetGroupInvitationInfo200 = {
 };
 
 export type RemoveAssignment200 = {
+  success: boolean;
+};
+
+export type LogoutDevice200 = {
   success: boolean;
 };
 

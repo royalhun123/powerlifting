@@ -1,12 +1,14 @@
 import type { Exercise, Workout } from "@workspace/api-client-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { newId } from "@/lib/pl";
 
-export function CircuitEditor({ workout, onChange, blankExercise }: {
+export function CircuitEditor({ workout, onChange, blankExercise, renderExercise }: {
   workout: Workout;
   onChange: (patch: Partial<Workout>) => void;
   blankExercise: () => Exercise;
+  renderExercise: (exercise: Exercise) => ReactNode;
 }) {
   return <div className="space-y-3 px-4">
     {(workout.circuits || []).map(circuit => (
@@ -37,6 +39,10 @@ export function CircuitEditor({ workout, onChange, blankExercise }: {
           })}>Ungroup circuit</Button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">Do one set of each exercise per round, then rest. Edit the exercises below. Ungroup keeps the exercises.</p>
+        <div className="mt-3 space-y-2 border-l-2 border-primary/40 pl-2 md:pl-4">
+          {workout.exercises.filter(ex => ex.circuitId === circuit.id).map(renderExercise)}
+          {!workout.exercises.some(ex => ex.circuitId === circuit.id) && <p className="p-3 text-sm text-muted-foreground">Add exercises using the button above.</p>}
+        </div>
       </div>
     ))}
   </div>;

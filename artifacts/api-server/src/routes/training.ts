@@ -17,6 +17,8 @@ import { analytics } from "../lib/analytics";
 import { normalizeProgram } from "../lib/program-defaults";
 import { isCoach, isAdmin } from "../lib/coach-access";
 import { sameWorkspace } from "../lib/workspace-access";
+import { workspaceId } from "../lib/workspace-access";
+import { isDeletedSession, sessionSyncDecision, type SyncMetadata } from "../lib/session-sync";
 import { fail, dateValid, sessionVolume, type Program, type Assignment, type Session } from "../lib/training-types";
 
 const router:IRouter = Router();
@@ -234,6 +236,25 @@ router.delete("/assignments/:id", async (req,res) => {
 });
 router.post("/sessions", async (req,res) => {
   const input=SaveSessionBody.parse(req.body);
+  const sync=req.get("X-Session-Sync")==="1";
+  const mutationId=req.get("X-Mutation-Id") || "";
+  const expected=req.get("X-Expected-Updated-At") || "";
+  if(sync) {
+    if(!input.id || !/^[0-9a-f-]{36}$/i.test(input.id) || !/^[0-9a-f-]{36}$/i.test(mutationId) || !expected) fail(400,"Sync requires stable session/mutation UUIDs and an expected revision.");
+    if(req.get("X-Workspace-Id")!==await workspaceId(req.user!.id)) fail(409,"Workspace changed. This offline workout belongs to a different workspace.");
+    const [acknowledged]=await db.select().from(workoutsTable).where(and(eq(workoutsTable.id,input.id),eq(workoutsTable.athleteId,req.user!.id)));
+    if(acknowledged && isDeletedSession(acknowledged.data)) fail(409,"This workout was deleted on the server. Local data retained; it will not be recreated automatically.");
+    const receipts=(acknowledged?.data as { _sync?: SyncMetadata } | undefined)?._sync;
+    if(acknowledged && receipts?.[mutationId]) {
+      // An acknowledgement must still be recoverable if the assignment was
+      // subsequently archived or its prescription changed.
+      const previous=SaveSessionResponse.parse(acknowledged.data);
+      sessionSyncDecision(previous,receipts,mutationId,expected,input);
+      res.setHeader("X-Acknowledged-Updated-At",receipts[mutationId].updatedAt ?? previous.updatedAt);
+      res.json(previous);
+      return;
+    }
+  }
   if(!dateValid(input.date)) fail(400,"Enter a valid workout date.");
   const [assigned]=await db.select().from(assignmentsTable).where(and(eq(assignmentsTable.id,input.assignmentId),eq(assignmentsTable.athleteId,req.user!.id)));
   if(!assigned) fail(403,"You can log only your own assigned workouts.");
@@ -257,23 +278,51 @@ router.post("/sessions", async (req,res) => {
   const profile=await ensureProfile(req.user!.id,req.user!.firstName || "Athlete");
   const saved=await db.transaction(async tx=>{
     let previous:Session | undefined;
+    let receipts:SyncMetadata={};
+    // Serialize creation as well as updates, including concurrent duplicate retries.
+    if(sync) await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${input.id!}, 0))`);
     if(input.id) {
-      const [row]=await tx.select().from(workoutsTable).where(and(eq(workoutsTable.id,input.id),eq(workoutsTable.athleteId,req.user!.id))).for("update");
-      if(!row) fail(404,"Workout log not found.");
-      previous=SaveSessionResponse.parse(row.data);
-      if(previous.assignmentId!==input.assignmentId || previous.workoutId!==input.workoutId) fail(400,"Cannot move a log to another workout.");
+      const [row]=await tx.select().from(workoutsTable).where(eq(workoutsTable.id,input.id)).for("update");
+      if(row && row.athleteId!==req.user!.id) fail(404,"Workout log not found.");
+      if(row && isDeletedSession(row.data)) fail(sync ? 409 : 404,"This workout was deleted on the server. Local data retained; it will not be recreated automatically.");
+      if(!row && !sync) fail(404,"Workout log not found.");
+      if(row) {
+        previous=SaveSessionResponse.parse(row.data);
+        receipts=(row.data as { _sync?: SyncMetadata })._sync ?? {};
+        if(previous.assignmentId!==input.assignmentId || previous.workoutId!==input.workoutId) fail(400,"Cannot move a log to another workout.");
+      }
     }
-    const session:Session={...input,sets:normalizedSets,id:input.id || randomUUID(),athleteId:req.user!.id,athleteName:profile.name,coachFeedback:previous?.coachFeedback || "",...(previous?.discussions ? {discussions:previous.discussions} : {}),volume:sessionVolume({sets:normalizedSets}),updatedAt:new Date().toISOString()};
-    if(input.id) await tx.update(workoutsTable).set({data:session}).where(and(eq(workoutsTable.id,input.id),eq(workoutsTable.athleteId,req.user!.id)));
-    else await tx.insert(workoutsTable).values({id:session.id,athleteId:req.user!.id,assignmentId:input.assignmentId,data:session});
+    if(sync) {
+      const decision=sessionSyncDecision(previous,receipts,mutationId,expected,input);
+      if(decision.replay && previous) {
+        // Chain the next offline command to the ORIGINAL commit, not to a
+        // newer server edit which happened after a lost response.
+        res.setHeader("X-Acknowledged-Updated-At",receipts[mutationId].updatedAt ?? previous.updatedAt);
+        return previous;
+      }
+      receipts={...receipts,[mutationId]:{fingerprint:decision.fingerprint}};
+    }
+    const session:Session={...input,sets:normalizedSets,id:input.id || randomUUID(),athleteId:req.user!.id,athleteName:profile.name,coachFeedback:previous?.coachFeedback || "",...(previous?.discussions ? {discussions:previous.discussions} : {}),volume:sessionVolume({sets:normalizedSets}),updatedAt:new Date(Math.max(Date.now(),previous ? Date.parse(previous.updatedAt)+1 : 0)).toISOString()};
+    if(sync) {
+      receipts[mutationId].updatedAt=session.updatedAt;
+      res.setHeader("X-Acknowledged-Updated-At",session.updatedAt);
+    }
+    const data={...session,_sync:receipts};
+    if(previous) await tx.update(workoutsTable).set({data}).where(and(eq(workoutsTable.id,session.id),eq(workoutsTable.athleteId,req.user!.id)));
+    else await tx.insert(workoutsTable).values({id:session.id,athleteId:req.user!.id,assignmentId:input.assignmentId,data});
     return session;
   });
   res.json(SaveSessionResponse.parse(saved));
 });
 router.delete("/sessions/:id", async (req,res) => {
   const {id}=DeleteSessionParams.parse(req.params);
-  const rows=await db.delete(workoutsTable).where(and(eq(workoutsTable.id,id),eq(workoutsTable.athleteId,req.user!.id))).returning();
-  if(!rows.length) fail(404,"Workout log not found.");
+  await db.transaction(async tx=>{
+    const [row]=await tx.select().from(workoutsTable).where(and(eq(workoutsTable.id,id),eq(workoutsTable.athleteId,req.user!.id))).for("update");
+    if(!row || isDeletedSession(row.data)) fail(404,"Workout log not found.");
+    // Erase the workout payload, retain only the ID/ownership tombstone so a
+    // delayed lost-response retry cannot silently resurrect a deleted workout.
+    await tx.update(workoutsTable).set({data:{_deleted:true}}).where(eq(workoutsTable.id,id));
+  });
   res.json({success:true});
 });
 router.patch("/sessions/:id/feedback", async (req,res) => {
@@ -282,9 +331,10 @@ router.patch("/sessions/:id/feedback", async (req,res) => {
   const {feedback}=UpdateFeedbackBody.parse(req.body);
   const saved=await db.transaction(async tx=>{
     const [row]=await tx.select().from(workoutsTable).where(eq(workoutsTable.id,id)).for("update");
-    if(!row || row.athleteId===req.user!.id || !await linked(req.user!.id,row.athleteId)) fail(403,"Only a linked coach can leave feedback.");
-    const session={...SaveSessionResponse.parse(row.data),coachFeedback:feedback,updatedAt:new Date().toISOString()};
-    await tx.update(workoutsTable).set({data:session}).where(eq(workoutsTable.id,id));
+    if(!row || isDeletedSession(row.data) || row.athleteId===req.user!.id || !await linked(req.user!.id,row.athleteId)) fail(403,"Only a linked coach can leave feedback.");
+    const prior=SaveSessionResponse.parse(row.data);
+    const session={...prior,coachFeedback:feedback,updatedAt:new Date(Math.max(Date.now(),Date.parse(prior.updatedAt)+1)).toISOString()};
+    await tx.update(workoutsTable).set({data:{...row.data as object,...session}}).where(eq(workoutsTable.id,id));
     return session;
   });
   res.json(UpdateFeedbackResponse.parse(saved));

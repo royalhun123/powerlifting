@@ -394,9 +394,8 @@ export default function ProgramDetail() {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            <CircuitEditor workout={w} onChange={patch => updateWorkout(w.id, patch)} blankExercise={blankExercise} />
-            <div className="divide-y">
-              {w.exercises.map((ex) => {
+            {(() => {
+              const renderExercise = (ex: Exercise) => {
                 const t = targetLoad(ex, data.profile);
                 return (
                   <div key={ex.id} className={`px-4 py-3 ${ex.review ? "bg-[hsl(var(--deadlift)/0.08)]" : ""}`} data-testid={`row-exercise-${ex.id}`}>
@@ -430,7 +429,7 @@ export default function ProgramDetail() {
                       <label className="grid gap-1 text-xs font-medium">Muscle group
                         <Select value={ex.muscleGroup || "uncategorized"} onValueChange={v => updateExercise(w.id, ex.id, { muscleGroup: v === "uncategorized" ? undefined : v as Exercise["muscleGroup"] })}>
                           <SelectTrigger className="w-44" data-testid={`select-muscle-${ex.id}`}><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-72" data-testid={`muscle-options-${ex.id}`}>
                             <SelectItem value="uncategorized">Uncategorized</SelectItem>
                             {MUSCLE_GROUPS.map(group => <SelectItem key={group} value={group}>{group[0].toUpperCase() + group.slice(1)}</SelectItem>)}
                           </SelectContent>
@@ -457,8 +456,12 @@ export default function ProgramDetail() {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              };
+              return <>
+                <div className="divide-y">{w.exercises.filter(ex => !ex.circuitId).map(renderExercise)}</div>
+                <CircuitEditor workout={w} onChange={patch => updateWorkout(w.id, patch)} blankExercise={blankExercise} renderExercise={renderExercise} />
+              </>;
+            })()}
             <div className="px-4 py-2">
               <Button variant="ghost" size="sm" onClick={() => updateWorkout(w.id, { exercises: [...w.exercises, blankExercise()] })} data-testid={`button-add-exercise-${w.id}`}>
                 <Plus className="mr-1.5 h-4 w-4" /> Exercise

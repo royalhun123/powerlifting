@@ -24,6 +24,7 @@ import { useWorkspace } from '@/hooks/use-platform';
 import { EmptyState, LoadingPage } from '@/components/common';
 import MyPrograms from '@/pages/my-programs';
 import Coaches from '@/pages/coaches';
+import { OfflineStatus } from '@/components/offline-status';
 
 function AdminOnly({children}:{children:ReactNode}) {
   const {data,isLoading}=useWorkspace();
@@ -138,6 +139,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <OfflineStatus />
           <Router />
         </WouterRouter>
         <Toaster />

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isDeletedSession } from "../lib/session-sync";
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, usersTable, profilesTable, coachingTable, coachesTable, credentialsTable, passwordSetupsTable, programsTable, assignmentsTable, workoutsTable, workspaceMembersTable, groupsTable, groupMembersTable, administrationTable } from "@workspace/db";
@@ -23,7 +24,7 @@ router.get("/coaches/athletes/:athleteId/sessions", async (req,res)=>{
   // Read the athlete's historical sessions, never reconstruct from current templates
   // or filter out sessions whose original assignment was archived or removed.
   const rows = await db.select().from(workoutsTable).where(eq(workoutsTable.athleteId,athleteId));
-  const sessions = ListAdminSessionsResponse.parse(rows.map(r=>r.data));
+  const sessions = ListAdminSessionsResponse.parse(rows.filter(r=>!isDeletedSession(r.data)).map(r=>r.data));
   sessions.sort((a,b)=>b.date.localeCompare(a.date)||b.updatedAt.localeCompare(a.updatedAt)||a.id.localeCompare(b.id));
   res.json(sessions);
 });

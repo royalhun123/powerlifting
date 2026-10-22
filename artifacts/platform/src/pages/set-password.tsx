@@ -64,7 +64,7 @@ export default function SetPassword() {
           const nm = chosenName.trim();
           const data = choose ? { token, username: cu, password: pw, ...(nm ? { name: nm } : {}) } : { token, password: pw };
           // On error (e.g. 409 username taken) inputs are kept so the same link can be retried.
-          complete.mutate({ data }, { onSuccess: () => { setPw(""); setConfirm(""); window.location.replace("/"); } });
+          complete.mutate({ data }, { onSuccess: () => { localStorage.removeItem("navy-pending-logout"); setPw(""); setConfirm(""); window.location.replace("/"); } });
         }}>
         {choose ? <>
           <div className="border-l-2 border-[#B4975A] bg-secondary/50 p-3">

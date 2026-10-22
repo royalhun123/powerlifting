@@ -45,6 +45,7 @@ import type {
   InvitationInput,
   LifterRegistrationInput,
   LiftingGroup,
+  LogoutDevice200,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   PasswordAccount,
@@ -4012,6 +4013,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getRemoveAssignmentMutationOptions(options));
     }
 
+export const getLogoutDeviceUrl = () => {
+
+
+
+
+  return `/api/auth/device-logout`
+}
+
+/**
+ * Revoke this browser's cookie session without depending on external OIDC availability. May be called for an expired session.
+ */
+export const logoutDevice = async ( options?: Parameters<typeof customFetch>[1]): Promise<LogoutDevice200> => {
+
+  return customFetch<LogoutDevice200>(getLogoutDeviceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutDeviceMutationKey = () => ['logoutDevice'] as const;
+
+export const getLogoutDeviceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutDevice>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutDevice>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutDevice>>, void> = () => {
+
+
+          return  logoutDevice(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof logoutDevice>>>
+
+    export type LogoutDeviceMutationError = ErrorType<unknown>
+
+
+    export const useLogoutDevice = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutDevice>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutDevice>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutDeviceMutationOptions(options));
+    }
+
 export const getSaveSessionUrl = () => {
 
 
@@ -4020,6 +4092,14 @@ export const getSaveSessionUrl = () => {
   return `/api/sessions`
 }
 
+/**
+ * Legacy callers without X-Session-Sync retain existing create/update behavior.
+ * Durable offline callers send ALL sync headers and a stable UUID body id.
+ * Creates use expected revision "new"; edits use the last acknowledged server
+ * updatedAt timestamp. Replays of the same mutation and payload are idempotent.
+ * A revision mismatch or reused mutation ID with different payload returns 409,
+ * never overwriting the server. Sync identity and workspace are verified server-side.
+ */
 export const saveSession = async (sessionInput: SessionInput, options?: Parameters<typeof customFetch>[1]): Promise<Session> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -4051,7 +4131,7 @@ return customFetch<Session>(getSaveSessionUrl(),
 
 export const getSaveSessionMutationKey = () => ['saveSession'] as const;
 
-export const getSaveSessionMutationOptions = <TError = ErrorType<unknown>,
+export const getSaveSessionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSession>>, TError,SaveSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSession>>, TError,SaveSessionMutationVariables, TContext> => {
 
@@ -4080,10 +4160,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveSessionMutationResult = NonNullable<Awaited<ReturnType<typeof saveSession>>>
     export type SaveSessionMutationBody = BodyType<SessionInput>
-    export type SaveSessionMutationError = ErrorType<unknown>
+    export type SaveSessionMutationError = ErrorType<void>
     export type SaveSessionMutationVariables = {data: BodyType<SessionInput>}
 
-    export const useSaveSession = <TError = ErrorType<unknown>,
+    export const useSaveSession = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSession>>, TError,SaveSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof saveSession>>,

@@ -551,7 +551,7 @@ export const ListCoachesResponseItem = zod.object({
   "notes": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(listCoachesResponseProgramsItemOneWorkoutsItemExercisesMax)
@@ -599,7 +599,7 @@ export const ListCoachesResponseItem = zod.object({
   "notes": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(listCoachesResponseBlocksItemProgramOneWorkoutsItemExercisesMax)
@@ -653,7 +653,7 @@ export const ListCoachesResponseItem = zod.object({
   "notes": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(listCoachesResponseClientsItemBlocksItemProgramOneWorkoutsItemExercisesMax)
@@ -1220,7 +1220,7 @@ export const GetWorkspaceResponse = zod.object({
   "notes": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(getWorkspaceResponseProgramsItemOneWorkoutsItemExercisesMax)
@@ -1276,7 +1276,7 @@ export const GetWorkspaceResponse = zod.object({
   "notes": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(getWorkspaceResponseAssignmentsItemProgramOneWorkoutsItemExercisesMax)
@@ -1473,7 +1473,7 @@ export const SaveProgramBody = zod.object({
   "notes": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(saveProgramBodyWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(saveProgramBodyWorkoutsItemExercisesMax)
@@ -1557,7 +1557,7 @@ export const SaveProgramResponse = zod.object({
   "notes": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(saveProgramResponseOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(saveProgramResponseOneWorkoutsItemExercisesMax)
@@ -1713,7 +1713,7 @@ export const AssignProgramResponse = zod.object({
   "notes": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(assignProgramResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(assignProgramResponseProgramOneWorkoutsItemExercisesMax)
@@ -1823,7 +1823,7 @@ export const ArchiveAssignmentResponse = zod.object({
   "notes": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemNotesMax),
   "review": zod.boolean(),
   "lift": zod.enum(['squat', 'bench', 'deadlift', 'accessory']),
-  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'custom']).optional(),
+  "muscleGroup": zod.enum(['chest', 'lats', 'upper back', 'shoulders', 'rear delts', 'biceps', 'triceps', 'quads', 'abductors', 'adductors', 'hamstrings', 'calves', 'abs', 'custom']).optional(),
   "customMuscleGroup": zod.string().max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesItemCustomMuscleGroupMax).optional(),
   "circuitId": zod.string().optional()
 })).max(archiveAssignmentResponseProgramOneWorkoutsItemExercisesMax)
@@ -1848,6 +1848,29 @@ export const RemoveAssignmentResponse = zod.object({
   "success": zod.boolean()
 })
 
+
+/**
+ * Revoke this browser's cookie session without depending on external OIDC availability. May be called for an expired session.
+ */
+export const LogoutDeviceResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * Legacy callers without X-Session-Sync retain existing create/update behavior.
+ * Durable offline callers send ALL sync headers and a stable UUID body id.
+ * Creates use expected revision "new"; edits use the last acknowledged server
+ * updatedAt timestamp. Replays of the same mutation and payload are idempotent.
+ * A revision mismatch or reused mutation ID with different payload returns 409,
+ * never overwriting the server. Sync identity and workspace are verified server-side.
+ */
+export const SaveSessionHeader = zod.object({
+  "X-Session-Sync": zod.enum(['1']).optional(),
+  "X-Mutation-Id": zod.string().uuid().optional(),
+  "X-Expected-Updated-At": zod.string().optional().describe('Last acknowledged server updatedAt, or "new" for creation.'),
+  "X-Workspace-Id": zod.string().optional().describe('Workspace id from the authenticated cached workspace.')
+})
 
 export const saveSessionBodyNameMax = 200;
 

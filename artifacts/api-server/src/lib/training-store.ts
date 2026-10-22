@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { db, profilesTable, programsTable, assignmentsTable, workoutsTable, coachingTable, invitationsTable, groupsTable, groupMembersTable } from "@workspace/db";
 import { SaveProgramResponse, UpdateProfileResponse, AssignProgramResponse, SaveSessionResponse } from "@workspace/api-zod";
+import { isDeletedSession } from "./session-sync";
 import imported from "../data/imported-programs.json";
 import type { Profile, Workspace } from "./training-types";
 import { convert, round } from "./training-types";
@@ -53,7 +54,7 @@ export async function loadWorkspace(id: string, name: string): Promise<Workspace
     coach ? db.select().from(invitationsTable).where(eq(invitationsTable.coachId,id)) : Promise.resolve([]),
     athleteIds.length ? db.select().from(profilesTable).where(inArray(profilesTable.userId,athleteIds)) : Promise.resolve([]),
   ]);
-  const sessions = sessionRows.map(r => SaveSessionResponse.parse(r.data)).sort((a,b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
+  const sessions = sessionRows.filter(r => !isDeletedSession(r.data)).map(r => SaveSessionResponse.parse(r.data)).sort((a,b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt));
   const athletes = profileRows.map(r => {
     const p=UpdateProfileResponse.parse(r.data);
     const logs=sessions.filter(s => s.athleteId === r.userId && s.status === "completed");

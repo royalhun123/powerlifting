@@ -20,6 +20,12 @@ import { workspaceId, workspaceUserIds } from "../lib/workspace-access";
 
 const router = Router();
 router.use((_req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
+// Local/device sign-out must work for password and expired sessions without
+// requiring the external OIDC provider to be configured or reachable.
+router.post("/auth/device-logout", async (req, res) => {
+  await clearSession(res, getSessionId(req));
+  res.json({ success: true });
+});
 
 router.post("/auth/register", async (req,res)=>{
   await authLimit(req,"public-registration",10);

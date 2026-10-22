@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db, workoutsTable, coachingTable, coachesTable } from "@workspace/db";
+import { isDeletedSession } from "../lib/session-sync";
 import {
   CreateDiscussionThreadBody, ReplyToDiscussionBody, GetSessionDiscussionResponse,
   SaveSessionResponse,
@@ -42,7 +43,7 @@ function response(session: Session, canPost: boolean) {
 
 router.get("/sessions/:id/discussion", async (req, res) => {
   const [row] = await db.select().from(workoutsTable).where(eq(workoutsTable.id, req.params.id));
-  if (!row) fail(404, "Workout log not found.");
+  if (!row || isDeletedSession(row.data)) fail(404, "Workout log not found.");
   const permission = await access(row, req.user!.id);
   res.json(response(SaveSessionResponse.parse(row.data), permission.canPost));
 });
@@ -58,7 +59,7 @@ async function postMessage(
   if (!text) fail(400, "Enter a comment or reply.");
   return db.transaction(async tx => {
     const [row] = await tx.select().from(workoutsTable).where(eq(workoutsTable.id, sessionId)).for("update");
-    if (!row) fail(404, "Workout log not found.");
+    if (!row || isDeletedSession(row.data)) fail(404, "Workout log not found.");
     const permission = await access(row, userId);
     if (!permission.canPost) fail(403, "Admin access is read-only.");
     const session = SaveSessionResponse.parse(row.data);
@@ -104,8 +105,8 @@ async function postMessage(
       id: randomUUID(), clientMessageId: input.clientMessageId,
       authorId: userId, authorName: author.name, authorRole: permission.role, text, createdAt: now,
     });
-    const saved: Session = { ...session, discussions: threads };
-    await tx.update(workoutsTable).set({ data: saved }).where(eq(workoutsTable.id, row.id));
+    const saved: Session = { ...session, discussions: threads, updatedAt: new Date(Math.max(Date.now(), Date.parse(session.updatedAt) + 1)).toISOString() };
+    await tx.update(workoutsTable).set({ data: { ...row.data as object, ...saved } }).where(eq(workoutsTable.id, row.id));
     return response(saved, true);
   });
 }

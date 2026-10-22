@@ -18,7 +18,7 @@ export default function SignUp() {
       <form className="space-y-4" onSubmit={e=>{
         e.preventDefault();if(!valid||register.isPending)return;
         register.mutate({data:{username:username.trim(),password,...(name.trim()?{name:name.trim()}:{} )}},
-          {onSuccess:()=>window.location.replace(import.meta.env.BASE_URL)});
+          {onSuccess:()=>{localStorage.removeItem("navy-pending-logout");window.location.replace(import.meta.env.BASE_URL);}});
       }}>
         <label className="grid gap-1 text-sm">Name (optional)<Input value={name} onChange={e=>setName(e.target.value)} maxLength={100} autoComplete="name" /></label>
         <label className="grid gap-1 text-sm">Username<Input required value={username} onChange={e=>setUsername(e.target.value)} maxLength={32} autoComplete="username" autoCapitalize="none" spellCheck={false} aria-describedby="username-help" /></label>

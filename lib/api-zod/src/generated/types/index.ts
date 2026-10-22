@@ -54,6 +54,7 @@ export * from './liftingGroupMembersItem';
 export * from './liftRecord';
 export * from './loggedSet';
 export * from './loggedSetLift';
+export * from './logoutDevice200';
 export * from './mobileTokenExchangeRequest';
 export * from './mobileTokenExchangeSuccess';
 export * from './passwordAccount';

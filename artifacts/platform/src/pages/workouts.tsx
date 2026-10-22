@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { queueSession, readDevice } from "@workspace/replit-auth-web";
 import { SessionSummary } from "@/components/session-summary";
 import { ExerciseContext } from "@/components/exercise-context";
 import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { useLocation, useSearch } from "wouter";
 import { ArrowLeft, Check, CheckCircle2, Copy, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
-import { useDeleteSession, useSaveSession, type Assignment, type LoggedSet, type Session, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
+import { useDeleteSession, type Assignment, type LoggedSet, type Session, type SessionInput, type SessionInputStatus, type SessionInputUnit, type Workout } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +22,7 @@ import type { Profile } from "@workspace/api-client-react";
 
 type LogState = {
   id?: string;
+  expected?: string;
   assignment: Assignment;
   workout: Workout;
   date: string;
@@ -36,6 +39,7 @@ function numOr0(v: string): number {
 function resumeSession(session: Session, assignment: Assignment, workout: Workout): LogState {
   return {
     id: session.id,
+    expected: session.updatedAt,
     assignment,
     workout,
     date: session.date,
@@ -52,13 +56,16 @@ function openWorkout(assignment: Assignment, workout: Workout, sessions: Session
   const draft = matching.filter((session) => session.status === "draft").sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
   return draft
     ? resumeSession(draft, assignment, workout)
-    : { assignment, workout, date: todayISO(), unit: profile.unit, notes: "", sets: buildSets(workout.exercises, profile) };
+    : { id: crypto.randomUUID(), expected: "new", assignment, workout, date: todayISO(), unit: profile.unit, notes: "", sets: buildSets(workout.exercises, profile) };
 }
 
 function Logger({ state, setState, profile, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; onDone: () => void }) {
-  const save = useSaveSession();
+  const save = useMutation({
+    networkMode: "always",
+    mutationFn: ({ data }: { data: SessionInput }) => queueSession(data, state.expected ?? "new"),
+  });
   const invalidate = useInvalidateAll();
-  const guard = useMutationGuard();
+  const guard = useMutationGuard(true);
   const { toast } = useToast();
   const { workout } = state;
   // Track numeric edits even when the user enters a value equal to a prescription.
@@ -77,6 +84,10 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
 
   const submit = (status: SessionInputStatus) => {
     if (!guard()) return;
+    if (status === "completed" && !state.sets.some(s => s.completed && s.reps > 0)) {
+      toast({ title: "Complete at least one set", description: "Enter actual reps before completing a session.", variant: "destructive" });
+      return;
+    }
     save.mutate(
       {
         data: {
@@ -97,9 +108,9 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
       {
         onSuccess: async (saved) => {
           await invalidate();
-          toast({ title: status === "completed" ? "Session completed" : "Draft saved", description: `${saved.name} · ${fmtNum(saved.volume)} ${saved.unit}` });
+          toast({ title: status === "completed" ? "Session saved on this device" : "Draft saved on this device", description: `${saved.name} · Queued for sync. See sync status above.` });
           if (status === "completed") onDone();
-          else setState({ ...state, id: saved.id });
+          else setState({ ...state, id: saved.id, expected: saved.updatedAt });
         },
         onError: (e) => toast({ title: "Save failed", description: errMessage(e), variant: "destructive" }),
       },
@@ -242,7 +253,7 @@ function Logger({ state, setState, profile, onDone }: { state: LogState; setStat
         <Panel title="Session notes">
           <Textarea value={state.notes} onChange={(e) => setState({ ...state, notes: e.target.value })} placeholder="How did it move? Sleep, bar speed, anything your group leader should know." data-testid="input-session-notes" />
         </Panel>
-        <WorkoutDiscussion session={state.id ? { id: state.id, sets: state.sets } : null} />
+        {state.id && state.expected !== "new" && navigator.onLine && <WorkoutDiscussion session={{ id: state.id, sets: state.sets }} />}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 px-4 py-3 backdrop-blur md:left-60">
@@ -330,8 +341,17 @@ export default function Workouts() {
     }
     setLog(resumeSession(s, a, w));
   };
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!toDelete || !guard()) return;
+    if (!navigator.onLine) {
+      toast({ title: "Connect to delete", description: "Offline session saves are supported; deletion requires an online connection.", variant: "destructive" });
+      return;
+    }
+    const device = await readDevice();
+    if (device.entries.some(entry => entry.input.id === toDelete.id && entry.status !== "synced")) {
+      toast({ title: "Sync this workout first", description: "Resolve pending saves before deleting a session.", variant: "destructive" });
+      return;
+    }
     del.mutate(
       { id: toDelete.id },
       {

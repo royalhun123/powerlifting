@@ -4,3 +4,4 @@
 - [Access and history](access-and-history.md) — independent coaches, read-only admin oversight, shared uploader-owned programs, password login, and safe history preservation.
 - [Workbook interpretation](workbook-interpretation.md) — source peaking sheets contain date-coerced ranges and ambiguous historical values; confirm instead of inventing completed sets.
 - [Circuit history](circuit-history.md) — extend circuits and muscle categories without rewriting history or changing competition-lift analytics.
+- [Offline training](offline-training.md) — account-scoped local saves, duplicate-safe sync, explicit conflicts, and browser-accessible production testing.

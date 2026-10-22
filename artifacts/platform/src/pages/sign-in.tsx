@@ -35,11 +35,11 @@ export default function SignIn() {
         <p className="text-sm">An older private sign-in link was opened on this device.</p>
         {redeem.isError && <p role="alert" className="mt-1 text-sm text-destructive">{errMessage(redeem.error)}</p>}
         <div className="mt-2 flex flex-wrap gap-2">
-          <Button size="sm" disabled={redeem.isPending} data-testid="button-legacy-continue" onClick={() => redeem.mutate({ data: { token: fragmentKey } }, { onSuccess: () => { setFragmentKey(""); window.location.replace("/"); } })}>{redeem.isPending ? "Signing in…" : "Continue with this link"}</Button>
+          <Button size="sm" disabled={redeem.isPending} data-testid="button-legacy-continue" onClick={() => redeem.mutate({ data: { token: fragmentKey } }, { onSuccess: () => { localStorage.removeItem("navy-pending-logout"); setFragmentKey(""); window.location.replace("/"); } })}>{redeem.isPending ? "Signing in…" : "Continue with this link"}</Button>
           <Button size="sm" variant="ghost" data-testid="button-legacy-dismiss" onClick={() => { setFragmentKey(""); redeem.reset(); }}>Dismiss</Button>
         </div>
       </div>}
-      <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (!username.trim() || !password) return; login.mutate({ data: { username: username.trim(), password } }, { onSuccess: () => { setPassword(""); window.location.replace("/"); } }); }}>
+      <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (!username.trim() || !password) return; login.mutate({ data: { username: username.trim(), password } }, { onSuccess: () => { localStorage.removeItem("navy-pending-logout"); setPassword(""); window.location.replace("/"); } }); }}>
         <label className="grid gap-1.5 text-sm">Username<Input autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} maxLength={100} data-testid="input-signin-username" /></label>
         <label className="grid gap-1.5 text-sm">Password<Input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} maxLength={128} data-testid="input-signin-password" /></label>
         {login.isError && <p role="alert" className="text-sm text-destructive" data-testid="status-signin-error">{errMessage(login.error)}</p>}

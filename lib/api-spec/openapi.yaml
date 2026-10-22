@@ -602,9 +602,49 @@ paths:
                 required: [success]
                 properties:
                   success: { type: boolean }
+  /auth/device-logout:
+    post:
+      operationId: logoutDevice
+      description: Revoke this browser's cookie session without depending on external OIDC availability. May be called for an expired session.
+      responses:
+        "200":
+          description: Device cookie session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success: { type: boolean }
   /sessions:
     post:
       operationId: saveSession
+      description: |
+        Legacy callers without X-Session-Sync retain existing create/update behavior.
+        Durable offline callers send ALL sync headers and a stable UUID body id.
+        Creates use expected revision "new"; edits use the last acknowledged server
+        updatedAt timestamp. Replays of the same mutation and payload are idempotent.
+        A revision mismatch or reused mutation ID with different payload returns 409,
+        never overwriting the server. Sync identity and workspace are verified server-side.
+      parameters:
+        - in: header
+          name: X-Session-Sync
+          required: false
+          schema: { type: string, enum: ["1"] }
+        - in: header
+          name: X-Mutation-Id
+          required: false
+          schema: { type: string, format: uuid }
+        - in: header
+          name: X-Expected-Updated-At
+          required: false
+          description: Last acknowledged server updatedAt, or "new" for creation.
+          schema: { type: string }
+        - in: header
+          name: X-Workspace-Id
+          required: false
+          description: Workspace id from the authenticated cached workspace.
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -613,9 +653,15 @@ paths:
       responses:
         "200":
           description: Saved own workout
+          headers:
+            X-Acknowledged-Updated-At:
+              description: Original commit revision of this mutation (including replays). Chain later queued commands to this revision, not to a potentially newer response body's updatedAt.
+              schema: { type: string, format: date-time }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Session" }
+        "409":
+          description: Revision conflict, workspace mismatch, or reused mutation ID; retain local data and review server state.
   /sessions/{id}:
     delete:
       operationId: deleteSession
@@ -923,7 +969,7 @@ components:
         lift: { type: string, enum: [squat, bench, deadlift, accessory] }
         muscleGroup:
           type: string
-          enum: [chest, lats, upper back, shoulders, rear delts, biceps, triceps, quads, abductors, adductors, hamstrings, calves, custom]
+          enum: [chest, lats, upper back, shoulders, rear delts, biceps, triceps, quads, abductors, adductors, hamstrings, calves, abs, custom]
         customMuscleGroup: { type: string, maxLength: 100 }
         circuitId: { type: string }
     Circuit:

@@ -21,5 +21,6 @@ export const ExerciseMuscleGroup = {
   adductors: 'adductors',
   hamstrings: 'hamstrings',
   calves: 'calves',
+  abs: 'abs',
   custom: 'custom',
 } as const;
