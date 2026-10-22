@@ -1,0 +1,107 @@
+[Skip to content](https://vercel.com/powerlifting2/powerlifting/settings/environment-variables#geist-skip-nav)
+
+Find
+F
+
+[Overview](https://vercel.com/powerlifting2/powerlifting)
+[Deployments](https://vercel.com/powerlifting2/powerlifting/deployments)
+[Logs](https://vercel.com/powerlifting2/powerlifting/logs)
+[Analytics](https://vercel.com/powerlifting2/powerlifting/analytics)
+[Speed Insights](https://vercel.com/powerlifting2/powerlifting/speed-insights)
+[Observability](https://vercel.com/powerlifting2/powerlifting/observability)
+[Firewall](https://vercel.com/powerlifting2/powerlifting/firewall)
+[CDN](https://vercel.com/powerlifting2/powerlifting/cdn)
+[Environment Variables](https://vercel.com/powerlifting2/powerlifting/settings/environment-variables)
+[Domains](https://vercel.com/powerlifting2/powerlifting/settings/domains)
+[Connect](https://vercel.com/powerlifting2/powerlifting/connect)
+[Integrations](https://vercel.com/powerlifting2/powerlifting/settings/integrations)
+[Storage](https://vercel.com/powerlifting2/powerlifting/stores)
+[Flags](https://vercel.com/powerlifting2/powerlifting/flags)
+[Agent](https://vercel.com/powerlifting2/powerlifting/agent)
+[AI Gateway](https://vercel.com/powerlifting2/powerlifting/ai-gateway)
+[Sandboxes](https://vercel.com/powerlifting2/powerlifting/sandboxes)
+[Workflows](https://vercel.com/powerlifting2/powerlifting/workflows)
+[Images](https://vercel.com/powerlifting2/powerlifting/images)
+[Daemons](https://vercel.com/powerlifting2/powerlifting/daemons)
+[Usage](https://vercel.com/powerlifting2/powerlifting/usage)
+[Support](https://vercel.com/powerlifting2/powerlifting/support)
+[Settings](https://vercel.com/powerlifting2/powerlifting/settings)
+
+Avatar for royalhun123
+royalhun123
+
+
+Environment Variables
+Environment Variables
+Store API keys, tokens, and config securely. [Learn more about environment variables](https://vercel.com/docs/environment-variables) · [Separate Production Secret Values](https://vercel.com/powerlifting2/~/settings/security#disjunctive-production-secret-policy)
+
+Project
+Shared
+Search variables…
+
+All Types
+All Environments
+All Editors
+
+All Variables
+
+Last Updated
+
+powerlif…BASE_URL
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…p_PGHOST
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…DATABASE
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…RES_HOST
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…DATABASE
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…OJECT_ID
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…p_PGUSER
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+powerlif…GRES_URL
+Neon
+Production and Preview
+Added 
+2h ago
+
+
+Enable access to System Environment Variables
+powerlifting - Overview – Vercel
