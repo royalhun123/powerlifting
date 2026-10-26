@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { useMutation } from "@tanstack/react-query";
 import { queueSession, readDevice, recoverWorkoutTyping, discardWorkoutRecovery, draftSyncIssue, subscribeOffline, offlineRevision, type RecoveryEntry } from "@workspace/replit-auth-web";
 import { SessionSummary } from "@/components/session-summary";
+import { PreviousWeekReference } from "@/components/previous-week-reference";
 import { ExerciseContext } from "@/components/exercise-context";
 import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { useLocation, useSearch } from "wouter";
@@ -63,7 +64,7 @@ function openWorkout(assignment: Assignment, workout: Workout, sessions: Session
     : { id: crypto.randomUUID(), expected: "new", assignment, workout, date: todayISO(), unit: profile.unit, notes: "", sets: buildSets(workout.exercises, profile) };
 }
 
-function Logger({ state, setState: commitState, profile, workspaceId, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; workspaceId: string; onDone: () => void }) {
+function Logger({ state, setState: commitState, profile, workspaceId, sessions, onDone }: { state: LogState; setState: (s: LogState) => void; profile: Profile; workspaceId: string; sessions: Session[]; onDone: () => void }) {
   const [recoveryStatus, setRecoveryStatus] = useState("");
   const recoveryWrite = useRef(0);
   const editorId = useRef(crypto.randomUUID());
@@ -215,6 +216,7 @@ function Logger({ state, setState: commitState, profile, workspaceId, onDone }: 
                   <div className="text-primary">Effort: {ex.effort || "—"}</div>
                 </div>
                 {ex.notes && <p className="w-full text-xs text-muted-foreground">{ex.notes}</p>}
+                <PreviousWeekReference assignment={state.assignment} workout={workout} exercise={ex} sessions={sessions} />
                 <p className="w-full text-xs text-muted-foreground">Each set has its own actual weight and reps. Increase or decrease the weight as needed.{range ? ` Aim for ${range.min}–${range.max} reps; log the number you actually complete.` : ` Rep prescription: ${ex.reps}. Log actual reps below.`}</p>
                 <p className="w-full text-xs text-muted-foreground">Entering reps records the set automatically once a weight is entered (bodyweight accessories may use 0). RPE is optional; a tested 1RM is a single at RPE 10. Only RPE 9 sets generate estimated maxes.</p>
               </header>
@@ -373,6 +375,7 @@ export default function Workouts() {
         state={log}
         setState={setLog}
         profile={data.profile}
+        sessions={mine.sessions}
         workspaceId={data.workspaceId ?? "team"}
         onDone={() => {
           setLog(null);
@@ -438,7 +441,7 @@ export default function Workouts() {
 
   return (
     <div>
-      <SessionSummary session={viewedSession} onClose={()=>{setViewedSession(null);setLocation("/workouts");}} />
+      <SessionSummary session={viewedSession} assignments={data.assignments} sessions={mine.sessions} onClose={()=>{setViewedSession(null);setLocation("/workouts");}} />
       <PageHeader kicker="Train" title="Workouts">
         {mine.assignments.length > 1 && (
           <Select value={active?.id} onValueChange={setPickedAssignment}>

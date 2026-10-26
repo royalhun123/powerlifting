@@ -1,10 +1,13 @@
-import type { Session } from "@workspace/api-client-react";
+import type { Assignment, Session } from "@workspace/api-client-react";
+import { PreviousWeekReference } from "@/components/previous-week-reference";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { WorkoutDiscussion } from "@/components/workout-discussion";
 import { fmtDate, fmtNum } from "@/lib/pl";
 
-export function SessionSummary({session,onClose}:{session:Session|null;onClose:()=>void}) {
+export function SessionSummary({session,onClose,assignments = [],sessions = []}:{session:Session|null;onClose:()=>void;assignments?:Assignment[];sessions?:Session[]}) {
+  const assignment = assignments.find(a => a.id === session?.assignmentId);
+  const workout = assignment?.program.workouts.find(w => w.id === session?.workoutId);
   return <Dialog open={!!session} onOpenChange={open=>!open && onClose()}>
     <DialogContent className="max-h-[90dvh] max-w-3xl overflow-y-auto" data-testid="completed-workout-summary">
       <DialogHeader>
@@ -19,6 +22,12 @@ export function SessionSummary({session,onClose}:{session:Session|null;onClose:(
             <td className="p-2">{set.setNumber}</td><td className="p-2">{fmtNum(set.weight)}</td><td className="p-2">{set.reps}</td><td className="p-2">{set.rpe || "—"}</td><td className="p-2 whitespace-pre-wrap">{set.notes || "—"}</td>
           </tr>)}</tbody>
         </table></div>
+        {assignment && workout && workout.week > 1 && <div className="space-y-3">
+          {workout.exercises.map(exercise => <div key={exercise.id}>
+            <h3 className="mb-1 text-sm font-medium">{exercise.name}</h3>
+            <PreviousWeekReference assignment={assignment} workout={workout} exercise={exercise} sessions={sessions} />
+          </div>)}
+        </div>}
         {session.notes && <div><h3 className="font-medium">Session notes</h3><p className="whitespace-pre-wrap text-sm">{session.notes}</p></div>}
         <WorkoutDiscussion session={session} />
       </>}
